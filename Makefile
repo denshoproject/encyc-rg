@@ -188,19 +188,19 @@ install-encyc-rg: install-virtualenv
 	pip install -U --download-cache=$(PIP_CACHE_DIR) -r $(INSTALLDIR)/encycrg/requirements/production.txt
 # logs dir
 	-mkdir $(LOGS_BASE)
-	chown -R ddr.root $(LOGS_BASE)
+	chown -R encyc.root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 # sqlite db dir
 	-mkdir $(SQLITE_BASE)
-	chown -R ddr.root $(SQLITE_BASE)
+	chown -R encyc.root $(SQLITE_BASE)
 	chmod -R 755 $(SQLITE_BASE)
 
 syncdb:
 	source $(VIRTUALENV)/bin/activate; \
 	cd $(INSTALLDIR)/encycrg && python manage.py syncdb --noinput
-	chown -R ddr.root $(SQLITE_BASE)
+	chown -R encyc.root $(SQLITE_BASE)
 	chmod -R 750 $(SQLITE_BASE)
-	chown -R ddr.root $(LOGS_BASE)
+	chown -R encyc.root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 
 update-encyc-rg:
@@ -334,9 +334,5 @@ status:
 	supervisorctl status
 
 git-status:
-	@echo "------------------------------------------------------------------------"
-	cd $(INSTALL_BASE)/ddr-cmdln && git status
-	@echo "------------------------------------------------------------------------"
-	cd $(INSTALL_BASE)/ddr-local && git status
 	@echo "------------------------------------------------------------------------"
 	cd $(INSTALLDIR) && git status
