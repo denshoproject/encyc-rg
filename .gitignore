@@ -1,0 +1,8 @@
+*~
+*.pyc
+*.db
+*.svg
+build/
+encycrg/encycrg/settings.py
+src/
+tmp/

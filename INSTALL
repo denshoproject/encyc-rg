@@ -1,0 +1,66 @@
+================
+encyc-rg Setup
+================
+
+This page documents the process of installing and configuring `encyc-rg` on an existing Debian Linux machine.
+
+Most of the commands you will type will be entered as `root`.  To become `root`, type the following at a command prompt::
+
+    $ su - root
+    [enter root password]
+
+As per convention, variables in this documentation are written in upper case with underscores, starting with a "$" sign.
+
+
+
+DDR Applications and Dependencies - Automated Installation
+==========================================================
+
+In this section we will use a script to automatically install the DDR code and its supporting applications.
+
+Log in to your VM and become `root`.  Then add a `encyc` user, install the prerequisites, and install the `encyc-rg` app itself.::
+
+    # adduser encyc
+    [enter info]
+    # apt-get install git-core
+    # git clone https://github.com/densho/encyc-rg.git /usr/local/src/encyc-rg
+    # cd /usr/local/src/encyc-rg/encycrg
+
+    # If you are testing a branch, switch to that branch.
+    # git checkout -b BRANCHNAME origin/BRANCHNAME
+    
+    # make install
+
+Wait as Make installs Debian packages and Python code and builds up your system.  On a basic VM this takes between 5-10 minutes.
+
+
+
+Configuration
+=============
+
+The default settings in `/etc/encyc/rg.cfg` are specific to the Densho production system.  Settings in `/etc/encyc/rglocal.cfg` will override the defaults.
+
+Edit `/etc/encyc/rglocal.cfg` to include the following text.::
+
+    [public]
+    
+    # Absolute path to directory that will hold static and user-uploaded files.
+    # Note: Should match MEDIA_ROOT and STATIC_ROOT in Makefile.
+    # Note: Should not have trailing slashes.
+    static_root=/var/www/encycrg/static
+    media_root=/var/www/encycrg/media
+
+To get the nice Django error messages edit `/usr/local/src/encyc-rg/encycrg/encycrg/settings.py`.  **WARNING: setting `DEBUG = True` in a production environment is a security risk!**::
+
+    DEBUG = True
+    THUMBNAIL_DEBUG = False
+
+`encyc-rg` uses the Django ORM to store data about locally-created thumbnail images in a SQLite3 database.  Create database tables for installed applications.::
+
+    # make syncdb
+
+Restart the servers and the web application to see the effects of your edits.::
+
+    # make restart
+
+At this point `encyc-rg` is installed but the Elasticsearch database contains no data.

@@ -1,0 +1,14 @@
+# dependencies used in all environments
+
+# Non-Python dependencies
+# sudo apt-get install python2.7, supervisor, imagemagick
+
+                                   # LICENSE  Python3
+                                   
+django                             # MIT      y
+django-filter
+django-redis                       # BSD      y
+djangorestframework                # BSD      y
+gunicorn                           # MIT      y
+markdown
+redis                              # MIT      y
