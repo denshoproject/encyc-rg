@@ -18,8 +18,10 @@ MEDIA_ROOT=$(MEDIA_BASE)/media
 STATIC_ROOT=$(MEDIA_BASE)/static
 
 DJANGO_CONF=$(INSTALLDIR)/encycrg/encycrg/settings.py
-NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
-NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
+NGINX_APP_CONF=/etc/nginx/sites-available/$(APP).conf
+NGINX_APP_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
+NGINX_ELASTIC_CONF=/etc/nginx/sites-available/elastic.conf
+NGINX_ELASTIC_CONF_LINK=/etc/nginx/sites-enabled/elastic.conf
 GUNICORN_CONF=/etc/supervisor/conf.d/gunicorn_$(APP).conf
 
 ELASTICSEARCH=elasticsearch-1.0.1.deb
@@ -319,10 +321,14 @@ install-daemons-configs:
 	@echo ""
 	@echo "daemon configs ------------------------------------------------------"
 # nginx settings
-	cp $(INSTALLDIR)/conf/nginx.conf $(NGINX_CONF)
-	chown root.root $(NGINX_CONF)
-	chmod 644 $(NGINX_CONF)
-	-ln -s $(NGINX_CONF) $(NGINX_CONF_LINK)
+	cp $(INSTALLDIR)/conf/nginx-app.conf $(NGINX_APP_CONF)
+	chown root.root $(NGINX_APP_CONF)
+	chmod 644 $(NGINX_APP_CONF)
+	-ln -s $(NGINX_APP_CONF) $(NGINX_APP_CONF_LINK)
+	cp $(INSTALLDIR)/conf/nginx-elastic.conf $(NGINX_ELASTIC_CONF)
+	chown root.root $(NGINX_ELASTIC_CONF)
+	chmod 644 $(NGINX_ELASTIC_CONF)
+	-ln -s $(NGINX_ELASTIC_CONF) $(NGINX_ELASTIC_CONF_LINK)
 	-rm /etc/nginx/sites-enabled/default
 # supervisord
 	cp $(INSTALLDIR)/conf/gunicorn.conf $(GUNICORN_CONF)
@@ -330,8 +336,10 @@ install-daemons-configs:
 	chmod 644 $(GUNICORN_CONF)
 
 uninstall-daemons-configs:
-	-rm $(NGINX_CONF)
-	-rm $(NGINX_CONF_LINK)
+	-rm $(NGINX_APP_CONF)
+	-rm $(NGINX_APP_CONF_LINK)
+	-rm $(NGINX_ELASTIC_CONF)
+	-rm $(NGINX_ELASTIC_CONF_LINK)
 	-rm $(GUNICORN_CONF)
 
 
