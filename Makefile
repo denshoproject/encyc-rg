@@ -160,6 +160,8 @@ install-elasticsearch:
 	chmod -R 755 /var/backups/elasticsearch
 
 install-virtualenv:
+	@echo ""
+	@echo "install-virtualenv -----------------------------------------------------"
 	apt-get --assume-yes install python-pip python-virtualenv
 	test -d $(VIRTUALENV) || virtualenv --distribute --setuptools $(VIRTUALENV)
 
