@@ -23,7 +23,7 @@ Log in to your VM and become `root`.  Then add a `encyc` user, install the prere
     # adduser encyc
     [enter info]
     # apt-get install git-core
-    # git clone https://github.com/densho/encyc-rg.git /usr/local/src/encyc-rg
+    # git clone git@github.com:densho/encyc-rg.git /usr/local/src/encyc-rg
     # cd /usr/local/src/encyc-rg/encycrg
 
     # If you are testing a branch, switch to that branch.
