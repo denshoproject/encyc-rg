@@ -186,6 +186,10 @@ install-encyc-rg: install-virtualenv
 	git pull
 	source $(VIRTUALENV)/bin/activate; \
 	pip install -U --download-cache=$(PIP_CACHE_DIR) -r $(INSTALLDIR)/encycrg/requirements/production.txt
+# media dir
+	-mkdir $(MEDIA_BASE)
+	-mkdir $(STATIC_ROOT)
+	-mkdir $(MEDIA_ROOT)
 # logs dir
 	-mkdir $(LOGS_BASE)
 	chown -R encyc.root $(LOGS_BASE)
@@ -239,14 +243,14 @@ get-app-assets:
 	@echo ""
 	@echo "get assets --------------------------------------------------------------"
 	-mkdir $(MEDIA_BASE)
-	wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
-	tar xzvf /tmp/$(APP)-assets.tar.gz -C $(MEDIA_BASE)/
+	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
+	-tar xzvf /tmp/$(APP)-assets.tar.gz -C $(MEDIA_BASE)/
 
 install-modernizr:
 	@echo ""
 	@echo "Modernizr --------------------------------------------------------------"
 	-rm $(STATIC_ROOT)/js/$(MODERNIZR)*
-	wget -nc -P $(STATIC_ROOT)/js http://$(PACKAGE_SERVER)/$(MODERNIZR)
+	-wget -nc -P $(STATIC_ROOT)/js http://$(PACKAGE_SERVER)/$(MODERNIZR)
 
 clean-modernizr:
 	-rm $(STATIC_ROOT)/js/$(MODERNIZR)*
@@ -254,8 +258,8 @@ clean-modernizr:
 install-bootstrap:
 	@echo ""
 	@echo "Bootstrap --------------------------------------------------------------"
-	wget -nc -P $(STATIC_ROOT) http://$(PACKAGE_SERVER)/$(BOOTSTRAP)
-	7z x -y -o$(STATIC_ROOT) $(STATIC_ROOT)/$(BOOTSTRAP)
+	-wget -nc -P $(STATIC_ROOT) http://$(PACKAGE_SERVER)/$(BOOTSTRAP)
+	-7z x -y -o$(STATIC_ROOT) $(STATIC_ROOT)/$(BOOTSTRAP)
 
 clean-bootstrap:
 	-rm -Rf $(STATIC_ROOT)/$(BOOTSTRAP)
@@ -263,7 +267,7 @@ clean-bootstrap:
 install-jquery:
 	@echo ""
 	@echo "jQuery -----------------------------------------------------------------"
-	wget -nc -P $(STATIC_ROOT)/js http://$(PACKAGE_SERVER)/$(JQUERY)
+	-wget -nc -P $(STATIC_ROOT)/js http://$(PACKAGE_SERVER)/$(JQUERY)
 	-ln -s $(STATIC_ROOT)/js/$(JQUERY) $(STATIC_ROOT)/js/jquery.js
 
 clean-jquery:
