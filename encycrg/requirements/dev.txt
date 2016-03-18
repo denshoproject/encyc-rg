@@ -6,7 +6,6 @@
 # include base
 -r _base.txt
 
-bpython                         # MIT
 coverage                        # BSD
 nose                            # LGPL
 snakefood                       # GPL
