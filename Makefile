@@ -332,10 +332,10 @@ restart-supervisor:
 
 
 status:
-	/etc/init.d/redis-server status
-	/etc/init.d/elasticsearch status
-	/etc/init.d/nginx status
-	supervisorctl status
+	-/etc/init.d/redis-server status
+	-/etc/init.d/elasticsearch status
+	-/etc/init.d/nginx status
+	-supervisorctl status
 
 git-status:
 	@echo "------------------------------------------------------------------------"
