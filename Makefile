@@ -37,7 +37,9 @@ ASSETS=encyc-rg-assets.tar.gz
 help:
 	@echo "encyc-rg Install Helper"
 	@echo ""
-	@echo "install - Does a complete install. Idempotent, so run as many times as you like."
+	@echo "get     - Downloads source, installers, and assets files. Does not install."
+	@echo ""
+	@echo "install - Installs app, config files, and static assets.  Does not download."
 	@echo "          IMPORTANT: Run 'adduser encyc' first to install encyc user and group."
 	@echo "          Installation instructions: make howto-install"
 	@echo ""
@@ -94,6 +96,7 @@ howto-install:
 	@echo "- # make restart"
 
 
+get: get-app get-static apt-update
 
 install: install-prep install-app install-static install-configs
 
@@ -104,7 +107,7 @@ uninstall: uninstall-app
 clean: clean-app
 
 
-install-prep: apt-update install-core git-config install-misc-tools
+install-prep: apt-upgrade install-core git-config install-misc-tools
 
 apt-update:
 	@echo ""
@@ -131,6 +134,8 @@ install-misc-tools:
 	apt-get --assume-yes install ack-grep byobu elinks htop mg multitail
 
 
+get-daemons: get-elasticsearch
+
 install-daemons: install-nginx install-redis install-elasticsearch
 
 install-nginx:
@@ -143,12 +148,14 @@ install-redis:
 	@echo "Redis ------------------------------------------------------------------"
 	apt-get --assume-yes install redis-server
 
-install-elasticsearch:
+get-elasticsearch:
+	apt-get --assume-yes install openjdk-7-jre
+	-wget -nc -P /tmp/downloads http://$(PACKAGE_SERVER)/$(ELASTICSEARCH)
+
+install-elasticsearch: get-elasticsearch
 	@echo ""
 	@echo "Elasticsearch ----------------------------------------------------------"
 # Elasticsearch is configured/restarted here so it's online by the time script is done.
-	apt-get --assume-yes install openjdk-7-jre
-	wget -nc -P /tmp/downloads http://$(PACKAGE_SERVER)/$(ELASTICSEARCH)
 	gdebi --non-interactive /tmp/downloads/$(ELASTICSEARCH)
 	cp $(INSTALLDIR)/debian/conf/elasticsearch.yml /etc/elasticsearch/
 	chown root.root /etc/elasticsearch/elasticsearch.yml
@@ -159,9 +166,8 @@ install-elasticsearch:
 	chown -R elasticsearch.elasticsearch /var/backups/elasticsearch
 	chmod -R 755 /var/backups/elasticsearch
 
+
 install-virtualenv:
-	@echo ""
-	@echo "install-virtualenv -----------------------------------------------------"
 	apt-get --assume-yes install python-pip python-virtualenv
 	test -d $(VIRTUALENV) || virtualenv --distribute --setuptools $(VIRTUALENV)
 
@@ -173,6 +179,8 @@ install-setuptools: install-virtualenv
 	pip install -U --download-cache=$(PIP_CACHE_DIR) bpython setuptools
 
 
+get-app: get-encyc-rg get-static
+
 install-app: install-encyc-rg
 
 update-app: update-encyc-rg install-configs
@@ -181,32 +189,32 @@ uninstall-app: uninstall-encyc-rg
 
 clean-app: clean-encyc-rg
 
+
+get-encyc-rg:
+	git pull
+	pip install --download=$(PIP_CACHE_DIR) --exists-action=i -r $(INSTALLDIR)/encycrg/requirements/production.txt
+
 install-encyc-rg: install-virtualenv
 	@echo ""
 	@echo "encyc-rg --------------------------------------------------------------"
 	apt-get --assume-yes install imagemagick sqlite3 supervisor
-	git pull
 	source $(VIRTUALENV)/bin/activate; \
-	pip install -U --download-cache=$(PIP_CACHE_DIR) -r $(INSTALLDIR)/encycrg/requirements/production.txt
-# media dir
-	-mkdir $(MEDIA_BASE)
-	-mkdir $(STATIC_ROOT)
-	-mkdir $(MEDIA_ROOT)
+	pip install -U --no-index --find-links=$(PIP_CACHE_DIR) -r $(INSTALLDIR)/encycrg/requirements/production.txt
 # logs dir
 	-mkdir $(LOGS_BASE)
-	chown -R encyc.root $(LOGS_BASE)
+	chown -R ddr.root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 # sqlite db dir
 	-mkdir $(SQLITE_BASE)
-	chown -R encyc.root $(SQLITE_BASE)
+	chown -R ddr.root $(SQLITE_BASE)
 	chmod -R 755 $(SQLITE_BASE)
 
 syncdb:
 	source $(VIRTUALENV)/bin/activate; \
 	cd $(INSTALLDIR)/encycrg && python manage.py syncdb --noinput
-	chown -R encyc.root $(SQLITE_BASE)
+	chown -R ddr.root $(SQLITE_BASE)
 	chmod -R 750 $(SQLITE_BASE)
-	chown -R encyc.root $(LOGS_BASE)
+	chown -R ddr.root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 
 update-encyc-rg:
@@ -214,7 +222,7 @@ update-encyc-rg:
 	@echo "encyc-rg --------------------------------------------------------------"
 	git fetch && git pull
 	source $(VIRTUALENV)/bin/activate; \
-	pip install -U --download-cache=$(PIP_CACHE_DIR) -r $(INSTALLDIR)/encycrg/requirements/production.txt
+	pip install -U --no-download --download-cache=$(PIP_CACHE_DIR) -r $(INSTALLDIR)/encycrg/requirements/production.txt
 
 uninstall-encyc-rg:
 	cd $(INSTALLDIR)/encycrg
@@ -237,39 +245,57 @@ branch:
 	cd $(INSTALLDIR)/encycrg; python ./bin/git-checkout-branch.py $(BRANCH)
 
 
-install-static: get-app-assets install-modernizr install-bootstrap install-jquery
+get-static: get-app-assets get-modernizr get-bootstrap get-jquery
+
+install-static: install-app-assets install-modernizr install-bootstrap install-jquery
 
 clean-static: clean-modernizr clean-bootstrap clean-jquery
 
+
 get-app-assets:
+	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
+
+install-app-assets:
 	@echo ""
 	@echo "get assets --------------------------------------------------------------"
 	-mkdir $(MEDIA_BASE)
-	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
-	-tar xzvf /tmp/$(APP)-assets.tar.gz -C $(MEDIA_BASE)/
+	tar xzvf /tmp/$(APP)-assets.tar.gz -C $(MEDIA_BASE)/
+
+
+get-modernizr:
+	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(MODERNIZR)
 
 install-modernizr:
 	@echo ""
 	@echo "Modernizr --------------------------------------------------------------"
 	-rm $(STATIC_ROOT)/js/$(MODERNIZR)*
-	-wget -nc -P $(STATIC_ROOT)/js http://$(PACKAGE_SERVER)/$(MODERNIZR)
+	-cp -R /tmp/$(MODERNIZR) $(STATIC_ROOT)/js
 
 clean-modernizr:
 	-rm $(STATIC_ROOT)/js/$(MODERNIZR)*
 
+
+get-bootstrap:
+	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(BOOTSTRAP)
+
 install-bootstrap:
 	@echo ""
 	@echo "Bootstrap --------------------------------------------------------------"
-	-wget -nc -P $(STATIC_ROOT) http://$(PACKAGE_SERVER)/$(BOOTSTRAP)
-	-7z x -y -o$(STATIC_ROOT) $(STATIC_ROOT)/$(BOOTSTRAP)
+	7z x -y -o$(STATIC_ROOT) /tmp/$(BOOTSTRAP)
 
 clean-bootstrap:
 	-rm -Rf $(STATIC_ROOT)/$(BOOTSTRAP)
 
+
+get-jquery:
+	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(JQUERY)
+
 install-jquery:
 	@echo ""
 	@echo "jQuery -----------------------------------------------------------------"
-	-wget -nc -P $(STATIC_ROOT)/js http://$(PACKAGE_SERVER)/$(JQUERY)
+#	wget -nc -P $(STATIC_ROOT)/js http://$(PACKAGE_SERVER)/$(JQUERY)
+#	-ln -s $(STATIC_ROOT)/js/$(JQUERY) $(STATIC_ROOT)/js/jquery.js
+	cp -R /tmp/$JQUERY) $(STATIC_ROOT)/js
 	-ln -s $(STATIC_ROOT)/js/$(JQUERY) $(STATIC_ROOT)/js/jquery.js
 
 clean-jquery:

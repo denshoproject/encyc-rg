@@ -29,6 +29,7 @@ Log in to your VM and become `root`.  Then add a `encyc` user, install the prere
     # If you are testing a branch, switch to that branch.
     # git checkout -b BRANCHNAME origin/BRANCHNAME
     
+    # make get
     # make install
 
 Wait as Make installs Debian packages and Python code and builds up your system.  On a basic VM this takes between 5-10 minutes.
