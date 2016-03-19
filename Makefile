@@ -28,7 +28,7 @@ GUNICORN_CONF=/etc/supervisor/conf.d/gunicorn_$(APP).conf
 ELASTICSEARCH=elasticsearch-1.0.1.deb
 MODERNIZR=modernizr-2.6.2.js
 JQUERY=jquery-1.11.0.min.js
-BOOTSTRAP=bootstrap-3.1.1-dist.zip
+BOOTSTRAP=bootstrap-3.1.1-dist
 ASSETS=encyc-rg-assets.tar.gz
 # wget https://github.com/twbs/bootstrap/releases/download/v3.1.1/bootstrap-3.1.1-dist.zip
 # wget http://code.jquery.com/jquery-1.11.0.min.js
@@ -279,12 +279,13 @@ clean-modernizr:
 
 
 get-bootstrap:
-	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(BOOTSTRAP)
+	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(BOOTSTRAP).zip
 
 install-bootstrap:
 	@echo ""
 	@echo "Bootstrap --------------------------------------------------------------"
-	7z x -y -o$(STATIC_ROOT) /tmp/$(BOOTSTRAP)
+	7z x -y -o$(STATIC_ROOT) /tmp/$(BOOTSTRAP).zip
+	-ln -s $(STATIC_ROOT)/$(BOOTSTRAP) $(STATIC_ROOT)/bootstrap
 
 clean-bootstrap:
 	-rm -Rf $(STATIC_ROOT)/$(BOOTSTRAP)
