@@ -215,7 +215,7 @@ install-encyc-rg: install-virtualenv
 
 syncdb:
 	source $(VIRTUALENV)/bin/activate; \
-	cd $(INSTALLDIR)/encycrg && python manage.py syncdb --noinput
+	cd $(INSTALLDIR)/encycrg && python manage.py migrate --noinput
 	chown -R $(USER).root $(SQLITE_BASE)
 	chmod -R 750 $(SQLITE_BASE)
 	chown -R $(USER).root $(LOGS_BASE)
