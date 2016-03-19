@@ -256,10 +256,17 @@ install-static: install-app-assets install-modernizr install-bootstrap install-j
 clean-static: clean-modernizr clean-bootstrap clean-jquery
 
 
+make-static-dirs:
+	-mkdir $(MEDIA_BASE)
+	-mkdir $(STATIC_ROOT)
+	-mkdir $(STATIC_ROOT)/js
+	chown -R $(USER).root $(MEDIA_BASE)
+	chmod -R 755 $(MEDIA_BASE)
+
 get-app-assets:
 	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(ASSETS)
 
-install-app-assets:
+install-app-assets: make-static-dirs
 	@echo ""
 	@echo "get assets --------------------------------------------------------------"
 	-tar xzvf $(DOWNLOADS_DIR)/$(APP)-assets.tar.gz -C $(STATIC_ROOT)/
@@ -268,7 +275,7 @@ install-app-assets:
 get-modernizr:
 	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(MODERNIZR)
 
-install-modernizr:
+install-modernizr: make-static-dirs
 	@echo ""
 	@echo "Modernizr --------------------------------------------------------------"
 	-cp -R $(DOWNLOADS_DIR)/$(MODERNIZR) $(STATIC_ROOT)/js/
@@ -280,7 +287,7 @@ clean-modernizr:
 get-bootstrap:
 	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(BOOTSTRAP).zip
 
-install-bootstrap:
+install-bootstrap: make-static-dirs
 	@echo ""
 	@echo "Bootstrap --------------------------------------------------------------"
 	7z x -y -o$(STATIC_ROOT) $(DOWNLOADS_DIR)/$(BOOTSTRAP).zip
@@ -293,7 +300,7 @@ clean-bootstrap:
 get-jquery:
 	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(JQUERY)
 
-install-jquery:
+install-jquery: make-static-dirs
 	@echo ""
 	@echo "jQuery -----------------------------------------------------------------"
 #	wget -nc -P $(STATIC_ROOT)/js http://$(PACKAGE_SERVER)/$(JQUERY)
