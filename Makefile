@@ -2,6 +2,7 @@ SHELL = /bin/bash
 
 PROJECT=encyc
 APP=encycrg
+USER=encyc
 
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
@@ -204,19 +205,19 @@ install-encyc-rg: install-virtualenv
 	pip install -U --no-index --find-links=$(PIP_CACHE_DIR) -r $(INSTALLDIR)/encycrg/requirements/production.txt
 # logs dir
 	-mkdir $(LOGS_BASE)
-	chown -R ddr.root $(LOGS_BASE)
+	chown -R $(USER).root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 # sqlite db dir
 	-mkdir $(SQLITE_BASE)
-	chown -R ddr.root $(SQLITE_BASE)
+	chown -R $(USER).root $(SQLITE_BASE)
 	chmod -R 755 $(SQLITE_BASE)
 
 syncdb:
 	source $(VIRTUALENV)/bin/activate; \
 	cd $(INSTALLDIR)/encycrg && python manage.py syncdb --noinput
-	chown -R ddr.root $(SQLITE_BASE)
+	chown -R $(USER).root $(SQLITE_BASE)
 	chmod -R 750 $(SQLITE_BASE)
-	chown -R ddr.root $(LOGS_BASE)
+	chown -R $(USER).root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 
 update-encyc-rg:
