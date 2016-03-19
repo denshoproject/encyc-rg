@@ -8,6 +8,7 @@ PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
 INSTALL_BASE=/usr/local/src
 INSTALLDIR=$(INSTALL_BASE)/encyc-rg
+DOWNLOADS_DIR=/tmp/$(APP)-install
 PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 VIRTUALENV=$(INSTALL_BASE)/env/$(APP)
 
@@ -153,13 +154,13 @@ install-redis:
 
 get-elasticsearch:
 	apt-get --assume-yes install openjdk-7-jre
-	-wget -nc -P /tmp/downloads http://$(PACKAGE_SERVER)/$(ELASTICSEARCH)
+	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(ELASTICSEARCH)
 
 install-elasticsearch: get-elasticsearch
 	@echo ""
 	@echo "Elasticsearch ----------------------------------------------------------"
 # Elasticsearch is configured/restarted here so it's online by the time script is done.
-	gdebi --non-interactive /tmp/downloads/$(ELASTICSEARCH)
+	gdebi --non-interactive $(DOWNLOADS_DIR)/$(ELASTICSEARCH)
 	cp $(INSTALLDIR)/debian/conf/elasticsearch.yml /etc/elasticsearch/
 	chown root.root /etc/elasticsearch/elasticsearch.yml
 	chmod 644 /etc/elasticsearch/elasticsearch.yml
@@ -256,35 +257,33 @@ clean-static: clean-modernizr clean-bootstrap clean-jquery
 
 
 get-app-assets:
-	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
+	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(ASSETS)
 
 install-app-assets:
 	@echo ""
 	@echo "get assets --------------------------------------------------------------"
-	-mkdir $(MEDIA_BASE)
-	tar xzvf /tmp/$(APP)-assets.tar.gz -C $(MEDIA_BASE)/
+	-tar xzvf $(DOWNLOADS_DIR)/$(APP)-assets.tar.gz -C $(STATIC_ROOT)/
 
 
 get-modernizr:
-	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(MODERNIZR)
+	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(MODERNIZR)
 
 install-modernizr:
 	@echo ""
 	@echo "Modernizr --------------------------------------------------------------"
-	-rm $(STATIC_ROOT)/js/$(MODERNIZR)*
-	-cp -R /tmp/$(MODERNIZR) $(STATIC_ROOT)/js
+	-cp -R $(DOWNLOADS_DIR)/$(MODERNIZR) $(STATIC_ROOT)/js/
 
 clean-modernizr:
 	-rm $(STATIC_ROOT)/js/$(MODERNIZR)*
 
 
 get-bootstrap:
-	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(BOOTSTRAP).zip
+	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(BOOTSTRAP).zip
 
 install-bootstrap:
 	@echo ""
 	@echo "Bootstrap --------------------------------------------------------------"
-	7z x -y -o$(STATIC_ROOT) /tmp/$(BOOTSTRAP).zip
+	7z x -y -o$(STATIC_ROOT) $(DOWNLOADS_DIR)/$(BOOTSTRAP).zip
 	-ln -s $(STATIC_ROOT)/$(BOOTSTRAP) $(STATIC_ROOT)/bootstrap
 
 clean-bootstrap:
@@ -292,14 +291,14 @@ clean-bootstrap:
 
 
 get-jquery:
-	-wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(JQUERY)
+	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(JQUERY)
 
 install-jquery:
 	@echo ""
 	@echo "jQuery -----------------------------------------------------------------"
 #	wget -nc -P $(STATIC_ROOT)/js http://$(PACKAGE_SERVER)/$(JQUERY)
 #	-ln -s $(STATIC_ROOT)/js/$(JQUERY) $(STATIC_ROOT)/js/jquery.js
-	cp -R /tmp/$JQUERY) $(STATIC_ROOT)/js
+	cp -R $(DOWNLOADS_DIR)/$(JQUERY) $(STATIC_ROOT)/js/
 	-ln -s $(STATIC_ROOT)/js/$(JQUERY) $(STATIC_ROOT)/js/jquery.js
 
 clean-jquery:
