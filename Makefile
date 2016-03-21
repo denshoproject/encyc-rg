@@ -238,6 +238,9 @@ uninstall-encyc-rg:
 restart-encycrg:
 	/etc/init.d/supervisor restart encycrg
 
+stop-encycrg:
+	/etc/init.d/supervisor stop encycrg
+
 clean-encyc-rg:
 	-rm -Rf $(INSTALLDIR)/encycrg/src
 
@@ -373,6 +376,21 @@ restart-nginx:
 
 restart-supervisor:
 	/etc/init.d/supervisor restart
+
+
+stop: stop-elasticsearch stop-redis stop-nginx stop-supervisor
+
+stop-elasticsearch:
+	/etc/init.d/elasticsearch stop
+
+stop-redis:
+	/etc/init.d/redis-server stop
+
+stop-nginx:
+	/etc/init.d/nginx stop
+
+stop-supervisor:
+	/etc/init.d/supervisor stop
 
 
 status:
