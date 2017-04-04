@@ -10,25 +10,102 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
+import ConfigParser
+import logging
 import os
+import sys
+
+from DDR.config import NoConfigError
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+CONFIG_FILES = [
+    '/etc/encyc/encycrg.cfg',
+    '/etc/encyc/encycrg-local.cfg'
+]
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
+config = ConfigParser.ConfigParser()
+configs_read = config.read(CONFIG_FILES)
+if not configs_read:
+    raise NoConfigError('No config file!')
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '%qz4pxxj!c1(@zm#1uark03na4te=xq$m!616z+v6s!53i1bi&'
+with open('/etc/ddr/ddrpublic-secret-key.txt') as f:
+    SECRET_KEY = f.read().strip()
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+LANGUAGE_CODE='en-us'
+TIME_ZONE='America/Los_Angeles'
 
-ALLOWED_HOSTS = []
+DEBUG = config.getboolean('debug', 'debug')
+TEMPLATE_DEBUG = DEBUG
+THUMBNAIL_DEBUG = config.getboolean('debug', 'thumbnail')
 
+# Hosts/domain names that are valid for this site; required if DEBUG is False
+# See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in config.get('public', 'allowed_hosts').split(',')
+]
 
-# Application definition
+CACHE_TIMEOUT = int(config.get('public', 'cache_timeout'))
+
+# Elasticsearch
+DOCSTORE_HOSTS = [{
+    'host':config.get('public', 'docstore_host').split(':')[0],
+    'port':config.get('public', 'docstore_host').split(':')[1],
+}]
+DOCSTORE_INDEX = config.get('public', 'docstore_index')
+
+# Filesystem path and URL for static media (mostly used for interfaces).
+STATIC_ROOT = config.get('public', 'static_root')
+STATIC_URL='/static/'
+
+# Version number appended to Bootstrap, etc URLs so updates are always
+# picked up by browser. IMPORTANT: must be same as ASSETS_VERSION in Makefile!
+ASSETS_VERSION = config.get('public', 'assets_version')
+
+# Filesystem path and URL for media to be manipulated by ddrlocal
+# (collection repositories, thumbnail cache, etc).
+MEDIA_ROOT = config.get('public', 'media_root')
+MEDIA_URL = config.get('public', 'media_url')
+# URL of local media server ("local" = in the same cluster).
+# Use this for sorl.thumbnail so it doesn't have to go through
+# a CDN and get blocked for not including a User-Agent header.
+# TODO Hard-coded! Replace with value from ddr.cfg.
+MEDIA_URL_LOCAL = config.get('public', 'media_url_local')
+# The REST API will use MEDIA_URL_LOCAL for image URLs
+# if this query argument is present with a truthy value.
+MEDIA_URL_LOCAL_MARKER = 'internal'
+
+# used when document signature image field not populated
+MISSING_IMG = config.get('public', 'missing_img')
+
+THUMBNAIL_GEOMETRY='512x512>'
+THUMBNAIL_COLORSPACE='sRGB'
+THUMBNAIL_OPTIONS=''
+
+MEDIA_BASE = os.path.join(MEDIA_ROOT, 'base')
+
+DATE_FORMAT = '%Y-%m-%d'
+TIME_FORMAT = '%H:%M:%S'
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
+TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%S:%f'
+# Django uses a slightly different datetime format
+DATETIME_FORMAT_FORM = '%Y-%m-%d %H:%M:%S'
+
+PRETTY_DATE_FORMAT = '%d %B %Y'
+PRETTY_TIME_FORMAT = '%I:%M %p'
+PRETTY_DATETIME_FORMAT = '%d %B %Y, %I:%M %p'
+
+# ----------------------------------------------------------------------
+
+ADMINS = (
+    ('geoffrey jost', 'geoffrey.jost@densho.org'),
+    ('Geoff Froh', 'geoff.froh@densho.org'),
+)
+MANAGERS = ADMINS
+
+SITE_ID = 1
 
 INSTALLED_APPS = [
     #'django.contrib.admin',
@@ -38,6 +115,54 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': '/var/lib/ddr/ddrpublic.db',
+    }
+}
+
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = '6379'
+REDIS_DB_CACHE = 0
+REDIS_DB_SORL = 3
+
+CACHES = {
+    "default": {
+        "BACKEND": "redis_cache.cache.RedisCache",
+        "LOCATION": "%s:%s:%s" % (REDIS_HOST, REDIS_PORT, REDIS_DB_CACHE),
+        "OPTIONS": {
+            "CLIENT_CLASS": "redis_cache.client.DefaultClient",
+        }
+    }
+}
+
+# ElasticSearch
+ELASTICSEARCH_MAX_SIZE = 10000
+ELASTICSEARCH_QUERY_TIMEOUT = 60 * 10  # 10 min
+ELASTICSEARCH_FACETS_TIMEOUT = 60*60*1  # 1 hour
+
+RESULTS_PER_PAGE = 25
+
+# sorl-thumbnail
+THUMBNAIL_KVSTORE = 'sorl.thumbnail.kvstores.cached_db_kvstore.KVStore'
+#THUMBNAIL_KVSTORE = 'sorl.thumbnail.kvstores.redis_kvstore.KVStore'
+THUMBNAIL_REDIS_PASSWORD = ''
+THUMBNAIL_REDIS_HOST = REDIS_HOST
+THUMBNAIL_REDIS_PORT = int(REDIS_PORT)
+THUMBNAIL_REDIS_DB = REDIS_DB_SORL
+THUMBNAIL_ENGINE = 'sorl.thumbnail.engines.convert_engine.Engine'
+THUMBNAIL_CONVERT = 'convert'
+THUMBNAIL_IDENTIFY = 'identify'
+THUMBNAIL_CACHE_TIMEOUT = 60*60*24*365*10  # 10 years
+THUMBNAIL_DUMMY = False
+THUMBNAIL_URL_TIMEOUT = 60  # 1min
+
+
+
+
+
 
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
@@ -103,19 +228,8 @@ DATABASES = {
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.9/howto/static-files/
-
-STATIC_URL = '/static/'

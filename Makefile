@@ -1,16 +1,39 @@
-SHELL = /bin/bash
-
 PROJECT=encyc
 APP=encycrg
 USER=encyc
+
+SHELL = /bin/bash
+DEBIAN_CODENAME := $(shell lsb_release -sc)
+DEBIAN_RELEASE := $(shell lsb_release -sr)
 
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
 INSTALL_BASE=/usr/local/src
 INSTALLDIR=$(INSTALL_BASE)/encyc-rg
 DOWNLOADS_DIR=/tmp/$(APP)-install
+REQUIREMENTS=$(INSTALLDIR)/requirements
 PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
-VIRTUALENV=$(INSTALL_BASE)/env/$(APP)
+
+VIRTUALENV=$(INSTALLDIR)/venv/$(APP)
+SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
+
+PACKAGE_BASE=/tmp/encycrg
+PACKAGE_TMP=$(PACKAGE_BASE)/encyc-rg
+PACKAGE_VENV=$(PACKAGE_TMP)/venv/encycrg
+# current branch name minus dashes or underscores
+PACKAGE_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
+# current commit date minus dashes
+PACKAGE_TIMESTAMP := $(shell git log -1 --pretty="%ad" --date=short | tr -d -)
+# current commit hash
+PACKAGE_COMMIT := $(shell git log -1 --pretty="%h")
+PACKAGE_TGZ=encycrg-$(PACKAGE_BRANCH)-$(PACKAGE_TIMESTAMP)-$(PACKAGE_COMMIT).tgz
+PACKAGE_RSYNC_DEST=takezo@takezo:~/packaging/encyc-rg
+
+CONF_BASE=/etc/encyc
+CONF_PRODUCTION=$(CONF_BASE)/encycrg.cfg
+CONF_LOCAL=$(CONF_BASE)/encycrg-local.cfg
+CONF_SECRET=$(CONF_BASE)/encycrg-secret-key.txt
+CONF_DJANGO=$(INSTALLDIR)/encycrg/encycrg/settings.py
 
 LOGS_BASE=/var/log/$(PROJECT)
 SQLITE_BASE=/var/lib/$(PROJECT)
@@ -19,21 +42,15 @@ MEDIA_BASE=/var/www/$(APP)
 MEDIA_ROOT=$(MEDIA_BASE)/media
 STATIC_ROOT=$(MEDIA_BASE)/static
 
-DJANGO_CONF=$(INSTALLDIR)/encycrg/encycrg/settings.py
-NGINX_APP_CONF=/etc/nginx/sites-available/$(APP).conf
-NGINX_APP_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
-NGINX_ELASTIC_CONF=/etc/nginx/sites-available/elastic.conf
-NGINX_ELASTIC_CONF_LINK=/etc/nginx/sites-enabled/elastic.conf
-GUNICORN_CONF=/etc/supervisor/conf.d/gunicorn_$(APP).conf
-
-ELASTICSEARCH=elasticsearch-1.0.1.deb
-MODERNIZR=modernizr-2.6.2.js
-JQUERY=jquery-1.11.0.min.js
-BOOTSTRAP=bootstrap-3.1.1-dist
+ELASTICSEARCH=elasticsearch-2.4.4.deb
 ASSETS=encyc-rg-assets.tar.gz
-# wget https://github.com/twbs/bootstrap/releases/download/v3.1.1/bootstrap-3.1.1-dist.zip
-# wget http://code.jquery.com/jquery-1.11.0.min.js
-# wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.0.1.deb
+# wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.4.4.deb
+
+SUPERVISOR_GUNICORN_CONF=/etc/supervisor/conf.d/$(APP).conf
+SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
+NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
+NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
+
 
 .PHONY: help
 
@@ -184,7 +201,7 @@ install-setuptools: install-virtualenv
 	@echo "install-setuptools -----------------------------------------------------"
 	apt-get --assume-yes install python-dev
 	source $(VIRTUALENV)/bin/activate; \
-	pip install -U --download-cache=$(PIP_CACHE_DIR) bpython setuptools
+	pip install -U bpython setuptools
 
 
 get-app: get-encyc-rg get-static
@@ -200,14 +217,14 @@ clean-app: clean-encyc-rg
 
 get-encyc-rg:
 	git pull
-	pip install --download=$(PIP_CACHE_DIR) --exists-action=i -r $(INSTALLDIR)/encycrg/requirements/production.txt
+	pip install -U -r $(REQUIREMENTS)/production.txt
 
 install-encyc-rg: install-virtualenv
 	@echo ""
 	@echo "encyc-rg --------------------------------------------------------------"
 	apt-get --assume-yes install imagemagick sqlite3 supervisor
 	source $(VIRTUALENV)/bin/activate; \
-	pip install -U --no-index --find-links=$(PIP_CACHE_DIR) -r $(INSTALLDIR)/encycrg/requirements/production.txt
+	pip install -U -r $(REQUIREMENTS)/production.txt
 # logs dir
 	-mkdir $(LOGS_BASE)
 	chown -R $(USER).root $(LOGS_BASE)
@@ -230,12 +247,12 @@ update-encyc-rg:
 	@echo "encyc-rg --------------------------------------------------------------"
 	git fetch && git pull
 	source $(VIRTUALENV)/bin/activate; \
-	pip install -U --no-download --download-cache=$(PIP_CACHE_DIR) -r $(INSTALLDIR)/encycrg/requirements/production.txt
+	pip install -U -r $(REQUIREMENTS)/production.txt
 
 uninstall-encyc-rg:
 	cd $(INSTALLDIR)/encycrg
 	source $(VIRTUALENV)/bin/activate; \
-	-pip uninstall -r $(INSTALLDIR)/encycrg/requirements/production.txt
+	-pip uninstall -r $(REQUIREMENTS)/production.txt
 	-rm /usr/local/lib/python2.7/dist-packages/encycrg-*
 	-rm -Rf /usr/local/lib/python2.7/dist-packages/encycrg
 
@@ -256,11 +273,11 @@ branch:
 	cd $(INSTALLDIR)/encycrg; python ./bin/git-checkout-branch.py $(BRANCH)
 
 
-get-static: get-app-assets get-modernizr get-bootstrap get-jquery
+get-static: get-app-assets
 
-install-static: install-app-assets install-modernizr install-bootstrap install-jquery
+install-static: install-app-assets
 
-clean-static: clean-modernizr clean-bootstrap clean-jquery
+clean-static:
 
 
 make-static-dirs:
@@ -279,58 +296,26 @@ install-app-assets: make-static-dirs
 	-tar xzvf $(DOWNLOADS_DIR)/$(APP)-assets.tar.gz -C $(STATIC_ROOT)/
 
 
-get-modernizr:
-	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(MODERNIZR)
-
-install-modernizr: make-static-dirs
-	@echo ""
-	@echo "Modernizr --------------------------------------------------------------"
-	-cp -R $(DOWNLOADS_DIR)/$(MODERNIZR) $(STATIC_ROOT)/js/
-
-clean-modernizr:
-	-rm $(STATIC_ROOT)/js/$(MODERNIZR)*
-
-
-get-bootstrap:
-	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(BOOTSTRAP).zip
-
-install-bootstrap: make-static-dirs
-	@echo ""
-	@echo "Bootstrap --------------------------------------------------------------"
-	7z x -y -o$(STATIC_ROOT) $(DOWNLOADS_DIR)/$(BOOTSTRAP).zip
-	-ln -s $(STATIC_ROOT)/$(BOOTSTRAP) $(STATIC_ROOT)/bootstrap
-
-clean-bootstrap:
-	-rm -Rf $(STATIC_ROOT)/$(BOOTSTRAP)
-
-
-get-jquery:
-	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(JQUERY)
-
-install-jquery: make-static-dirs
-	@echo ""
-	@echo "jQuery -----------------------------------------------------------------"
-#	wget -nc -P $(STATIC_ROOT)/js http://$(PACKAGE_SERVER)/$(JQUERY)
-#	-ln -s $(STATIC_ROOT)/js/$(JQUERY) $(STATIC_ROOT)/js/jquery.js
-	cp -R $(DOWNLOADS_DIR)/$(JQUERY) $(STATIC_ROOT)/js/
-	-ln -s $(STATIC_ROOT)/js/$(JQUERY) $(STATIC_ROOT)/js/jquery.js
-
-clean-jquery:
-	-rm -Rf $(STATIC_ROOT)/js/$(JQUERY)
-	-rm $(STATIC_ROOT)/js/jquery.js
-
-
 install-configs:
 	@echo ""
 	@echo "installing configs --------------------------------------------------"
-	cp $(INSTALLDIR)/conf/settings.py $(DJANGO_CONF)
-	chown root.root $(DJANGO_CONF)
-	chmod 644 $(DJANGO_CONF)
+	-mkdir /etc/encyc
+	cp $(INSTALLDIR)/conf/$(APP).cfg $(CONF_PRODUCTION)
+	chown root.root $(CONF_PRODUCTION)
+	chmod 644 $(CONF_PRODUCTION)
+	touch $(CONF_LOCAL)
+	chown encyc.root $(CONF_LOCAL)
+	chmod 640 $(CONF_LOCAL)
+	python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)])' > $(CONF_SECRET)
+	chown encyc.root $(CONF_SECRET)
+	chmod 640 $(CONF_SECRET)
+	cp $(INSTALLDIR)/conf/settings.py $(CONF_DJANGO)
+	chown root.root $(CONF_DJANGO)
+	chmod 644 $(CONF_DJANGO)
 
 uninstall-configs:
-	-rm $(DJANGO_CONF)
-	-rm $(CONFIG_KEY)
-	-rm $(CONFIG_PROD)
+	-rm $(CONF_DJANGO)
+	-rm $(CONF_SECRET)
 
 install-daemons-configs:
 	@echo ""
@@ -406,3 +391,25 @@ status:
 git-status:
 	@echo "------------------------------------------------------------------------"
 	cd $(INSTALLDIR) && git status
+
+
+package:
+	@echo ""
+	@echo "packaging --------------------------------------------------------------"
+	-rm -Rf $(PACKAGE_TMP)
+	-rm -Rf $(PACKAGE_BASE)/*.tgz
+	-mkdir -p $(PACKAGE_BASE)
+	cp -R $(INSTALL_LOCAL) $(PACKAGE_TMP)
+	cd $(PACKAGE_TMP)
+	git clean -fd   # Remove all untracked files
+	virtualenv --relocatable $(PACKAGE_VENV)  # Make venv relocatable
+	-cd $(PACKAGE_BASE); tar czf $(PACKAGE_TGZ) encyc-rg
+
+rsync-packaged:
+	@echo ""
+	@echo "rsync-packaged ---------------------------------------------------------"
+	rsync -avz --delete $(PACKAGE_BASE)/encyc-rg $(PACKAGE_RSYNC_DEST)
+
+install-packaged: install-prep install-dependencies install-static install-configs mkdirs syncdb install-daemon-configs
+	@echo ""
+	@echo "install packaged -------------------------------------------------------"
