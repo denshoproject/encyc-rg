@@ -15,8 +15,6 @@ import logging
 import os
 import sys
 
-from DDR.config import NoConfigError
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -28,7 +26,7 @@ CONFIG_FILES = [
 config = ConfigParser.ConfigParser()
 configs_read = config.read(CONFIG_FILES)
 if not configs_read:
-    raise NoConfigError('No config file!')
+    raise Exception('No config file!')
 
 with open('/etc/ddr/ddrpublic-secret-key.txt') as f:
     SECRET_KEY = f.read().strip()
