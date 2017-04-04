@@ -6,3 +6,4 @@ build/
 encycrg/encycrg/settings.py
 src/
 tmp/
+venv/
