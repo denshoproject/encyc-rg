@@ -35,8 +35,6 @@ LANGUAGE_CODE='en-us'
 TIME_ZONE='America/Los_Angeles'
 
 DEBUG = config.getboolean('debug', 'debug')
-TEMPLATE_DEBUG = DEBUG
-THUMBNAIL_DEBUG = config.getboolean('debug', 'thumbnail')
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -189,6 +187,7 @@ TEMPLATES = [
                 #'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'debug': config.getboolean('debug', 'thumbnail'),
         },
     },
 ]

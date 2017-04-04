@@ -5,7 +5,7 @@
 
                                    # LICENSE  Python3
                                    
-django                             # MIT      y
+django>=1.11                       # MIT      y
 django-filter
 django-redis                       # BSD      y
 djangorestframework                # BSD      y
