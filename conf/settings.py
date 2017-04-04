@@ -28,7 +28,7 @@ configs_read = config.read(CONFIG_FILES)
 if not configs_read:
     raise Exception('No config file!')
 
-with open('/etc/ddr/ddrpublic-secret-key.txt') as f:
+with open('/etc/encyc/encycrg-secret-key.txt') as f:
     SECRET_KEY = f.read().strip()
 
 LANGUAGE_CODE='en-us'
@@ -42,41 +42,36 @@ THUMBNAIL_DEBUG = config.getboolean('debug', 'thumbnail')
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = [
     host.strip()
-    for host in config.get('public', 'allowed_hosts').split(',')
+    for host in config.get('security', 'allowed_hosts').split(',')
 ]
-
-CACHE_TIMEOUT = int(config.get('public', 'cache_timeout'))
 
 # Elasticsearch
 DOCSTORE_HOSTS = [{
-    'host':config.get('public', 'docstore_host').split(':')[0],
-    'port':config.get('public', 'docstore_host').split(':')[1],
+    'host':config.get('elasticsearch', 'docstore_host').split(':')[0],
+    'port':config.get('elasticsearch', 'docstore_host').split(':')[1],
 }]
-DOCSTORE_INDEX = config.get('public', 'docstore_index')
+DOCSTORE_INDEX = config.get('elasticsearch', 'docstore_index')
 
 # Filesystem path and URL for static media (mostly used for interfaces).
-STATIC_ROOT = config.get('public', 'static_root')
+STATIC_ROOT = config.get('media', 'static_root')
 STATIC_URL='/static/'
 
 # Version number appended to Bootstrap, etc URLs so updates are always
 # picked up by browser. IMPORTANT: must be same as ASSETS_VERSION in Makefile!
-ASSETS_VERSION = config.get('public', 'assets_version')
+ASSETS_VERSION = config.get('media', 'assets_version')
 
-# Filesystem path and URL for media to be manipulated by ddrlocal
+# Filesystem path and URL for media to be manipulated by encycrg
 # (collection repositories, thumbnail cache, etc).
-MEDIA_ROOT = config.get('public', 'media_root')
-MEDIA_URL = config.get('public', 'media_url')
+MEDIA_ROOT = config.get('media', 'media_root')
+MEDIA_URL = config.get('media', 'media_url')
 # URL of local media server ("local" = in the same cluster).
 # Use this for sorl.thumbnail so it doesn't have to go through
 # a CDN and get blocked for not including a User-Agent header.
-# TODO Hard-coded! Replace with value from ddr.cfg.
-MEDIA_URL_LOCAL = config.get('public', 'media_url_local')
-# The REST API will use MEDIA_URL_LOCAL for image URLs
-# if this query argument is present with a truthy value.
-MEDIA_URL_LOCAL_MARKER = 'internal'
+# TODO Hard-coded! Replace with value from encycrg.cfg.
+MEDIA_URL_LOCAL = config.get('media', 'media_url_local')
 
 # used when document signature image field not populated
-MISSING_IMG = config.get('public', 'missing_img')
+MISSING_IMG = config.get('media', 'missing_img')
 
 THUMBNAIL_GEOMETRY='512x512>'
 THUMBNAIL_COLORSPACE='sRGB'
@@ -117,14 +112,14 @@ INSTALLED_APPS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/var/lib/ddr/ddrpublic.db',
+        'NAME': '/var/lib/encyc/encycrg.db',
     }
 }
 
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = '6379'
-REDIS_DB_CACHE = 0
-REDIS_DB_SORL = 3
+REDIS_DB_CACHE = 1
+REDIS_DB_SORL = 4
 
 CACHES = {
     "default": {
@@ -135,6 +130,13 @@ CACHES = {
         }
     }
 }
+
+# whole-site caching
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_SECONDS = 60 * 15
+CACHE_MIDDLEWARE_KEY_PREFIX = 'encycrg'
+# low-level caching
+CACHE_TIMEOUT = 60 * 5
 
 # ElasticSearch
 ELASTICSEARCH_MAX_SIZE = 10000
