@@ -105,6 +105,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    #
+    'encycrg',
+    'rg',
 ]
 
 DATABASES = {
@@ -173,7 +176,7 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'encycrg.urls'
+ROOT_URLCONF = 'rg.urls'
 
 TEMPLATES = [
     {
