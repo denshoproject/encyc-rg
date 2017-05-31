@@ -8,7 +8,10 @@
 django>=1.11                       # MIT      y
 django-filter
 django-redis                       # BSD      y
+django-redis-cache
+django-redis-sessions
 djangorestframework                # BSD      y
+elasticsearch-dsl>=2.0.0,<3.0.0
 gunicorn                           # MIT      y
 markdown
 redis                              # MIT      y
