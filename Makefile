@@ -11,7 +11,7 @@ PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 INSTALL_BASE=/usr/local/src
 INSTALLDIR=$(INSTALL_BASE)/encyc-rg
 DOWNLOADS_DIR=/tmp/$(APP)-install
-REQUIREMENTS=$(INSTALLDIR)/requirements
+REQUIREMENTS=$(INSTALLDIR)/requirements.txt
 PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 
 VIRTUALENV=$(INSTALLDIR)/venv/$(APP)
@@ -217,14 +217,14 @@ clean-app: clean-encyc-rg
 
 get-encyc-rg:
 	git pull
-	pip install -U -r $(REQUIREMENTS)/production.txt
+	pip install -U -r $(REQUIREMENTS)
 
 install-encyc-rg: install-virtualenv
 	@echo ""
 	@echo "encyc-rg --------------------------------------------------------------"
 	apt-get --assume-yes install imagemagick sqlite3 supervisor
 	source $(VIRTUALENV)/bin/activate; \
-	pip install -U -r $(REQUIREMENTS)/production.txt
+	pip install -U -r $(REQUIREMENTS)
 # logs dir
 	-mkdir $(LOGS_BASE)
 	chown -R $(USER).root $(LOGS_BASE)
@@ -247,12 +247,12 @@ update-encyc-rg:
 	@echo "encyc-rg --------------------------------------------------------------"
 	git fetch && git pull
 	source $(VIRTUALENV)/bin/activate; \
-	pip install -U -r $(REQUIREMENTS)/production.txt
+	pip install -U -r $(REQUIREMENTS)
 
 uninstall-encyc-rg:
 	cd $(INSTALLDIR)/encycrg
 	source $(VIRTUALENV)/bin/activate; \
-	-pip uninstall -r $(REQUIREMENTS)/production.txt
+	-pip uninstall -r $(REQUIREMENTS)
 	-rm /usr/local/lib/python2.7/dist-packages/encycrg-*
 	-rm -Rf /usr/local/lib/python2.7/dist-packages/encycrg
 
