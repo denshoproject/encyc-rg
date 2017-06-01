@@ -42,3 +42,39 @@ class Debug(Exception):
 
 def debug(request):
     return technical_500_response(request, Debug, Debug(DEBUG_TEXT), None)
+
+
+class articles(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/articles.html', {})
+
+class article(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/article.html', {})
+
+
+class authors(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/authors.html', {})
+
+class author(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/author.html', {})
+
+
+class categories(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/categories.html', {})
+
+class category(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/category.html', {})
+
+
+class sources(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/sources.html', {})
+
+class source(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/source.html', {})
