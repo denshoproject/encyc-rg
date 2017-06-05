@@ -12,18 +12,18 @@ from .models import Page, Source, Author
 from .models import MAX_SIZE, NotFoundError
 
 BROWSABLE_FIELDS = [
-    'databox_rgmediatype',
-    'databox_interestlevel',
-    'databox_readinglevel',
-    'databox_theme',
-    'databox_genre',
-    'databox_relatedevents',
-    'databox_availability',
-    'databox_freewebversion',
-    'databox_denshotopic',
-    'databox_geography',
-    'databox_facility',
-    'databox_hasteachingaids',
+    'rg_rgmediatype',
+    'rg_interestlevel',
+    'rg_readinglevel',
+    'rg_theme',
+    'rg_genre',
+    'rg_relatedevents',
+    'rg_availability',
+    'rg_freewebversion',
+    'rg_denshotopic',
+    'rg_geography',
+    'rg_facility',
+    'rg_hasteachingaids',
 ]
 
 
