@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Index
 from elasticsearch_dsl import DocType, String, Date, Nested, Boolean, analysis
-from elasticsearch_dsl import Search
+from elasticsearch_dsl import Search, Q
 from elasticsearch_dsl.connections import connections
 from elasticsearch_dsl.utils import AttrList
 
@@ -274,9 +274,10 @@ class Page(DocType):
         return self.title_sort[0]
     
     @staticmethod
-    def pages():
+    def pages(only_rg=True):
         """Returns list of published light Page objects.
         
+        @param only_rg: boolean Only return RG pages (rg_rgmediatype present)
         @returns: list
         """
         KEY = 'encyc-front:pages'
@@ -285,6 +286,9 @@ class Page(DocType):
         data = None
         if not data:
             s = Search().doc_type(Page)[0:MAX_SIZE]
+            if only_rg:
+                # require rg_rgmediatype
+                s = s.filter(Q('exists', field=['rg_rgmediatype']))
             s = s.sort('title_sort')
             s = s.fields([
                 'url_title',
