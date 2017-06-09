@@ -18,13 +18,12 @@ from .search import run_search, DEFAULT_LIMIT
 def index(request, format=None):
     """INDEX DOCS
     """
-    data = {
-        'articles': reverse('rg-api-articles', request=request),
-        'authors': reverse('rg-api-authors', request=request),
-        'sources': reverse('rg-api-sources', request=request),
-        'browse': reverse('rg-api-browse', request=request),
-        'search': reverse('rg-api-search', request=request),
-    }
+    data = OrderedDict()
+    data['browse'] = reverse('rg-api-browse', request=request)
+    data['articles'] = reverse('rg-api-articles', request=request)
+    data['authors'] = reverse('rg-api-authors', request=request)
+    data['sources'] = reverse('rg-api-sources', request=request)
+    data['search'] = reverse('rg-api-search', request=request)
     return Response(data)
 
 
@@ -51,10 +50,6 @@ def authors(request, format=None):
         }
         data.append(a)
     return Response(data)
-
-@api_view(['GET'])
-def categories(request, format=None):
-    return Response([])
 
 @api_view(['GET'])
 def sources(request, format=None):
@@ -132,10 +127,6 @@ def author(request, url_title, format=None):
     return Response(data)
 
 @api_view(['GET'])
-def category(request, url_title, format=None):
-    return Response([])
-
-@api_view(['GET'])
 def source(request, url_title, format=None):
     try:
         source = Source.get(url_title)
@@ -159,10 +150,13 @@ def source(request, url_title, format=None):
 def browse(request, format=None):
     """INDEX DOCS
     """
-    data = {
-        field: reverse('rg-api-browse-field', args=([field]), request=request)
-        for field in PAGE_BROWSABLE_FIELDS
-    }
+    data = OrderedDict()
+    data['categories'] = reverse('rg-api-categories', request=request)
+    for field in PAGE_BROWSABLE_FIELDS:
+        label = field.replace('rg_', '')
+        data[label] = reverse(
+            'rg-api-browse-field', args=([field]), request=request
+        )
     return Response(data)
 
 def _aggs_dict(aggregations):
@@ -229,6 +223,51 @@ def browse_field_value(request, fieldname, value, format=None):
         for page in response
     ]
     return Response(data)
+
+
+# ----------------------------------------------------------------------
+
+@api_view(['GET'])
+def categories(request, format=None):
+    """CATEGORIES DOCS
+    """
+    fieldname = 'categories'
+    s = Search().doc_type(Page).query("match_all")
+    s.aggs.bucket(fieldname, A('terms', field=fieldname))
+    response = s.execute()
+    aggs = _aggs_dict(response.aggregations.to_dict())[fieldname]
+    data = [
+        {
+            'term': term,
+            'count': count,
+            'url': reverse(
+                'rg-api-browse-fieldvalue',
+                args=([fieldname, term]),
+                request=request
+            ),
+        }
+        for term,count in aggs.iteritems()
+    ]
+    return Response(data)
+
+@api_view(['GET'])
+def category(request, category, format=None):
+    """CATEGORY DOCS
+    """
+    query = {
+        'doctypes': ['articles'],
+        'must': {
+            "match": {"categories": category}
+        }
+    }
+    results = run_search(
+        request_data=query,
+        request=request,
+        sort_fields=[],
+        limit=DEFAULT_LIMIT,
+        offset=0,
+    )
+    return Response(results)
 
 
 # ----------------------------------------------------------------------

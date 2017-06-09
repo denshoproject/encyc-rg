@@ -9,17 +9,17 @@ from . import views
 urlpatterns = [
     url(r'^debug/', views.debug, name='rg-debug'),
     
+    url(r"^api/1.0/browse/categories/(?P<category>[\w\W]+)/$", api.category, name='rg-api-category'),
+    url(r"^api/1.0/browse/categories/$", api.categories, name='rg-api-categories'),
     url(r"^api/1.0/browse/(?P<fieldname>[\w\W]+)/(?P<value>[\w\W]+)/$", api.browse_field_value, name='rg-api-browse-fieldvalue'),
     url(r"^api/1.0/browse/(?P<fieldname>[\w\W]+)/$", api.browse_field, name='rg-api-browse-field'),
     url(r"^api/1.0/browse/$", api.browse, name='rg-api-browse'),
     url(r"^api/1.0/articles/(?P<url_title>[\w\W]+)/$", api.article, name='rg-api-article'),
     url(r"^api/1.0/authors/(?P<url_title>[\w\W]+)/$", api.author, name='rg-api-author'),
-    url(r"^api/1.0/categories/(?P<url_title>[\w\W]+)/$", api.category, name='rg-api-category'),
     url(r"^api/1.0/sources/(?P<url_title>[\w\W]+)/$", api.source, name='rg-api-source'),
     
     url(r"^api/1.0/articles/$", api.articles, name='rg-api-articles'),
     url(r"^api/1.0/authors/$", api.authors, name='rg-api-authors'),
-    url(r"^api/1.0/categories/$", api.categories, name='rg-api-categories'),
     url(r"^api/1.0/sources/$", api.sources, name='rg-api-sources'),
     url(r"^api/1.0/search/$", api.search.as_view(), name='rg-api-search'),
     
