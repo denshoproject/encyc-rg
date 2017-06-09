@@ -1,31 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from collections import OrderedDict
+import json
 
 from elasticsearch_dsl import Search, A
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .models import Page, Source, Author
+from .models import Page, PAGE_BROWSABLE_FIELDS, Source, Author
 from .models import MAX_SIZE, NotFoundError
-
-BROWSABLE_FIELDS = [
-    'rg_rgmediatype',
-    'rg_interestlevel',
-    'rg_readinglevel',
-    'rg_theme',
-    'rg_genre',
-    'rg_relatedevents',
-    'rg_availability',
-    'rg_freewebversion',
-    'rg_denshotopic',
-    'rg_geography',
-    'rg_facility',
-    'rg_hasteachingaids',
-]
-
+from .search import run_search, DEFAULT_LIMIT
 
 @api_view(['GET'])
 def index(request, format=None):
@@ -40,6 +27,8 @@ def index(request, format=None):
     }
     return Response(data)
 
+
+# ----------------------------------------------------------------------
 
 @api_view(['GET'])
 def articles(request, format=None):
@@ -163,13 +152,16 @@ def source(request, url_title, format=None):
     # overwrite
     return Response(data)
 
+
+# ----------------------------------------------------------------------
+
 @api_view(['GET'])
 def browse(request, format=None):
     """INDEX DOCS
     """
     data = {
         field: reverse('rg-api-browse-field', args=([field]), request=request)
-        for field in BROWSABLE_FIELDS
+        for field in PAGE_BROWSABLE_FIELDS
     }
     return Response(data)
 
@@ -239,7 +231,29 @@ def browse_field_value(request, fieldname, value, format=None):
     return Response(data)
 
 
-@api_view(['GET'])
-def search(request, fieldname, format=None):
-    data = {}
-    return Response(data)
+# ----------------------------------------------------------------------
+
+class search(APIView):
+    """
+    <a href="/api/0.2/search/help/">Search API help</a>
+    """
+    
+    def get(self, request, format=None):
+        """
+        Search API info and UI.
+        """
+        data = {}
+        return Response(data)
+    
+    def post(self, request, format=None):
+        """
+        Return search results.
+        """
+        results = run_search(
+            json.loads(request.data['_content']),
+            request,
+            sort_fields=[],
+            limit=DEFAULT_LIMIT,
+            offset=0,
+        )
+        return Response(results)

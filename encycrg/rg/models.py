@@ -15,6 +15,7 @@ from elasticsearch_dsl.utils import AttrList
 from django.conf import settings
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
+from rest_framework.reverse import reverse as api_reverse
 
 MAX_SIZE = 10000
 
@@ -87,7 +88,16 @@ class Author(DocType):
 
     def absolute_url(self):
         return reverse('rg-author', args=([self.title,]))
-
+    
+    @staticmethod
+    def dict_list(hit):
+        data = {
+            'title_sort': '',
+            'title': '',
+            'url': '',
+        }
+        return data
+    
     def dict_all(self, data=OrderedDict()):
         """Return a dict with all fields
         """
@@ -159,6 +169,21 @@ class Author(DocType):
             self.body = unicode(remove_status_markers(BeautifulSoup(self.body)))
 
 
+PAGE_BROWSABLE_FIELDS = [
+    'rg_rgmediatype',
+    'rg_interestlevel',
+    'rg_readinglevel',
+    'rg_theme',
+    'rg_genre',
+    'rg_relatedevents',
+    'rg_availability',
+    'rg_freewebversion',
+    'rg_denshotopic',
+    'rg_geography',
+    'rg_facility',
+    'rg_hasteachingaids',
+]
+
 class Page(DocType):
     """
     IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
@@ -213,7 +238,22 @@ class Page(DocType):
     
     def __str__(self):
         return self.url_title
-
+    
+    def absolute_url(self):
+        return reverse('rg-page', args=([self.title]))
+    
+    @staticmethod
+    def dict_list(hit):
+        data = OrderedDict()
+        data['id'] = hit['_source']['url_title']
+        data['doctype'] = 'articles'
+        data['links'] = {}
+        data['links']['html'] = reverse('rg-api-article', args=([hit['_source']['url_title']]))
+        data['links']['json'] = api_reverse('rg-api-article', args=([hit['_source']['url_title']]))
+        data['links']['img'] = ''
+        data['links']['thumb'] = ''
+        return data
+    
     def dict_all(self, data=OrderedDict()):
         """Return a dict with all fields
         """
@@ -252,9 +292,6 @@ class Page(DocType):
         setval(self, data, 'rg_warnings')
         setval(self, data, 'body')
         return data
-    
-    def absolute_url(self):
-        return reverse('rg-page', args=([self.title]))
 
     def authors(self):
         """Returns list of published light Author objects for this Page.
@@ -462,6 +499,15 @@ class Source(DocType):
     def transcript_url(self):
         if self.transcript_path():
             return os.path.join(settings.SOURCES_MEDIA_URL, self.transcript_path())
+
+    @staticmethod
+    def dict_list(hit):
+        data = {
+            'doc_type': 'sources',
+            'title': hit['_source']['headword'],
+            'url': '',
+        }
+        return data
 
     def dict_all(self, data=OrderedDict()):
         """Return a dict with all fields
