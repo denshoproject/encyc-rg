@@ -10,28 +10,16 @@ from elasticsearch_dsl.connections import connections
 
 from django.conf import settings
 
-from .models import Page, PAGE_BROWSABLE_FIELDS, Source, Author
+from .models import Page, Source, Author
+from .models import DOCTYPE_CLASS, SEARCH_LIST_FIELDS, PAGE_BROWSABLE_FIELDS
 from .models import MAX_SIZE, NotFoundError
+
+DEFAULT_LIMIT = 25
 
 # set default hosts and index
 connections.create_connection(hosts=settings.DOCSTORE_HOSTS)
 INDEX = Index(settings.DOCSTORE_INDEX)
 
-DEFAULT_LIMIT = 25
-
-DOCTYPE_CLASS = {
-    'articles': Page,
-    'authors': Author,
-    'sources': Source,
-}
-
-SEARCH_RETURN_FIELDS = [
-
-    'id',
-    'title',
-    'description',
-
-]
 
 def run_search(request_data, request, sort_fields=[], limit=DEFAULT_LIMIT, offset=0):
     """Return object children list in Django REST Framework format.
@@ -46,23 +34,22 @@ def run_search(request_data, request, sort_fields=[], limit=DEFAULT_LIMIT, offse
     q['must'] = request_data.get('must', [])
     q['should'] = request_data.get('should', [])
     q['mustnot'] = request_data.get('mustnot', [])
-    q['models'] = request_data.get('models', [])
+    q['doctypes'] = request_data.get('doctypes', [])
     q['sort'] = request_data.get('sort', [])
     q['offset'] = request_data.get('offset', 0)
     q['limit'] = request_data.get('limit', DEFAULT_LIMIT)
-
+    
     if not (q['fulltext'] or q['must'] or q['should'] or q['mustnot']):
         return q,[]
 
-    if not isinstance(q['models'], basestring):
-        models = q['models']
-    elif isinstance(q['models'], list):
-        models = ','.join(q['models'])
+    if not isinstance(q['doctypes'], basestring):
+        doctypes = q['doctypes']
+    elif isinstance(q['doctypes'], list):
+        doctypes = ','.join(q['doctypes'])
     else:
-        raise Exception('model must be a string or a list')
-
-    #if not fields:
-    #    fields = SEARCH_RETURN_FIELDS
+        raise Exception('doctypes must be a string or a list')
+    if not doctypes:
+        doctypes = DOCTYPE_CLASS.keys()
     
     query = prep_query(
         text=q['fulltext'],
@@ -75,17 +62,17 @@ def run_search(request_data, request, sort_fields=[], limit=DEFAULT_LIMIT, offse
     if not query:
         raise Exception("Can't do an empty search. Give me something to work with here.")
     
-    doctypes = ','.join(q['models'])
     sort_cleaned = _clean_sort(q['sort'])
     
     s = Search.from_dict(query)
-    #    doc_type=doctypes,
+    for d in doctypes:
+        s = s.doc_type(DOCTYPE_CLASS[d])
     #s = s.sort(...)
     #s = s[from_:from_ + size]
-    #s = s.source(
-    #    include=','.join(SEARCH_RETURN_FIELDS),
-    #    exclude=[],
-    #)
+    s = s.source(
+        include=SEARCH_LIST_FIELDS,
+        exclude=[],
+    )
     results = s.execute()
     paginated = paginate_results(results, offset, limit, request)
     formatted = format_list_objects(paginated, request)
@@ -241,6 +228,6 @@ def format_list_objects(results, request):
         hit = results['hits'].pop(0)
         doctype = DOCTYPE_CLASS[hit['_type']]
         results['objects'].append(
-            doctype.dict_list(hit)
+            doctype.dict_list(hit, request)
         )
     return results

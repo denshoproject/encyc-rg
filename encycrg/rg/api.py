@@ -250,8 +250,8 @@ class search(APIView):
         Return search results.
         """
         results = run_search(
-            json.loads(request.data['_content']),
-            request,
+            request_data=json.loads(request.data['_content']),
+            request=request,
             sort_fields=[],
             limit=DEFAULT_LIMIT,
             offset=0,

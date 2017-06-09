@@ -19,6 +19,10 @@ from rest_framework.reverse import reverse as api_reverse
 
 MAX_SIZE = 10000
 
+DOCTYPE_CLASS = {}  # Maps doctype names to classes
+
+SEARCH_LIST_FIELDS = []
+
 # set default hosts and index
 connections.create_connection(hosts=settings.DOCSTORE_HOSTS)
 index = Index(settings.DOCSTORE_INDEX)
@@ -62,6 +66,14 @@ def hitvalue(hit, field):
     return value
 
 
+AUTHOR_LIST_FIELDS = [
+    'url_title',
+    'title',
+    'title_sort',
+    'published',
+    'modified',
+]
+
 class Author(DocType):
     """
     IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
@@ -90,12 +102,20 @@ class Author(DocType):
         return reverse('rg-author', args=([self.title,]))
     
     @staticmethod
-    def dict_list(hit):
-        data = {
-            'title_sort': '',
-            'title': '',
-            'url': '',
-        }
+    def dict_list(hit, request):
+        data = OrderedDict()
+        data['id'] = hit['_source']['url_title']
+        data['doctype'] = 'authors'
+        data['links'] = {}
+        data['links']['html'] = api_reverse(
+            'rg-author',
+            args=([hit['_source']['url_title']]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-author', args=([hit['_source']['url_title']]),
+            request=request,
+        )
         return data
     
     def dict_all(self, data=OrderedDict()):
@@ -136,13 +156,7 @@ class Author(DocType):
         if not data:
             s = Search(doc_type='authors')[0:MAX_SIZE]
             s = s.sort('title_sort')
-            s = s.fields([
-                'url_title',
-                'title',
-                'title_sort',
-                'published',
-                'modified',
-            ])
+            s = s.fields(AUTHOR_LIST_FIELDS)
             response = s.execute()
             data = [
                 Author(
@@ -168,6 +182,18 @@ class Author(DocType):
         if hasattr(self,'body') and self.body:
             self.body = unicode(remove_status_markers(BeautifulSoup(self.body)))
 
+DOCTYPE_CLASS['author'] = Author
+DOCTYPE_CLASS['authors'] = Author
+
+
+PAGE_LIST_FIELDS = [
+    'url_title',
+    'title',
+    'title_sort',
+    'published',
+    'modified',
+    'categories',
+]
 
 PAGE_BROWSABLE_FIELDS = [
     'rg_rgmediatype',
@@ -243,15 +269,21 @@ class Page(DocType):
         return reverse('rg-page', args=([self.title]))
     
     @staticmethod
-    def dict_list(hit):
+    def dict_list(hit, request):
         data = OrderedDict()
         data['id'] = hit['_source']['url_title']
         data['doctype'] = 'articles'
         data['links'] = {}
-        data['links']['html'] = reverse('rg-api-article', args=([hit['_source']['url_title']]))
-        data['links']['json'] = api_reverse('rg-api-article', args=([hit['_source']['url_title']]))
-        data['links']['img'] = ''
-        data['links']['thumb'] = ''
+        data['links']['html'] = api_reverse(
+            'rg-api-article',
+            args=([hit['_source']['url_title']]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-article',
+            args=([hit['_source']['url_title']]),
+            request=request
+        )
         return data
     
     def dict_all(self, data=OrderedDict()):
@@ -327,14 +359,7 @@ class Page(DocType):
                 # require rg_rgmediatype
                 s = s.filter(Q('exists', field=['rg_rgmediatype']))
             s = s.sort('title_sort')
-            s = s.fields([
-                'url_title',
-                'title',
-                'title_sort',
-                'published',
-                'modified',
-                'categories',
-            ])
+            s = s.fields(PAGE_LIST_FIELDS)
             response = s.execute()
             data = []
             for hit in response:
@@ -439,6 +464,18 @@ class Page(DocType):
         )
         return ddr._balance(objects, size)
 
+DOCTYPE_CLASS['article'] = Page
+DOCTYPE_CLASS['articles'] = Page
+
+
+SOURCE_LIST_FIELDS = [
+    'encyclopedia_id',
+    'published',
+    'modified',
+    'headword',
+    'media_format',
+    'img_path',
+]
 
 class Source(DocType):
     """
@@ -501,12 +538,20 @@ class Source(DocType):
             return os.path.join(settings.SOURCES_MEDIA_URL, self.transcript_path())
 
     @staticmethod
-    def dict_list(hit):
-        data = {
-            'doc_type': 'sources',
-            'title': hit['_source']['headword'],
-            'url': '',
-        }
+    def dict_list(hit, request):
+        data = OrderedDict()
+        data['id'] = hit['_source']['encyclopedia_id']
+        data['doctype'] = 'sources'
+        data['links'] = {}
+        data['links']['html'] = api_reverse(
+            'rg-source',
+            args=([hit['_source']['encyclopedia_id']]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-source', args=([hit['_source']['encyclopedia_id']]),
+            request=request,
+        )
         return data
 
     def dict_all(self, data=OrderedDict()):
@@ -586,14 +631,7 @@ class Source(DocType):
         if not data:
             s = Search(doc_type='sources')[0:MAX_SIZE]
             s = s.sort('encyclopedia_id')
-            s = s.fields([
-                'encyclopedia_id',
-                'published',
-                'modified',
-                'headword',
-                'media_format',
-                'img_path',
-            ])
+            s = s.fields(SOURCE_LIST_FIELDS)
             response = s.execute()
             data = [
                 Source(
@@ -659,3 +697,8 @@ class Citation(object):
             self.authors_mhra = citations.format_authors_mhra(self.authors['parsed'])
             self.authors_mla = citations.format_authors_mla(self.authors['parsed'])
         self.retrieved = datetime.now()
+
+DOCTYPE_CLASS['source'] = Source
+DOCTYPE_CLASS['sources'] = Source
+
+SEARCH_LIST_FIELDS = AUTHOR_LIST_FIELDS + PAGE_LIST_FIELDS + SOURCE_LIST_FIELDS
