@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 
 from .models import Page, PAGE_BROWSABLE_FIELDS, Source, Author
 from .models import MAX_SIZE, NotFoundError
-from .search import run_search, DEFAULT_LIMIT
+from .search import SearchResults, run_search, DEFAULT_LIMIT
 
 @api_view(['GET'])
 def index(request, format=None):
@@ -31,36 +31,42 @@ def index(request, format=None):
 
 @api_view(['GET'])
 def articles(request, format=None):
-    data = []
-    for page in Page.pages():
-        p = {
-            'title': page.title,
-            'url': reverse('rg-api-article', args=([page.url_title]), request=request),
-        }
-        data.append(p)
-    return Response(data)
+    limit = DEFAULT_LIMIT
+    offset = 0
+    return Response(
+        SearchResults(
+            objects=Page.pages(),
+            request=request,
+            limit=limit,
+            offset=offset,
+        ).ordered_dict()
+    )
 
 @api_view(['GET'])
 def authors(request, format=None):
-    data = []
-    for author in Author.authors():
-        a = {
-            'title': author.url_title,
-            'url': reverse('rg-api-author', args=([author.title]), request=request),
-        }
-        data.append(a)
-    return Response(data)
+    limit = DEFAULT_LIMIT
+    offset = 0
+    return Response(
+        SearchResults(
+            objects=Author.authors(),
+            request=request,
+            limit=limit,
+            offset=offset,
+        ).ordered_dict()
+    )
 
 @api_view(['GET'])
 def sources(request, format=None):
-    data = []
-    for source in Source.sources():
-        s = {
-            'id': source.encyclopedia_id,
-            'url': reverse('rg-api-source', args=([source.encyclopedia_id]), request=request),
-        }
-        data.append(s)
-    return Response(data)
+    limit = DEFAULT_LIMIT
+    offset = 0
+    return Response(
+        SearchResults(
+            objects=Source.sources(),
+            request=request,
+            limit=limit,
+            offset=offset,
+        ).ordered_dict()
+    )
 
 
 @api_view(['GET'])
@@ -183,6 +189,8 @@ def _aggs_dict(aggregations):
 
 @api_view(['GET'])
 def browse_field(request, fieldname, format=None):
+    """List databox terms and counts
+    """
     s = Search().doc_type(Page).query("match_all")
     s.aggs.bucket(
         fieldname,
@@ -209,20 +217,26 @@ def browse_field(request, fieldname, format=None):
 
 @api_view(['GET'])
 def browse_field_value(request, fieldname, value, format=None):
-    s = Search().doc_type(Page).from_dict(
-        {"query": {"match": {fieldname: value,}}}
-    )
-    response = s.execute()
-    data = [
-        {
-            'title': page.title,
-            'url': reverse(
-                'rg-api-article', args=([page.url_title]), request=request
-            ),
+    """List of articles tagged with databox term.
+    """
+    query = {
+        "query": {
+            "match": {
+                fieldname: value,
+            }
         }
-        for page in response
-    ]
-    return Response(data)
+    }
+    limit = DEFAULT_LIMIT
+    offset = 0
+    return Response(
+        SearchResults(
+            query=query,
+            results=Search().doc_type(Page).from_dict(query).execute(),
+            request=request,
+            limit=limit,
+            offset=offset,
+        ).ordered_dict()
+    )
 
 
 # ----------------------------------------------------------------------
@@ -257,17 +271,20 @@ def category(request, category, format=None):
     query = {
         'doctypes': ['articles'],
         'must': {
-            "match": {"categories": category}
+            "match": {
+                "categories": category,
+            }
         }
     }
-    results = run_search(
+    limit = DEFAULT_LIMIT
+    offset = 0
+    return Response(run_search(
         request_data=query,
         request=request,
         sort_fields=[],
-        limit=DEFAULT_LIMIT,
-        offset=0,
-    )
-    return Response(results)
+        limit=limit,
+        offset=offset,
+    ).ordered_dict())
 
 
 # ----------------------------------------------------------------------
@@ -281,18 +298,18 @@ class search(APIView):
         """
         Search API info and UI.
         """
-        data = {}
-        return Response(data)
+        return Response({})
     
     def post(self, request, format=None):
         """
         Return search results.
         """
-        results = run_search(
+        limit = DEFAULT_LIMIT
+        offset = 0
+        return Response(run_search(
             request_data=json.loads(request.data['_content']),
             request=request,
             sort_fields=[],
-            limit=DEFAULT_LIMIT,
-            offset=0,
-        )
-        return Response(results)
+            limit=limit,
+            offset=offset,
+        ).ordered_dict())

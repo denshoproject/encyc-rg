@@ -117,6 +117,22 @@ class Author(DocType):
             request=request,
         )
         return data
+
+    def to_dict_list(self, request=None):
+        data = OrderedDict()
+        data['id'] = self.url_title
+        data['doctype'] = 'authors'
+        data['links'] = {}
+        data['links']['html'] = api_reverse(
+            'rg-author',
+            args=([self.url_title]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-author', args=([self.url_title]),
+            request=request,
+        )
+        return data
     
     def dict_all(self, data=OrderedDict()):
         """Return a dict with all fields
@@ -283,6 +299,23 @@ class Page(DocType):
             'rg-api-article',
             args=([hit['_source']['url_title']]),
             request=request
+        )
+        return data
+
+    def to_dict_list(self, request=None):
+        data = OrderedDict()
+        data['id'] = self.url_title
+        data['doctype'] = 'articles'
+        data['links'] = {}
+        data['links']['html'] = api_reverse(
+            'rg-article',
+            args=([self.url_title]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-article',
+            args=([self.url_title]),
+            request=request,
         )
         return data
     
@@ -550,6 +583,23 @@ class Source(DocType):
         )
         data['links']['json'] = api_reverse(
             'rg-api-source', args=([hit['_source']['encyclopedia_id']]),
+            request=request,
+        )
+        return data
+
+    def to_dict_list(self, request=None):
+        data = OrderedDict()
+        data['id'] = self.encyclopedia_id
+        data['doctype'] = 'sources'
+        data['links'] = {}
+        data['links']['html'] = api_reverse(
+            'rg-source',
+            args=([self.encyclopedia_id]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-source',
+            args=([self.encyclopedia_id]),
             request=request,
         )
         return data

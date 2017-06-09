@@ -10,7 +10,6 @@ from elasticsearch_dsl.connections import connections
 
 from django.conf import settings
 
-from .models import Page, Source, Author
 from .models import DOCTYPE_CLASS, SEARCH_LIST_FIELDS, PAGE_BROWSABLE_FIELDS
 from .models import MAX_SIZE, NotFoundError
 
@@ -20,6 +19,83 @@ DEFAULT_LIMIT = 25
 connections.create_connection(hosts=settings.DOCSTORE_HOSTS)
 INDEX = Index(settings.DOCSTORE_INDEX)
 
+
+class SearchResults(object):
+    """Nicely packaged search results for use in API and UI.
+    
+    >>> from rg import search
+    >>> q = {"fulltext":"minidoka"}
+    >>> sr = search.run_search(request_data=q, request=None)
+    """
+    query = {}
+    _request = None
+    aggregations = None
+    objects = []
+    total = -1
+    limit = -1
+    offset = -1
+    page_size = -1
+    prev_page_api = ''
+    next_page_api = ''
+    this_page = -1
+    prev_page = ''
+    next_page = ''
+
+    def __init__(self, query={}, results=None, objects=[], limit=DEFAULT_LIMIT, offset=0, request=None):
+        if not (results or objects):
+            raise Exception('SearchResults requires an ES result set or a list of objects.')
+        self.query = query
+        self._request = request
+        self.limit = int(limit)
+        self.offset = int(offset)
+        self.page_size = self.limit
+        
+        if results:
+            self.objects = [
+                DOCTYPE_CLASS[hit['_type']].dict_list(hit, self._request)
+                for hit in results.hits.hits
+            ]
+            self.aggregations = getattr(results, 'aggregations', {})
+            self.total = int(results.hits.total)
+
+        elif objects:
+            self.objects = objects
+            self.total = len(self.objects)
+        
+        # API pagination
+        p = offset - limit
+        n = offset + limit
+        if p < 0:
+            p = None
+        if n >= self.total:
+            n = None
+        if p is not None:
+            self.prev_page_api = '?limit=%s&offset=%s' % (limit, p)
+        if n:
+            self.next_page_api = '?limit=%s&offset=%s' % (limit, n)
+        
+        # Django pagination
+    
+    def ordered_dict(self):
+        """Express search results in API and Redis-friendly dict
+        
+        returns: OrderedDict
+        """
+        data = OrderedDict()
+        data['total'] = self.total
+        data['page_size'] = self.limit
+        data['prev_page'] = self.prev_page_api
+        data['next_page'] = self.next_page_api
+        data['objects'] = []
+        for o in self.objects:
+            if isinstance(o, dict) or isinstance(o, OrderedDict):
+                data['objects'].append(o)
+            else:
+                data['objects'].append(
+                    o.to_dict_list(request=self._request)
+                )
+        data['query'] = self.query
+        return data
 
 def run_search(request_data, request, sort_fields=[], limit=DEFAULT_LIMIT, offset=0):
     """Return object children list in Django REST Framework format.
@@ -74,10 +150,13 @@ def run_search(request_data, request, sort_fields=[], limit=DEFAULT_LIMIT, offse
         exclude=[],
     )
     results = s.execute()
-    paginated = paginate_results(results, offset, limit, request)
-    formatted = format_list_objects(paginated, request)
-    formatted['query'] = q
-    return formatted
+    return SearchResults(
+        query=query,
+        results=results,
+        limit=limit,
+        offset=offset,
+        request=request,
+    )
 
 def prep_query(text='', must=[], should=[], mustnot=[], aggs={}):
     """Assembles a dict conforming to the Elasticsearch query DSL.
@@ -187,47 +266,3 @@ def execute(doctypes=[], query={}, sort=[], fields=[], from_=0, size=MAX_SIZE):
     logger.debug('search(index=%s, doctypes=%s, query=%s, sort=%s, fields=%s, from_=%s, size=%s' % (
         INDEX, doctypes, query, sort, fields, from_, size
     ))
-
-def paginate_results(results, offset, limit, request=None):
-    """Makes Elasticsearch results nicer to work with (doesn't actually paginate)
-    
-    Strips much of the raw ES stuff, adds total, page_size, prev/next links
-    TODO format data to work with Django paginator?
-    
-    @param results: dict Output of docstore.Docstore().search
-    @returns: list of dicts
-    """
-    offset = int(offset)
-    limit = int(limit)
-    data = OrderedDict()
-    data['total'] = int(results.hits.total)
-    data['page_size'] = limit
-    
-    data['prev'] = None
-    data['next'] = None
-    p = offset - limit
-    n = offset + limit
-    if p < 0:
-        p = None
-    if n >= data['total']:
-        n = None
-    if p is not None:
-        data['prev'] = '?limit=%s&offset=%s' % (limit, p)
-    if n:
-        data['next'] = '?limit=%s&offset=%s' % (limit, n)
-    
-    data['hits'] = [hit for hit in results.hits.hits]
-    data['aggregations'] = getattr(results, 'aggregations', {})
-    return data
-
-def format_list_objects(results, request):
-    """Iterate through results objects apply format_object_detail function
-    """
-    results['objects'] = []
-    while(results['hits']):
-        hit = results['hits'].pop(0)
-        doctype = DOCTYPE_CLASS[hit['_type']]
-        results['objects'].append(
-            doctype.dict_list(hit, request)
-        )
-    return results
