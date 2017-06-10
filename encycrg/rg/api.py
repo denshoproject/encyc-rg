@@ -10,9 +10,12 @@ from rest_framework.reverse import reverse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.conf import settings
+
 from .models import Page, PAGE_BROWSABLE_FIELDS, Source, Author
-from .models import MAX_SIZE, NotFoundError
-from .search import SearchResults, run_search, DEFAULT_LIMIT
+from .models import NotFoundError
+from .search import SearchResults, run_search
+
 
 @api_view(['GET'])
 def index(request, format=None):
@@ -31,7 +34,7 @@ def index(request, format=None):
 
 @api_view(['GET'])
 def articles(request, format=None):
-    limit = DEFAULT_LIMIT
+    limit = settings.DEFAULT_LIMIT
     offset = 0
     return Response(
         SearchResults(
@@ -44,7 +47,7 @@ def articles(request, format=None):
 
 @api_view(['GET'])
 def authors(request, format=None):
-    limit = DEFAULT_LIMIT
+    limit = settings.DEFAULT_LIMIT
     offset = 0
     return Response(
         SearchResults(
@@ -57,7 +60,7 @@ def authors(request, format=None):
 
 @api_view(['GET'])
 def sources(request, format=None):
-    limit = DEFAULT_LIMIT
+    limit = settings.DEFAULT_LIMIT
     offset = 0
     return Response(
         SearchResults(
@@ -226,7 +229,7 @@ def browse_field_value(request, fieldname, value, format=None):
             }
         }
     }
-    limit = DEFAULT_LIMIT
+    limit = settings.DEFAULT_LIMIT
     offset = 0
     return Response(
         SearchResults(
@@ -304,7 +307,7 @@ class search(APIView):
         """
         Return search results.
         """
-        limit = DEFAULT_LIMIT
+        limit = settings.DEFAULT_LIMIT
         offset = 0
         return Response(run_search(
             request_data=json.loads(request.data['_content']),

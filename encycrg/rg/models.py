@@ -17,8 +17,6 @@ from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from rest_framework.reverse import reverse as api_reverse
 
-MAX_SIZE = 10000
-
 DOCTYPE_CLASS = {}  # Maps doctype names to classes
 
 SEARCH_LIST_FIELDS = []
@@ -170,7 +168,7 @@ class Author(DocType):
         TIMEOUT = 60*5
         data = cache.get(KEY)
         if not data:
-            s = Search(doc_type='authors')[0:MAX_SIZE]
+            s = Search(doc_type='authors')[0:settings.MAX_SIZE]
             s = s.sort('title_sort')
             s = s.fields(AUTHOR_LIST_FIELDS)
             response = s.execute()
@@ -387,7 +385,7 @@ class Page(DocType):
         #data = cache.get(KEY)
         data = None
         if not data:
-            s = Search().doc_type(Page)[0:MAX_SIZE]
+            s = Search().doc_type(Page)[0:settings.MAX_SIZE]
             if only_rg:
                 # require rg_rgmediatype
                 s = s.filter(Q('exists', field=['rg_rgmediatype']))
@@ -679,7 +677,7 @@ class Source(DocType):
         TIMEOUT = 60*5
         data = cache.get(KEY)
         if not data:
-            s = Search(doc_type='sources')[0:MAX_SIZE]
+            s = Search(doc_type='sources')[0:settings.MAX_SIZE]
             s = s.sort('encyclopedia_id')
             s = s.fields(SOURCE_LIST_FIELDS)
             response = s.execute()

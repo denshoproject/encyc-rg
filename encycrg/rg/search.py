@@ -11,9 +11,8 @@ from elasticsearch_dsl.connections import connections
 from django.conf import settings
 
 from .models import DOCTYPE_CLASS, SEARCH_LIST_FIELDS, PAGE_BROWSABLE_FIELDS
-from .models import MAX_SIZE, NotFoundError
+from .models import NotFoundError
 
-DEFAULT_LIMIT = 25
 
 # set default hosts and index
 connections.create_connection(hosts=settings.DOCSTORE_HOSTS)
@@ -41,7 +40,7 @@ class SearchResults(object):
     prev_page = ''
     next_page = ''
 
-    def __init__(self, query={}, results=None, objects=[], limit=DEFAULT_LIMIT, offset=0, request=None):
+    def __init__(self, query={}, results=None, objects=[], limit=settings.DEFAULT_LIMIT, offset=0, request=None):
         if not (results or objects):
             raise Exception('SearchResults requires an ES result set or a list of objects.')
         self.query = query
@@ -97,7 +96,8 @@ class SearchResults(object):
         data['query'] = self.query
         return data
 
-def run_search(request_data, request, sort_fields=[], limit=DEFAULT_LIMIT, offset=0):
+
+def run_search(request_data, request, sort_fields=[], limit=settings.DEFAULT_LIMIT, offset=0):
     """Return object children list in Django REST Framework format.
     
     Returns a paged list with count/prev/next metadata
@@ -113,7 +113,7 @@ def run_search(request_data, request, sort_fields=[], limit=DEFAULT_LIMIT, offse
     q['doctypes'] = request_data.get('doctypes', [])
     q['sort'] = request_data.get('sort', [])
     q['offset'] = request_data.get('offset', 0)
-    q['limit'] = request_data.get('limit', DEFAULT_LIMIT)
+    q['limit'] = request_data.get('limit', limit)
     
     if not (q['fulltext'] or q['must'] or q['should'] or q['mustnot']):
         return q,[]
@@ -249,7 +249,7 @@ def _clean_sort( sort ):
             cleaned = ','.join([':'.join(x) for x in sort])
     return cleaned
 
-def execute(doctypes=[], query={}, sort=[], fields=[], from_=0, size=MAX_SIZE):
+def execute(doctypes=[], query={}, sort=[], fields=[], from_=0, size=settings.MAX_SIZE):
     """Executes a query, get a list of zero or more hits.
     
     The "query" arg must be a dict that conforms to the Elasticsearch query DSL.
