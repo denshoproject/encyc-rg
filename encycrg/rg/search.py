@@ -266,3 +266,25 @@ def execute(doctypes=[], query={}, sort=[], fields=[], from_=0, size=settings.MA
     logger.debug('search(index=%s, doctypes=%s, query=%s, sort=%s, fields=%s, from_=%s, size=%s' % (
         INDEX, doctypes, query, sort, fields, from_, size
     ))
+
+def aggs_dict(aggregations):
+    """Simplify aggregations data in search results
+    
+    input
+    {
+    u'format': {u'buckets': [{u'doc_count': 2, u'key': u'ds'}], u'doc_count_error_upper_bound': 0, u'sum_other_doc_count': 0},
+    u'rights': {u'buckets': [{u'doc_count': 3, u'key': u'cc'}], u'doc_count_error_upper_bound': 0, u'sum_other_doc_count': 0},
+    }
+    output
+    {
+    u'format': {u'ds': 2},
+    u'rights': {u'cc': 3},
+    }
+    """
+    return {
+        fieldname: {
+            bucket['key']: bucket['doc_count']
+            for bucket in data['buckets']
+        }
+        for fieldname,data in aggregations.iteritems()
+    }
