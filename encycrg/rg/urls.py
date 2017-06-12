@@ -21,7 +21,7 @@ urlpatterns = [
     url(r"^api/1.0/articles/$", api.articles, name='rg-api-articles'),
     url(r"^api/1.0/authors/$", api.authors, name='rg-api-authors'),
     url(r"^api/1.0/sources/$", api.sources, name='rg-api-sources'),
-    url(r"^api/1.0/search/$", api.search.as_view(), name='rg-api-search'),
+    url(r"^api/1.0/search/$", api.SearchUI.as_view(), name='rg-api-search'),
     
     url(r"^articles/(?P<url_title>[\w\W]+)/$", views.article, name='rg-article'),
     url(r"^authors/(?P<url_title>[\w\W]+)/$", views.author, name='rg-author'),

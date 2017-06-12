@@ -12,9 +12,8 @@ from rest_framework.views import APIView
 
 from django.conf import settings
 
-from .models import Page, PAGE_BROWSABLE_FIELDS, Source, Author
-from .models import NotFoundError
-from .search import SearchResults, run_search
+from . import models
+from . import search
 
 
 @api_view(['GET'])
@@ -37,8 +36,8 @@ def articles(request, format=None):
     limit = settings.DEFAULT_LIMIT
     offset = 0
     return Response(
-        SearchResults(
-            objects=Page.pages(),
+        search.SearchResults(
+            objects=models.Page.pages(),
             request=request,
             limit=limit,
             offset=offset,
@@ -50,8 +49,8 @@ def authors(request, format=None):
     limit = settings.DEFAULT_LIMIT
     offset = 0
     return Response(
-        SearchResults(
-            objects=Author.authors(),
+        search.SearchResults(
+            objects=models.Author.authors(),
             request=request,
             limit=limit,
             offset=offset,
@@ -63,8 +62,8 @@ def sources(request, format=None):
     limit = settings.DEFAULT_LIMIT
     offset = 0
     return Response(
-        SearchResults(
-            objects=Source.sources(),
+        search.SearchResults(
+            objects=models.Source.sources(),
             request=request,
             limit=limit,
             offset=offset,
@@ -77,9 +76,9 @@ def article(request, url_title, format=None):
     """DOCUMENTATION GOES HERE.
     """
     try:
-        page = Page.get(url_title)
+        page = models.Page.get(url_title)
         #page.scrub()
-    except NotFoundError:
+    except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
     #topic_term_ids = [
     #    '%s/facet/topics/%s/objects/' % (settings.DDR_API, term['id'])
@@ -116,8 +115,8 @@ def article(request, url_title, format=None):
 @api_view(['GET'])
 def author(request, url_title, format=None):
     try:
-        author = Author.get(url_title)
-    except NotFoundError:
+        author = models.Author.get(url_title)
+    except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
     data = OrderedDict()
     # put these at the top because OrderedDict
@@ -138,8 +137,8 @@ def author(request, url_title, format=None):
 @api_view(['GET'])
 def source(request, url_title, format=None):
     try:
-        source = Source.get(url_title)
-    except NotFoundError:
+        source = models.Source.get(url_title)
+    except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
     data = OrderedDict()
     # put these at the top because OrderedDict
@@ -161,7 +160,7 @@ def browse(request, format=None):
     """
     data = OrderedDict()
     data['categories'] = reverse('rg-api-categories', request=request)
-    for field in PAGE_BROWSABLE_FIELDS:
+    for field in models.PAGE_BROWSABLE_FIELDS:
         label = field.replace('rg_', '')
         data[label] = reverse(
             'rg-api-browse-field', args=([field]), request=request
@@ -194,7 +193,7 @@ def _aggs_dict(aggregations):
 def browse_field(request, fieldname, format=None):
     """List databox terms and counts
     """
-    s = Search().doc_type(Page).query("match_all")
+    s = Search().doc_type(models.Page).query("match_all")
     s.aggs.bucket(
         fieldname,
         A(
@@ -232,9 +231,9 @@ def browse_field_value(request, fieldname, value, format=None):
     limit = settings.DEFAULT_LIMIT
     offset = 0
     return Response(
-        SearchResults(
+        search.SearchResults(
             query=query,
-            results=Search().doc_type(Page).from_dict(query).execute(),
+            results=Search().doc_type(models.Page).from_dict(query).execute(),
             request=request,
             limit=limit,
             offset=offset,
@@ -249,10 +248,10 @@ def categories(request, format=None):
     """CATEGORIES DOCS
     """
     fieldname = 'categories'
-    s = Search().doc_type(Page).query("match_all")
+    s = Search().doc_type(models.Page).query("match_all")
     s.aggs.bucket(fieldname, A('terms', field=fieldname))
     response = s.execute()
-    aggs = _aggs_dict(response.aggregations.to_dict())[fieldname]
+    aggs = search.aggs_dict(response.aggregations.to_dict())[fieldname]
     data = [
         {
             'term': term,
@@ -281,7 +280,7 @@ def category(request, category, format=None):
     }
     limit = DEFAULT_LIMIT
     offset = 0
-    return Response(run_search(
+    return Response(search.run_search(
         request_data=query,
         request=request,
         sort_fields=[],
@@ -292,7 +291,7 @@ def category(request, category, format=None):
 
 # ----------------------------------------------------------------------
 
-class search(APIView):
+class SearchUI(APIView):
     """
     <a href="/api/0.2/search/help/">Search API help</a>
     """
@@ -309,7 +308,7 @@ class search(APIView):
         """
         limit = settings.DEFAULT_LIMIT
         offset = 0
-        return Response(run_search(
+        return Response(search.run_search(
             request_data=json.loads(request.data['_content']),
             request=request,
             sort_fields=[],
