@@ -271,7 +271,7 @@ def category(request, category, format=None):
 
 class SearchUI(APIView):
     """
-    <a href="/api/0.2/search/help/">Search API help</a>
+    <a href="/api/1.0/search/help/">Search API help</a>
     """
     
     def get(self, request, format=None):

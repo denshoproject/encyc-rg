@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
+from django.views.generic import TemplateView
 
 from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -21,6 +22,7 @@ urlpatterns = [
     url(r"^api/1.0/articles/$", api.articles, name='rg-api-articles'),
     url(r"^api/1.0/authors/$", api.authors, name='rg-api-authors'),
     url(r"^api/1.0/sources/$", api.sources, name='rg-api-sources'),
+    url(r'^api/1.0/search/help/$', TemplateView.as_view(template_name="rg/api/search-help.html"), name='rg-api-search-help'),
     url(r"^api/1.0/search/$", api.SearchUI.as_view(), name='rg-api-search'),
     
     url(r"^articles/(?P<url_title>[\w\W]+)/$", views.article, name='rg-article'),
