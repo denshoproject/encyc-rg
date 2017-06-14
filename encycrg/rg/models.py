@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Index
-from elasticsearch_dsl import DocType, String, Date, Nested, Boolean, analysis
+from elasticsearch_dsl import DocType, InnerObjectWrapper, analysis
+from elasticsearch_dsl import String, Date, Nested, Boolean
 from elasticsearch_dsl import Search, Q
 from elasticsearch_dsl.connections import connections
 from elasticsearch_dsl.utils import AttrList
@@ -750,3 +751,520 @@ DOCTYPE_CLASS['source'] = Source
 DOCTYPE_CLASS['sources'] = Source
 
 SEARCH_LIST_FIELDS = AUTHOR_LIST_FIELDS + PAGE_LIST_FIELDS + SOURCE_LIST_FIELDS
+
+
+class FacetTerm(DocType):
+    id = String(index='not_analyzed')  # Elasticsearch id
+    facet_id = String(index='not_analyzed')
+    title = String()
+
+class TopicsTerm(DocType):
+    id = String(index='not_analyzed')  # Elasticsearch id
+    facet_id = String(index='not_analyzed')
+    title = String()
+    _title = String()
+    description = String()
+    path = String(index='not_analyzed')
+    parent_id = String(index='not_analyzed')
+    ancestors = String(index='not_analyzed', multi=True)
+    children = String(index='not_analyzed', multi=True)
+    siblings = String(index='not_analyzed', multi=True)
+    encyc_urls = String(index='not_analyzed', multi=True)
+    weight = String()
+    
+    class Meta:
+        index = settings.DOCSTORE_INDEX
+        doc_type = 'topics'
+    
+    def __repr__(self):
+        return "<FacetTerm '%s'>" % (self.id)
+    
+    def __str__(self):
+        return '%s-%s' % (self.id)
+
+    @staticmethod
+    def terms(request, limit=settings.DEFAULT_LIMIT, offset=0):
+        s = Search(doc_type='facetterms')[0:settings.MAX_SIZE]
+        response = s.execute()
+        data = [
+            FacetTerm(
+                id = hitvalue(hit, 'id'),
+                title = hitvalue(hit, 'title'),
+               )
+            for hit in response
+        ]
+        return data
+    
+    def to_dict_list(self, request=None):
+        data = OrderedDict()
+        data['id'] = self.id
+        data['doctype'] = 'topics'
+        data['title'] = self.title
+        data['links'] = {}
+        data['links']['html'] = api_reverse(
+            'rg-term',
+            args=([self.facet_id, self.id]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-term',
+            args=([self.facet_id, self.id]),
+            request=request,
+        )
+        return data
+
+class Location(InnerObjectWrapper):
+    pass
+
+class GeoPoint(InnerObjectWrapper):
+    pass
+
+class ELink(InnerObjectWrapper):
+    pass
+
+class FacilityTerm(FacetTerm):
+    id = String(index='not_analyzed')  # Elasticsearch id
+    title = String()
+    type = String(index='not_analyzed')
+    locations = Nested(
+        doc_class=Location,
+        properties={
+            'label': String(),
+            'geopoint': Nested(
+                doc_class=GeoPoint,
+                properties={
+                    'lat': String(),
+                    'lng': String(),
+                }
+            )
+        }
+    )
+    elinks = Nested(
+        doc_class=ELink,
+        properties={
+            'label': String(),
+            'url': String(index='not_analyzed'),
+        }
+    )
+    
+    class Meta:
+        index = settings.DOCSTORE_INDEX
+        doc_type = 'facility'
+
+    @staticmethod
+    def terms(request, limit=settings.DEFAULT_LIMIT, offset=0):
+        s = Search(doc_type='facility')[0:settings.MAX_SIZE]
+        response = s.execute()
+        data = [
+            FacilityTerm(
+                id = hitvalue(hit, 'id'),
+                title = hitvalue(hit, 'title'),
+                type = hitvalue(hit, 'type'),
+               )
+            for hit in response
+        ]
+        return data
+
+    def to_dict_list(self, request=None):
+        data = OrderedDict()
+        data['id'] = self.id
+        data['doctype'] = 'facility'
+        data['title'] = self.title
+        data['links'] = {}
+        data['links']['html'] = api_reverse(
+            'rg-term',
+            args=([self.id]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-term',
+            args=([self.id]),
+            request=request,
+        )
+        return data
+
+
+FACET_TERM_TYPES = {
+    'topics': TopicTerm,
+    'facility': FacilityTerm,
+    'topicsterms': TopicTerm,
+    'facilityterms': FacilityTerm,
+}
+
+class Facet(DocType):
+    id = String(index='not_analyzed')  # Elasticsearch id
+    title = String()
+    description = String()
+    terms = []
+    
+    class Meta:
+        index = settings.DOCSTORE_INDEX
+        doc_type = 'facets'
+    
+    def __repr__(self):
+        return "<Facet '%s'>" % self.id
+    
+    def __str__(self):
+        return self.id
+    
+    def absolute_url(self):
+        return reverse('rg-facet', args=([self.id]))
+
+    @staticmethod
+    def dict_list(hit, request):
+        data = OrderedDict()
+        data['id'] = hit['_source']['id']
+        data['title'] = hit['_source']['title']
+        data['description'] = hit['_source']['description']
+        return data
+
+    def to_dict_list(self, request=None):
+        data = OrderedDict()
+        data['id'] = self.id
+        data['doctype'] = 'facet'
+        data['title'] = self.title
+        data['description'] = self.description
+        data['links'] = {}
+        data['links']['html'] = api_reverse(
+            'rg-facet',
+            args=([self.id]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-facet',
+            args=([self.id]),
+            request=request,
+        )
+        return data
+
+    def dict_all(self, request=None):
+        """Return a dict with all fields
+        """
+        data = OrderedDict()
+        data['id'] = self.id
+        data['doctype'] = 'facet'
+        data['links'] = {}
+        data['links']['html'] = api_reverse(
+            'rg-facet',
+            args=([self.id]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-facet',
+            args=([self.id]),
+            request=request,
+        )
+        data['title'] = self.title
+        data['description'] = self.description
+        return data
+
+    @staticmethod
+    def facets(request, limit=settings.DEFAULT_LIMIT, offset=0):
+        s = Search(doc_type='facets')[0:settings.MAX_SIZE]
+        response = s.execute()
+        data = [
+            Facet(
+                id = hitvalue(hit, 'id'),
+                title = hitvalue(hit, 'title'),
+                description = hitvalue(hit, 'description'),
+               )
+            for hit in response
+        ]
+        return data
+    
+#    @staticmethod
+#    def children(oid, request, sort=[], limit=DEFAULT_LIMIT, offset=0, raw=False):
+#        LIST_FIELDS = [
+#            'id',
+#            'sort',
+#            'title',
+#            'facet',
+#            'ancestors',
+#            'path',
+#            'type',
+#        ]
+#        q = docstore.search_query(
+#            must=[
+#                {'term': {'facet': oid}}
+#            ]
+#        )
+#        results = docstore.Docstore().search(
+#            doctypes=['facetterm'],
+#            query=q,
+#            sort=sort,
+#            fields=LIST_FIELDS,
+#            from_=offset,
+#            size=limit,
+#        )
+#        if raw:
+#            return [
+#                term['_source']
+#                for term in results['hits']['hits']
+#            ]
+#        return format_list_objects(
+#            paginate_results(
+#                results,
+#                offset,
+#                limit,
+#                request
+#            ),
+#            request,
+#            format_term
+#        )
+    
+#    @staticmethod
+#    def make_tree(terms_list):
+#        """Rearranges terms list into hierarchical list.
+#        
+#        Uses term['ancestors'] to generate a tree structure
+#        then "prints out" the tree to a list with indent (depth) indicators.
+#        More specifically, it adds term['depth'] attribs and reorders
+#        terms so they appear in the correct places in the hierarchy.
+#        source: https://gist.github.com/hrldcpr/2012250
+#        
+#        @param terms_list: list
+#        @returns: list
+#        """
+#        def tree():
+#            """Define a tree data structure
+#            """
+#            return defaultdict(tree)
+        
+#        def add(tree_, path):
+#            """
+#            @param tree_: defaultdict
+#            @param path: list of ancestor term IDs
+#            """
+#            for node in path:
+#                tree_ = tree_[node]
+        
+#        def populate(terms_list):
+#            """Create and populate tree structure
+#            by iterating through list of terms and referencing ancestor/path keys
+#            
+#            @param terms_list: list of dicts
+#            @returns: defaultdict
+#            """
+#            tree_ = tree()
+#            for term in terms_list:
+#                path = [tid for tid in term['ancestors']]
+#                path.append(term['id'])
+#                add(tree_, path)
+#            return tree_
+        
+#        def flatten(tree_, depth=0):
+#            """Takes tree dict and returns list of terms with depth values
+#            
+#            Variation on ptr() from the gist
+#            Recursively gets term objects from terms_dict, adds depth,
+#            and appends to list of terms.
+#            
+#            @param tree_: defaultdict Tree
+#            @param depth: int Depth of indents
+#            """
+#            for key in sorted(tree_.keys()):
+#                term = terms_dict[key]
+#                term['depth'] = depth
+#                terms.append(term)
+#                depth += 1
+#                flatten(tree_[key], depth)
+#                depth -= 1
+#        
+#        terms_dict = {t['id']: t for t in terms_list}
+#        terms_tree = populate(terms_list)
+#        terms = []
+#        flatten(terms_tree)
+#        return terms
+
+#    @staticmethod
+#    def topics_terms(request):
+#        """List of topics facet terms, with tree indents and doc counts
+#        
+#        TODO ES does query and aggregations caching.
+#        Does caching this mean the query/aggs won't be cached in ES?
+#        
+#        @param request: Django request object.
+#        @returns: list of Terms
+#        """
+#        facet_id = 'topics'
+#        key = 'facet:%s:terms' % facet_id
+#        cached = cache.get(key)
+#        if not cached:
+#            terms = Facet.children(
+#                facet_id, request,
+#                sort=[('title','asc')],
+#                limit=10000, raw=True
+#            )
+#            for term in terms:
+#                term['links'] = {}
+#                term['links']['html'] = reverse(
+#                    'ui-browse-term', args=[facet_id, term['id']]
+#                )
+#            terms = Facet.make_tree(terms)
+#            Term.term_aggregations('topics.id', 'topics', terms, request)
+#            cached = terms
+#            cache.set(key, cached, settings.CACHE_TIMEOUT)
+#        return cached
+    
+#    @staticmethod
+#    def get(oid, request):
+#        document = docstore.Docstore().get(
+#            model='facet', document_id=oid
+#        )
+#        if not document:
+#            raise NotFound()
+#        data = format_facet(document, request)
+#        HIDDEN_FIELDS = []
+#        for field in HIDDEN_FIELDS:
+#            pop_field(data, field)
+#        return data
+
+#    @staticmethod
+#    def facility_terms(request):
+#        """List of facility facet terms, sorted and with doc counts
+#        
+#        TODO ES does query and aggregations caching.
+#        Does caching this mean the query/aggs won't be cached in ES?
+#        
+#        @param request: Django request object.
+#        @returns: list of Terms
+#        """
+#        facet_id = 'facility'
+#        key = 'facet:%s:terms' % facet_id
+#        cached = cache.get(key)
+#        if not cached:
+#            terms = Facet.children(
+#                facet_id, request,
+#                sort=[('title','asc')],
+#                limit=10000, raw=True
+#            )
+#            for term in terms:
+#                term['links'] = {}
+#                term['links']['html'] = reverse(
+#                    'ui-browse-term', args=[facet_id, term['id']]
+#                )
+#            terms = sorted(terms, key=lambda term: term['title'])
+#            Term.term_aggregations('facility.id', 'facility', terms, request)
+#            cached = terms
+#            cache.set(key, cached, settings.CACHE_TIMEOUT)
+#        return cached
+
+
+class Term(object):
+    pass
+
+#    @staticmethod
+#    def terms(request, limit=DEFAULT_LIMIT, offset=0):
+#        SORT_FIELDS = [
+#        ]
+#        LIST_FIELDS = [
+#            'id',
+#            'title',
+#        ]
+#        q = docstore.search_query(
+#            must=[
+#                { "match_all": {}}
+#            ]
+#        )
+#        results = docstore.Docstore().search(
+#            doctypes=['facetterm'],
+#            query=q,
+#            sort=SORT_FIELDS,
+#            fields=LIST_FIELDS,
+#            from_=offset,
+#            size=limit,
+#        )
+#        return format_list_objects(
+#            paginate_results(
+#                results,
+#                offset,
+#                limit,
+#                request
+#            ),
+#            request,
+#            format_facet
+#        )
+
+#    @staticmethod
+#    def term_aggregations(field, fieldname, terms, request):
+#        """Add number of documents for each facet term
+#        
+#        @param field: str Field name in ES (e.g. 'topics.id')
+#        @param fieldname: str Fieldname in ddrpublic (e.g. 'topics')
+#        @param terms list
+#        """
+#        # aggregations
+#        query = {
+#            'models': [
+#                'entity',
+#                'segment',
+#            ],
+#            'aggs': {
+#                fieldname: {
+#                    'terms': {
+#                        'field': field,
+#                        'size': len(terms), # doc counts for all terms
+#                    }
+#                },
+#            }
+#        }
+#        results = docstore_search(
+#            models=query['models'],
+#            aggs=query['aggs'],
+#            request=request,
+#        )
+#        aggs = aggs_dict(results.get('aggregations'))[fieldname]
+#        # assign num docs per term
+#        for term in terms:
+#            num = aggs.get(str(term['id']), 0) # aggs keys are str(int)s
+#            term['doc_count'] = num            # could be used for sorting terms!
+    
+#    @staticmethod
+#    def get(oid, request):
+#        document = docstore.Docstore().get(
+#            model='facetterm', document_id=oid
+#        )
+#        if not document:
+#            raise NotFound()
+#        # save data for breadcrumbs
+#        # (we assume ancestors and path in same order)
+#        facet = document['_source']['facet']
+#        path = document['_source'].get('path')
+#        ancestors = document['_source'].get('ancestors')
+#        
+#        data = format_term(document, request)
+#        HIDDEN_FIELDS = []
+#        for field in HIDDEN_FIELDS:
+#            pop_field(data, field)
+#        # breadcrumbs
+#        # join path (titles) and ancestors (IDs)
+#        if path and ancestors:
+#            data['breadcrumbs'] = []
+#            path = path.split(':')
+#            path.pop() # last path item is not an ancestor
+#            if len(path) == len(ancestors):
+#                for n,tid in enumerate(ancestors):
+#                    data['breadcrumbs'].append({
+#                        'url':reverse('ui-browse-term', args=[facet, tid]),
+#                        'title':path[n]
+#                    })
+#        return data
+
+#    @staticmethod
+#    def objects(facet_id, term_id, limit=DEFAULT_LIMIT, offset=0, request=None):
+#        field = '%s.id' % facet_id
+#        return docstore_search(
+#            must=[
+#                {'terms': {field: [term_id]}},
+#            ],
+#            models=[],
+#            sort_fields=[
+#                'sort',
+#                'id',
+#                'record_created',
+#                'record_lastmod',
+#            ],
+#            limit=limit,
+#            offset=offset,
+#            request=request,
+#        )

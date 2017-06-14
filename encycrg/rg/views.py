@@ -62,6 +62,15 @@ class author(View):
         return render(request, 'rg/author.html', {})
 
 
+class sources(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/sources.html', {})
+
+class source(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/source.html', {})
+
+
 class categories(View):
     def get(self, request, *args, **kwargs):
         return render(request, 'rg/categories.html', {})
@@ -71,10 +80,14 @@ class category(View):
         return render(request, 'rg/category.html', {})
 
 
-class sources(View):
+class facets(View):
     def get(self, request, *args, **kwargs):
-        return render(request, 'rg/sources.html', {})
+        return render(request, 'rg/facets.html', {})
 
-class source(View):
+class facet(View):
     def get(self, request, *args, **kwargs):
-        return render(request, 'rg/source.html', {})
+        return render(request, 'rg/facet.html', {})
+
+class term(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'rg/term.html', {})

@@ -22,6 +22,7 @@ def index(request, format=None):
     """
     data = OrderedDict()
     data['browse'] = reverse('rg-api-browse', request=request)
+    data['facets'] = reverse('rg-api-facets', request=request)
     data['articles'] = reverse('rg-api-articles', request=request)
     data['authors'] = reverse('rg-api-authors', request=request)
     data['sources'] = reverse('rg-api-sources', request=request)
@@ -160,6 +161,8 @@ def browse(request, format=None):
     """
     data = OrderedDict()
     data['categories'] = reverse('rg-api-categories', request=request)
+    data['topics'] = reverse('rg-api-topics', request=request)
+    data['facilities'] = reverse('rg-api-facilities', request=request)
     for field in models.PAGE_BROWSABLE_FIELDS:
         label = field.replace('rg_', '')
         data[label] = reverse(
@@ -265,6 +268,72 @@ def category(request, category, format=None):
         limit=limit,
         offset=offset,
     ).ordered_dict())
+
+
+# ----------------------------------------------------------------------
+
+@api_view(['GET'])
+def facets(request, format=None):
+    limit = settings.DEFAULT_LIMIT
+    offset = 0
+    return Response(
+        search.SearchResults(
+            objects=models.Facet.facets(request),
+            request=request,
+            limit=limit,
+            offset=offset,
+        ).ordered_dict()
+    )
+
+@api_view(['GET'])
+def facet(request, facet_id, format=None):
+    try:
+        facet = models.Facet.get(facet_id)
+    except models.NotFoundError:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    data = facet.dict_all(request)
+    data['links']['children'] = reverse(
+        'rg-api-terms',
+        args=([facet_id]),
+        request=request
+    )
+    return Response(data)
+
+@api_view(['GET'])
+def terms(request, facet_id, format=None):
+    class_ = models.FACET_TERM_TYPES[facet_id]
+    limit = settings.DEFAULT_LIMIT
+    offset = 0
+    return Response(
+        search.SearchResults(
+            objects=class_.terms(request),
+            request=request,
+            limit=limit,
+            offset=offset,
+        ).ordered_dict()
+    )
+
+@api_view(['GET'])
+def term(request, facet_id, term_id, format=None):
+    assert False
+    #oid = '%s-%s' % (facet_id, term_id)
+    #data = Term.get(oid, request)
+    #return _detail(request, data)
+
+@api_view(['GET'])
+def term_objects(request, facet_id, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
+    assert False
+    #oid = '%s-%s' % (facet_id, term_id)
+    #data = Term.objects(
+    #    facet_id=facet_id,
+    #    term_id=term_id,
+    #    offset=offset,
+    #    request=request
+    #)
+    #return Response(data)
+
+
+
 
 
 # ----------------------------------------------------------------------
