@@ -753,66 +753,6 @@ DOCTYPE_CLASS['sources'] = Source
 SEARCH_LIST_FIELDS = AUTHOR_LIST_FIELDS + PAGE_LIST_FIELDS + SOURCE_LIST_FIELDS
 
 
-class FacetTerm(DocType):
-    id = String(index='not_analyzed')  # Elasticsearch id
-    facet_id = String(index='not_analyzed')
-    title = String()
-
-class TopicsTerm(DocType):
-    id = String(index='not_analyzed')  # Elasticsearch id
-    facet_id = String(index='not_analyzed')
-    title = String()
-    _title = String()
-    description = String()
-    path = String(index='not_analyzed')
-    parent_id = String(index='not_analyzed')
-    ancestors = String(index='not_analyzed', multi=True)
-    children = String(index='not_analyzed', multi=True)
-    siblings = String(index='not_analyzed', multi=True)
-    encyc_urls = String(index='not_analyzed', multi=True)
-    weight = String()
-    
-    class Meta:
-        index = settings.DOCSTORE_INDEX
-        doc_type = 'topics'
-    
-    def __repr__(self):
-        return "<FacetTerm '%s'>" % (self.id)
-    
-    def __str__(self):
-        return '%s-%s' % (self.id)
-
-    @staticmethod
-    def terms(request, limit=settings.DEFAULT_LIMIT, offset=0):
-        s = Search(doc_type='facetterms')[0:settings.MAX_SIZE]
-        response = s.execute()
-        data = [
-            FacetTerm(
-                id = hitvalue(hit, 'id'),
-                title = hitvalue(hit, 'title'),
-               )
-            for hit in response
-        ]
-        return data
-    
-    def to_dict_list(self, request=None):
-        data = OrderedDict()
-        data['id'] = self.id
-        data['doctype'] = 'topics'
-        data['title'] = self.title
-        data['links'] = {}
-        data['links']['html'] = api_reverse(
-            'rg-term',
-            args=([self.facet_id, self.id]),
-            request=request,
-        )
-        data['links']['json'] = api_reverse(
-            'rg-api-term',
-            args=([self.facet_id, self.id]),
-            request=request,
-        )
-        return data
-
 class Location(InnerObjectWrapper):
     pass
 
@@ -822,9 +762,21 @@ class GeoPoint(InnerObjectWrapper):
 class ELink(InnerObjectWrapper):
     pass
 
-class FacilityTerm(FacetTerm):
+class FacetTerm(DocType):
     id = String(index='not_analyzed')  # Elasticsearch id
+    facet_id = String(index='not_analyzed')
     title = String()
+    # topics
+    _title = String()
+    description = String()
+    path = String(index='not_analyzed')
+    parent_id = String(index='not_analyzed')
+    ancestors = String(index='not_analyzed', multi=True)
+    children = String(index='not_analyzed', multi=True)
+    siblings = String(index='not_analyzed', multi=True)
+    encyc_urls = String(index='not_analyzed', multi=True)
+    weight = String()
+    # facility
     type = String(index='not_analyzed')
     locations = Nested(
         doc_class=Location,
@@ -849,27 +801,43 @@ class FacilityTerm(FacetTerm):
     
     class Meta:
         index = settings.DOCSTORE_INDEX
-        doc_type = 'facility'
-
+        doc_type = 'facetterms'
+    
+    def __repr__(self):
+        return "<FacetTerm '%s-%s'>" % (self.facet_id, self.id)
+    
+    def __str__(self):
+        return '%s-%s' % (self.facet_id, self.id)
+    
     @staticmethod
-    def terms(request, limit=settings.DEFAULT_LIMIT, offset=0):
-        s = Search(doc_type='facility')[0:settings.MAX_SIZE]
+    def terms(request, facet_id=None, limit=settings.DEFAULT_LIMIT, offset=0):
+        s = Search(doc_type='facetterms')[0:settings.MAX_SIZE]
+        if facet_id:
+            s = s.query("match", facet_id=facet_id)
+            if facet_id == 'topics':
+                s = s.sort('path')
+            elif facet_id == 'facility':
+                s = s.sort('type', 'title')
         response = s.execute()
         data = [
-            FacilityTerm(
+            FacetTerm(
                 id = hitvalue(hit, 'id'),
+                facet_id = hitvalue(hit, 'facet_id'),
+                term_id = hitvalue(hit, 'term_id'),
                 title = hitvalue(hit, 'title'),
+                path = hitvalue(hit, 'path'),
                 type = hitvalue(hit, 'type'),
                )
             for hit in response
         ]
         return data
-
+    
     def to_dict_list(self, request=None):
         data = OrderedDict()
         data['id'] = self.id
-        data['doctype'] = 'facility'
-        data['title'] = self.title
+        data['facet_id'] = self.facet_id
+        data['term_id'] = self.facet_id
+        data['doctype'] = 'facetterms'
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-term',
@@ -881,15 +849,69 @@ class FacilityTerm(FacetTerm):
             args=([self.id]),
             request=request,
         )
+        data['path'] = self.path
+        data['title'] = self.title
+        data['type'] = self.type
         return data
 
+    def dict_all(self, request=None):
+        """Return a dict with all fields
+        """
+        data = OrderedDict()
+        data['id'] = self.id
+        data['facet_id'] = self.facet_id
+        data['term_id'] = self.facet_id
+        data['doctype'] = 'facetterms'
+        data['links'] = {}
+        data['links']['html'] = api_reverse(
+            'rg-term',
+            args=([self.id]),
+            request=request,
+        )
+        data['links']['json'] = api_reverse(
+            'rg-api-term',
+            args=([self.id]),
+            request=request,
+        )
+        data['title'] = self.title
+        if self.facet_id == 'topics':
+            data['_title'] = self._title
+            data['description'] = self.description
+            data['path'] = self.path
+            if self.parent_id:
+                data['parent_id'] = api_reverse('rg-api-term', args=(['%s-%s' % (self.facet_id, self.parent_id)]), request=request)
+            else:
+                data['parent_id'] = ''
+            data['ancestors'] = [
+                api_reverse('rg-api-term', args=(['%s-%s' % (self.facet_id, tid)]), request=request)
+                for tid in self.ancestors
+            ]
+            data['children'] = [
+                api_reverse('rg-api-term', args=(['%s-%s' % (self.facet_id, tid)]), request=request)
+                for tid in self.children
+            ]
+            data['siblings'] = [
+                api_reverse('rg-api-term', args=(['%s-%s' % (self.facet_id, tid)]), request=request)
+                for tid in self.siblings
+            ]
+            data['encyc_urls'] = [url for url in self.encyc_urls]
+            data['weight'] = self.weight
+        elif self.facet_id == 'facility':
+            data['type'] = self.type
+            data['locations'] = []
+            for n,loc in enumerate(self.locations):
+                data['locations'].append( {} )
+                data['locations'][n]['label'] = loc.label
+                data['locations'][n]['geopoint'] = {}
+                data['locations'][n]['geopoint']['lat'] = loc.geopoint.lat
+                data['locations'][n]['geopoint']['lng'] = loc.geopoint.lng
+            data['elinks'] = []
+            for n,e in enumerate(self.elinks):
+                data['elinks'].append( {} )
+                data['elinks'][n]['label'] = e.label
+                data['elinks'][n]['url'] = e.url
+        return data
 
-FACET_TERM_TYPES = {
-    'topics': TopicTerm,
-    'facility': FacilityTerm,
-    'topicsterms': TopicTerm,
-    'facilityterms': FacilityTerm,
-}
 
 class Facet(DocType):
     id = String(index='not_analyzed')  # Elasticsearch id

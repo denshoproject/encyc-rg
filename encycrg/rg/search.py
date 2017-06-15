@@ -42,7 +42,7 @@ class SearchResults(object):
 
     def __init__(self, query={}, results=None, objects=[], limit=settings.DEFAULT_LIMIT, offset=0, request=None):
         if not (results or objects):
-            raise Exception('SearchResults requires an ES result set or a list of objects.')
+            return
         self.query = query
         self._request = request
         self.limit = int(limit)

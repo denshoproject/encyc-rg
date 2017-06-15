@@ -301,12 +301,11 @@ def facet(request, facet_id, format=None):
 
 @api_view(['GET'])
 def terms(request, facet_id, format=None):
-    class_ = models.FACET_TERM_TYPES[facet_id]
     limit = settings.DEFAULT_LIMIT
     offset = 0
     return Response(
         search.SearchResults(
-            objects=class_.terms(request),
+            objects=models.FacetTerm.terms(request, facet_id),
             request=request,
             limit=limit,
             offset=offset,
@@ -314,26 +313,34 @@ def terms(request, facet_id, format=None):
     )
 
 @api_view(['GET'])
-def term(request, facet_id, term_id, format=None):
-    assert False
-    #oid = '%s-%s' % (facet_id, term_id)
-    #data = Term.get(oid, request)
-    #return _detail(request, data)
+def term(request, term_id, format=None):
+    try:
+        term = models.FacetTerm.get(term_id)
+    except models.NotFoundError:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    data = term.dict_all(request)
+    data['links']['children'] = reverse(
+        'rg-api-term-objects',
+        args=([term_id]),
+        request=request
+    )
+    return Response(data)
 
 @api_view(['GET'])
-def term_objects(request, facet_id, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
-    assert False
-    #oid = '%s-%s' % (facet_id, term_id)
-    #data = Term.objects(
-    #    facet_id=facet_id,
-    #    term_id=term_id,
-    #    offset=offset,
-    #    request=request
-    #)
-    #return Response(data)
-
-
-
+def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
+    try:
+        term = models.FacetTerm.get(term_id)
+    except models.NotFoundError:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    data = [
+        {
+            'title': url.replace('/','').replace('%20',' '),
+            'json': reverse('rg-api-article', args=([url]), request=request),
+            'html': reverse('rg-article', args=([url]), request=request),
+        }
+        for url in term.encyc_urls
+    ]
+    return Response(data)
 
 
 # ----------------------------------------------------------------------

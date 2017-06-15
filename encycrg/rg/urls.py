@@ -10,11 +10,11 @@ from . import views
 urlpatterns = [
     url(r'^debug/', views.debug, name='rg-debug'),
     
-    url(r'^api/0.2/facets/(?P<facet_id>[\w]+)/(?P<term_id>[\d]+)/objects/$', api.term_objects, name='rg-api-term-objects'),
-    url(r'^api/0.2/facets/(?P<facet_id>[\w]+)/(?P<term_id>[\d]+)/$', api.term, name='rg-api-term'),
-    url(r'^api/0.2/facets/(?P<facet_id>[\w]+)/children/$', api.terms, name='rg-api-terms'),
-    url(r'^api/0.2/facets/(?P<facet_id>[\w]+)/$', api.facet, name='rg-api-facet'),
-    url(r'^api/0.2/facets/$', api.facets, name='rg-api-facets'),
+    url(r'^api/1.0/terms/(?P<term_id>[\w\d-]+)/objects/$', api.term_objects, name='rg-api-term-objects'),
+    url(r'^api/1.0/terms/(?P<term_id>[\w\d-]+)/$', api.term, name='rg-api-term'),
+    url(r'^api/1.0/facets/(?P<facet_id>[\w\d-]+)/terms/$', api.terms, name='rg-api-terms'),
+    url(r'^api/1.0/facets/(?P<facet_id>[\w]+)/$', api.facet, name='rg-api-facet'),
+    url(r'^api/1.0/facets/$', api.facets, name='rg-api-facets'),
 
     url(r"^api/1.0/browse/categories/(?P<category>[\w\W]+)/$", api.category, name='rg-api-category'),
     url(r"^api/1.0/browse/categories/$", api.categories, name='rg-api-categories'),
@@ -32,7 +32,7 @@ urlpatterns = [
     url(r'^api/1.0/search/help/$', TemplateView.as_view(template_name="rg/api/search-help.html"), name='rg-api-search-help'),
     url(r"^api/1.0/search/$", api.SearchUI.as_view(), name='rg-api-search'),
     
-    url(r'^facets/(?P<facet_id>[\w]+)/(?P<term_id>[\d]+)/$', views.term, name='rg-term'),
+    url(r'^terms/(?P<term_id>[\w\d-]+)/$', views.term, name='rg-term'),
     url(r"^facets/(?P<facet_id>[\w\W]+)/$", views.facet, name='rg-facet'),
     url(r"^categories/(?P<url_title>[\w\W]+)/$", views.category, name='rg-category'),
     url(r"^categories/$", views.categories, name='rg-categories'),
