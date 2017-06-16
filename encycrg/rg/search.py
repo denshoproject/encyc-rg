@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+from past.builtins import basestring
+from builtins import object
 from collections import OrderedDict
 import json
 import logging
@@ -34,11 +37,11 @@ class SearchResults(object):
     limit = -1
     offset = -1
     page_size = -1
-    prev_page_api = ''
-    next_page_api = ''
+    prev_page_api = u''
+    next_page_api = u''
     this_page = -1
-    prev_page = ''
-    next_page = ''
+    prev_page = u''
+    next_page = u''
 
     def __init__(self, query={}, results=None, objects=[], limit=settings.DEFAULT_LIMIT, offset=0, request=None):
         if not (results or objects):
@@ -69,9 +72,9 @@ class SearchResults(object):
         if n >= self.total:
             n = None
         if p is not None:
-            self.prev_page_api = '?limit=%s&offset=%s' % (limit, p)
+            self.prev_page_api = u'?limit=%s&offset=%s' % (limit, p)
         if n:
-            self.next_page_api = '?limit=%s&offset=%s' % (limit, n)
+            self.next_page_api = u'?limit=%s&offset=%s' % (limit, n)
         
         # Django pagination
     
@@ -121,11 +124,11 @@ def run_search(request_data, request, sort_fields=[], limit=settings.DEFAULT_LIM
     if not isinstance(q['doctypes'], basestring):
         doctypes = q['doctypes']
     elif isinstance(q['doctypes'], list):
-        doctypes = ','.join(q['doctypes'])
+        doctypes = u','.join(q['doctypes'])
     else:
         raise Exception('doctypes must be a string or a list')
     if not doctypes:
-        doctypes = DOCTYPE_CLASS.keys()
+        doctypes = list(DOCTYPE_CLASS.keys())
     
     query = prep_query(
         text=q['fulltext'],
@@ -230,7 +233,7 @@ def _clean_dict(data):
     @param data: Standard DDR list-of-dicts data structure.
     """
     if data and isinstance(data, dict):
-        for key in data.keys():
+        for key in list(data.keys()):
             if not data[key]:
                 del(data[key])
 
@@ -242,11 +245,11 @@ def _clean_sort( sort ):
     >>> _clean_sort( [['a', 'asc'], ['b', 'asc']] )
     'a:asc,b:asc'
     """
-    cleaned = ''
+    cleaned = u''
     if sort and isinstance(sort,list):
         all_lists = [1 if isinstance(x, list) else 0 for x in sort]
         if not 0 in all_lists:
-            cleaned = ','.join([':'.join(x) for x in sort])
+            cleaned = u','.join([':'.join(x) for x in sort])
     return cleaned
 
 def execute(doctypes=[], query={}, sort=[], fields=[], from_=0, size=settings.MAX_SIZE):
@@ -286,5 +289,5 @@ def aggs_dict(aggregations):
             bucket['key']: bucket['doc_count']
             for bucket in data['buckets']
         }
-        for fieldname,data in aggregations.iteritems()
+        for fieldname,data in list(aggregations.items())
     }

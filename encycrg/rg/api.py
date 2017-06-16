@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
 from collections import OrderedDict
 import json
 
@@ -164,7 +165,7 @@ def browse(request, format=None):
     data['topics'] = reverse('rg-api-terms', args=(['topics']), request=request)
     data['facilities'] = reverse('rg-api-terms', args=(['facility']), request=request)
     for field in models.PAGE_BROWSABLE_FIELDS:
-        label = field.replace('rg_', '')
+        label = field.replace(u'rg_', u'')
         data[label] = reverse(
             'rg-api-browse-field', args=([field]), request=request
         )
@@ -194,7 +195,7 @@ def browse_field(request, fieldname, format=None):
                 request=request
             ),
         }
-        for term,count in aggs.iteritems()
+        for term,count in list(aggs.items())
     ]
     return Response(data)
 
@@ -243,7 +244,7 @@ def categories(request, format=None):
                 request=request
             ),
         }
-        for term,count in aggs.iteritems()
+        for term,count in list(aggs.items())
     ]
     return Response(data)
 
@@ -334,7 +335,7 @@ def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
         return Response(status=status.HTTP_404_NOT_FOUND)
     data = [
         {
-            'title': url.replace('/','').replace('%20',' '),
+            'title': url.replace(u'/', u'').replace(u'%20', u' '),
             'json': reverse('rg-api-article', args=([url]), request=request),
             'html': reverse('rg-article', args=([url]), request=request),
         }

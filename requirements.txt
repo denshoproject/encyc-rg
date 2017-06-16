@@ -15,3 +15,7 @@ elasticsearch-dsl>=2.0.0,<3.0.0
 gunicorn                           # MIT      y
 markdown
 redis                              # MIT      y
+
+caniusepython3
+future
+pylint

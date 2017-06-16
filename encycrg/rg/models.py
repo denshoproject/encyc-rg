@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
+from future.utils import python_2_unicode_compatible
+from builtins import str
+from builtins import object
 from collections import OrderedDict
 import logging
 logger = logging.getLogger(__name__)
@@ -73,6 +75,7 @@ AUTHOR_LIST_FIELDS = [
     'modified',
 ]
 
+@python_2_unicode_compatible
 class Author(DocType):
     """
     IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
@@ -87,12 +90,12 @@ class Author(DocType):
     body = String()
     article_titles = String(index='not_analyzed', multi=True)
     
-    class Meta:
+    class Meta(object):
         index = settings.DOCSTORE_INDEX
         doc_type = 'authors'
     
     def __repr__(self):
-        return "<Author '%s'>" % self.url_title
+        return u"<Author '%s'>" % self.url_title
     
     def __str__(self):
         return self.title
@@ -104,7 +107,7 @@ class Author(DocType):
     def dict_list(hit, request):
         data = OrderedDict()
         data['id'] = hit['_source']['url_title']
-        data['doctype'] = 'authors'
+        data['doctype'] = u'authors'
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-author',
@@ -120,7 +123,7 @@ class Author(DocType):
     def to_dict_list(self, request=None):
         data = OrderedDict()
         data['id'] = self.url_title
-        data['doctype'] = 'authors'
+        data['doctype'] = u'authors'
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-author',
@@ -195,7 +198,7 @@ class Author(DocType):
         TODO Should this happen upon import from MediaWiki?
         """
         if hasattr(self,'body') and self.body:
-            self.body = unicode(remove_status_markers(BeautifulSoup(self.body)))
+            self.body = str(remove_status_markers(BeautifulSoup(self.body)))
 
 DOCTYPE_CLASS['author'] = Author
 DOCTYPE_CLASS['authors'] = Author
@@ -225,6 +228,7 @@ PAGE_BROWSABLE_FIELDS = [
     'rg_hasteachingaids',
 ]
 
+@python_2_unicode_compatible
 class Page(DocType):
     """
     IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
@@ -270,12 +274,12 @@ class Page(DocType):
     #rg_lexile = String(index='not_analyzed', multi=True)
     #rg_guidedreadinglevel = String(index='not_analyzed', multi=True)
     
-    class Meta:
+    class Meta(object):
         index = settings.DOCSTORE_INDEX
-        doc_type = 'articles'
+        doc_type = u'articles'
     
     def __repr__(self):
-        return "<Page '%s'>" % self.url_title
+        return u"<Page '%s'>" % self.url_title
     
     def __str__(self):
         return self.url_title
@@ -287,7 +291,7 @@ class Page(DocType):
     def dict_list(hit, request):
         data = OrderedDict()
         data['id'] = hit['_source']['url_title']
-        data['doctype'] = 'articles'
+        data['doctype'] = u'articles'
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-api-article',
@@ -304,7 +308,7 @@ class Page(DocType):
     def to_dict_list(self, request=None):
         data = OrderedDict()
         data['id'] = self.url_title
-        data['doctype'] = 'articles'
+        data['doctype'] = u'articles'
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-article',
@@ -381,7 +385,7 @@ class Page(DocType):
         @param only_rg: boolean Only return RG pages (rg_rgmediatype present)
         @returns: list
         """
-        KEY = 'encyc-front:pages'
+        KEY = u'encyc-front:pages'
         TIMEOUT = 60*5
         #data = cache.get(KEY)
         data = None
@@ -413,7 +417,7 @@ class Page(DocType):
         
         @returns: list
         """
-        KEY = 'encyc-front:pages_by_category'
+        KEY = u'encyc-front:pages_by_category'
         TIMEOUT = 60*5
         data = cache.get(KEY)
         if not data:
@@ -422,7 +426,7 @@ class Page(DocType):
                 for category in page.categories:
                     # exclude internal editorial categories
                     if category not in settings.MEDIAWIKI_HIDDEN_CATEGORIES:
-                        if category not in categories.keys():
+                        if category not in list(categories.keys()):
                             categories[category] = []
                         # pages already sorted so category lists will be sorted
                         if page not in categories[category]:
@@ -441,7 +445,7 @@ class Page(DocType):
         TODO Should this happen upon import from MediaWiki?
         """
         if hasattr(self,'body') and self.body:
-            self.body = unicode(remove_status_markers(BeautifulSoup(self.body)))
+            self.body = str(remove_status_markers(BeautifulSoup(self.body)))
     
     def sources(self):
         """Returns list of published light Source objects for this Page.
@@ -460,10 +464,10 @@ class Page(DocType):
         for t in Elasticsearch.topics_by_url().get(self.absolute_url(), []):
             term = {
                 key: val
-                for key,val in t.iteritems()
+                for key,val in list(t.items())
             }
             term.pop('encyc_urls')
-            term['ddr_topic_url'] = '%s/%s/' % (
+            term['ddr_topic_url'] = u'%s/%s/' % (
                 settings.DDR_TOPICS_BASE,
                 term['id']
             )
@@ -509,6 +513,7 @@ SOURCE_LIST_FIELDS = [
     'img_path',
 ]
 
+@python_2_unicode_compatible
 class Source(DocType):
     """
     IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
@@ -543,12 +548,12 @@ class Source(DocType):
     filename = String(index='not_analyzed')
     img_path = String(index='not_analyzed')
     
-    class Meta:
+    class Meta(object):
         index = settings.DOCSTORE_INDEX
-        doc_type = 'sources'
+        doc_type = u'sources'
     
     def __repr__(self):
-        return "<Source '%s'>" % self.encyclopedia_id
+        return u"<Source '%s'>" % self.encyclopedia_id
     
     def __str__(self):
         return self.encyclopedia_id
@@ -573,7 +578,7 @@ class Source(DocType):
     def dict_list(hit, request):
         data = OrderedDict()
         data['id'] = hit['_source']['encyclopedia_id']
-        data['doctype'] = 'sources'
+        data['doctype'] = u'sources'
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-source',
@@ -589,7 +594,7 @@ class Source(DocType):
     def to_dict_list(self, request=None):
         data = OrderedDict()
         data['id'] = self.encyclopedia_id
-        data['doctype'] = 'sources'
+        data['doctype'] = u'sources'
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-source',
@@ -674,7 +679,7 @@ class Source(DocType):
         
         @returns: list
         """
-        KEY = 'encyc-front:sources'
+        KEY = u'encyc-front:sources'
         TIMEOUT = 60*5
         data = cache.get(KEY)
         if not data:
@@ -698,6 +703,7 @@ class Source(DocType):
         return data
 
 
+@python_2_unicode_compatible
 class Citation(object):
     """Represents a citation for a MediaWiki page.
     IMPORTANT: not a Django model object!
@@ -721,14 +727,14 @@ class Citation(object):
     authors_mla = ''
     
     def __repr__(self):
-        return "<Citation '%s'>" % self.url_title
+        return u"<Citation '%s'>" % self.url_title
     
     def __str__(self):
         return self.url_title
     
     def __init__(self, page, request):
         self.uri = page.absolute_url()
-        self.href = 'http://%s%s' % (request.META['HTTP_HOST'], self.uri)
+        self.href = u'http://%s%s' % (request.META['HTTP_HOST'], self.uri)
         if getattr(page, 'title', None):
             self.title = page.title
         elif getattr(page, 'caption', None):
@@ -762,6 +768,7 @@ class GeoPoint(InnerObjectWrapper):
 class ELink(InnerObjectWrapper):
     pass
 
+@python_2_unicode_compatible
 class FacetTerm(DocType):
     id = String(index='not_analyzed')  # Elasticsearch id
     facet_id = String(index='not_analyzed')
@@ -799,15 +806,15 @@ class FacetTerm(DocType):
         }
     )
     
-    class Meta:
+    class Meta(object):
         index = settings.DOCSTORE_INDEX
-        doc_type = 'facetterms'
+        doc_type = u'facetterms'
     
     def __repr__(self):
-        return "<FacetTerm '%s-%s'>" % (self.facet_id, self.id)
+        return u"<FacetTerm '%s-%s'>" % (self.facet_id, self.id)
     
     def __str__(self):
-        return '%s-%s' % (self.facet_id, self.id)
+        return u'%s-%s' % (self.facet_id, self.id)
     
     @staticmethod
     def terms(request, facet_id=None, limit=settings.DEFAULT_LIMIT, offset=0):
@@ -837,7 +844,7 @@ class FacetTerm(DocType):
         data['id'] = self.id
         data['facet_id'] = self.facet_id
         data['term_id'] = self.facet_id
-        data['doctype'] = 'facetterms'
+        data['doctype'] = u'facetterms'
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-term',
@@ -861,7 +868,7 @@ class FacetTerm(DocType):
         data['id'] = self.id
         data['facet_id'] = self.facet_id
         data['term_id'] = self.facet_id
-        data['doctype'] = 'facetterms'
+        data['doctype'] = u'facetterms'
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-term',
@@ -874,28 +881,28 @@ class FacetTerm(DocType):
             request=request,
         )
         data['title'] = self.title
-        if self.facet_id == 'topics':
+        if self.facet_id == u'topics':
             data['_title'] = self._title
             data['description'] = self.description
             data['path'] = self.path
             if self.parent_id:
-                data['parent_id'] = api_reverse('rg-api-term', args=(['%s-%s' % (self.facet_id, self.parent_id)]), request=request)
+                data['parent_id'] = api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, self.parent_id)]), request=request)
             else:
-                data['parent_id'] = ''
+                data['parent_id'] = u''
             data['ancestors'] = [
-                api_reverse('rg-api-term', args=(['%s-%s' % (self.facet_id, tid)]), request=request)
+                api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, tid)]), request=request)
                 for tid in self.ancestors
             ]
             data['children'] = [
-                api_reverse('rg-api-term', args=(['%s-%s' % (self.facet_id, tid)]), request=request)
+                api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, tid)]), request=request)
                 for tid in self.children
             ]
             data['siblings'] = [
-                api_reverse('rg-api-term', args=(['%s-%s' % (self.facet_id, tid)]), request=request)
+                api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, tid)]), request=request)
                 for tid in self.siblings
             ]
             data['weight'] = self.weight
-        elif self.facet_id == 'facility':
+        elif self.facet_id == u'facility':
             data['type'] = self.type
             data['locations'] = []
             for n,loc in enumerate(self.locations):
@@ -913,18 +920,19 @@ class FacetTerm(DocType):
         return data
 
 
+@python_2_unicode_compatible
 class Facet(DocType):
     id = String(index='not_analyzed')  # Elasticsearch id
     title = String()
     description = String()
     terms = []
     
-    class Meta:
+    class Meta(object):
         index = settings.DOCSTORE_INDEX
-        doc_type = 'facets'
+        doc_type = u'facets'
     
     def __repr__(self):
-        return "<Facet '%s'>" % self.id
+        return u"<Facet '%s'>" % self.id
     
     def __str__(self):
         return self.id
@@ -943,7 +951,7 @@ class Facet(DocType):
     def to_dict_list(self, request=None):
         data = OrderedDict()
         data['id'] = self.id
-        data['doctype'] = 'facet'
+        data['doctype'] = u'facet'
         data['title'] = self.title
         data['description'] = self.description
         data['links'] = {}
@@ -964,7 +972,7 @@ class Facet(DocType):
         """
         data = OrderedDict()
         data['id'] = self.id
-        data['doctype'] = 'facet'
+        data['doctype'] = u'facet'
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-facet',
@@ -982,7 +990,7 @@ class Facet(DocType):
 
     @staticmethod
     def facets(request, limit=settings.DEFAULT_LIMIT, offset=0):
-        s = Search(doc_type='facets')[0:settings.MAX_SIZE]
+        s = Search(doc_type=u'facets')[0:settings.MAX_SIZE]
         response = s.execute()
         data = [
             Facet(
