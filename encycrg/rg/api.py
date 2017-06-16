@@ -165,7 +165,7 @@ def browse(request, format=None):
     data['topics'] = reverse('rg-api-topics', request=request)
     data['facilities'] = reverse('rg-api-facilities', request=request)
     for field in models.PAGE_BROWSABLE_FIELDS:
-        label = field.replace('rg_', '')
+        label = field.replace(u'rg_', u'')
         data[label] = reverse(
             'rg-api-browse-field', args=([field]), request=request
         )
@@ -335,7 +335,7 @@ def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
         return Response(status=status.HTTP_404_NOT_FOUND)
     data = [
         {
-            'title': url.replace('/','').replace('%20',' '),
+            'title': url.replace(u'/', u'').replace(u'%20', u' '),
             'json': reverse('rg-api-article', args=([url]), request=request),
             'html': reverse('rg-article', args=([url]), request=request),
         }
