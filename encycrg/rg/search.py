@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from past.builtins import basestring
+from builtins import object
 from collections import OrderedDict
 import json
 import logging
@@ -125,7 +127,7 @@ def run_search(request_data, request, sort_fields=[], limit=settings.DEFAULT_LIM
     else:
         raise Exception('doctypes must be a string or a list')
     if not doctypes:
-        doctypes = DOCTYPE_CLASS.keys()
+        doctypes = list(DOCTYPE_CLASS.keys())
     
     query = prep_query(
         text=q['fulltext'],
@@ -230,7 +232,7 @@ def _clean_dict(data):
     @param data: Standard DDR list-of-dicts data structure.
     """
     if data and isinstance(data, dict):
-        for key in data.keys():
+        for key in list(data.keys()):
             if not data[key]:
                 del(data[key])
 
@@ -286,5 +288,5 @@ def aggs_dict(aggregations):
             bucket['key']: bucket['doc_count']
             for bucket in data['buckets']
         }
-        for fieldname,data in aggregations.iteritems()
+        for fieldname,data in list(aggregations.items())
     }

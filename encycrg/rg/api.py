@@ -194,7 +194,7 @@ def browse_field(request, fieldname, format=None):
                 request=request
             ),
         }
-        for term,count in aggs.iteritems()
+        for term,count in list(aggs.items())
     ]
     return Response(data)
 
@@ -243,7 +243,7 @@ def categories(request, format=None):
                 request=request
             ),
         }
-        for term,count in aggs.iteritems()
+        for term,count in list(aggs.items())
     ]
     return Response(data)
 

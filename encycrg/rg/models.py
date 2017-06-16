@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from builtins import str
+from builtins import object
 from collections import OrderedDict
 import logging
 logger = logging.getLogger(__name__)
@@ -87,7 +89,7 @@ class Author(DocType):
     body = String()
     article_titles = String(index='not_analyzed', multi=True)
     
-    class Meta:
+    class Meta(object):
         index = settings.DOCSTORE_INDEX
         doc_type = 'authors'
     
@@ -195,7 +197,7 @@ class Author(DocType):
         TODO Should this happen upon import from MediaWiki?
         """
         if hasattr(self,'body') and self.body:
-            self.body = unicode(remove_status_markers(BeautifulSoup(self.body)))
+            self.body = str(remove_status_markers(BeautifulSoup(self.body)))
 
 DOCTYPE_CLASS['author'] = Author
 DOCTYPE_CLASS['authors'] = Author
@@ -270,7 +272,7 @@ class Page(DocType):
     #rg_lexile = String(index='not_analyzed', multi=True)
     #rg_guidedreadinglevel = String(index='not_analyzed', multi=True)
     
-    class Meta:
+    class Meta(object):
         index = settings.DOCSTORE_INDEX
         doc_type = 'articles'
     
@@ -422,7 +424,7 @@ class Page(DocType):
                 for category in page.categories:
                     # exclude internal editorial categories
                     if category not in settings.MEDIAWIKI_HIDDEN_CATEGORIES:
-                        if category not in categories.keys():
+                        if category not in list(categories.keys()):
                             categories[category] = []
                         # pages already sorted so category lists will be sorted
                         if page not in categories[category]:
@@ -441,7 +443,7 @@ class Page(DocType):
         TODO Should this happen upon import from MediaWiki?
         """
         if hasattr(self,'body') and self.body:
-            self.body = unicode(remove_status_markers(BeautifulSoup(self.body)))
+            self.body = str(remove_status_markers(BeautifulSoup(self.body)))
     
     def sources(self):
         """Returns list of published light Source objects for this Page.
@@ -460,7 +462,7 @@ class Page(DocType):
         for t in Elasticsearch.topics_by_url().get(self.absolute_url(), []):
             term = {
                 key: val
-                for key,val in t.iteritems()
+                for key,val in list(t.items())
             }
             term.pop('encyc_urls')
             term['ddr_topic_url'] = '%s/%s/' % (
@@ -543,7 +545,7 @@ class Source(DocType):
     filename = String(index='not_analyzed')
     img_path = String(index='not_analyzed')
     
-    class Meta:
+    class Meta(object):
         index = settings.DOCSTORE_INDEX
         doc_type = 'sources'
     
@@ -799,7 +801,7 @@ class FacetTerm(DocType):
         }
     )
     
-    class Meta:
+    class Meta(object):
         index = settings.DOCSTORE_INDEX
         doc_type = 'facetterms'
     
@@ -919,7 +921,7 @@ class Facet(DocType):
     description = String()
     terms = []
     
-    class Meta:
+    class Meta(object):
         index = settings.DOCSTORE_INDEX
         doc_type = 'facets'
     
