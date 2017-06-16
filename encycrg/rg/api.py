@@ -259,7 +259,7 @@ def category(request, category, format=None):
             }
         }
     }
-    limit = DEFAULT_LIMIT
+    limit = settings.DEFAULT_LIMIT
     offset = 0
     return Response(search.run_search(
         request_data=query,
