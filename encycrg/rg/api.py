@@ -161,8 +161,8 @@ def browse(request, format=None):
     """
     data = OrderedDict()
     data['categories'] = reverse('rg-api-categories', request=request)
-    data['topics'] = reverse('rg-api-topics', request=request)
-    data['facilities'] = reverse('rg-api-facilities', request=request)
+    data['topics'] = reverse('rg-api-terms', args=(['topics']), request=request)
+    data['facilities'] = reverse('rg-api-terms', args=(['facility']), request=request)
     for field in models.PAGE_BROWSABLE_FIELDS:
         label = field.replace('rg_', '')
         data[label] = reverse(
