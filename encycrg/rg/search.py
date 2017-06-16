@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
 from past.builtins import basestring
 from builtins import object
 from collections import OrderedDict
