@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
+from future.utils import python_2_unicode_compatible
 from builtins import str
 from builtins import object
 from collections import OrderedDict
@@ -75,6 +75,7 @@ AUTHOR_LIST_FIELDS = [
     'modified',
 ]
 
+@python_2_unicode_compatible
 class Author(DocType):
     """
     IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
@@ -227,6 +228,7 @@ PAGE_BROWSABLE_FIELDS = [
     'rg_hasteachingaids',
 ]
 
+@python_2_unicode_compatible
 class Page(DocType):
     """
     IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
@@ -511,6 +513,7 @@ SOURCE_LIST_FIELDS = [
     'img_path',
 ]
 
+@python_2_unicode_compatible
 class Source(DocType):
     """
     IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
@@ -700,6 +703,7 @@ class Source(DocType):
         return data
 
 
+@python_2_unicode_compatible
 class Citation(object):
     """Represents a citation for a MediaWiki page.
     IMPORTANT: not a Django model object!
@@ -764,6 +768,7 @@ class GeoPoint(InnerObjectWrapper):
 class ELink(InnerObjectWrapper):
     pass
 
+@python_2_unicode_compatible
 class FacetTerm(DocType):
     id = String(index='not_analyzed')  # Elasticsearch id
     facet_id = String(index='not_analyzed')
@@ -915,6 +920,7 @@ class FacetTerm(DocType):
         return data
 
 
+@python_2_unicode_compatible
 class Facet(DocType):
     id = String(index='not_analyzed')  # Elasticsearch id
     title = String()
