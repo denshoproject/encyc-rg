@@ -894,7 +894,6 @@ class FacetTerm(DocType):
                 api_reverse('rg-api-term', args=(['%s-%s' % (self.facet_id, tid)]), request=request)
                 for tid in self.siblings
             ]
-            data['encyc_urls'] = [url for url in self.encyc_urls]
             data['weight'] = self.weight
         elif self.facet_id == 'facility':
             data['type'] = self.type
@@ -905,11 +904,12 @@ class FacetTerm(DocType):
                 data['locations'][n]['geopoint'] = {}
                 data['locations'][n]['geopoint']['lat'] = loc.geopoint.lat
                 data['locations'][n]['geopoint']['lng'] = loc.geopoint.lng
-            data['elinks'] = []
-            for n,e in enumerate(self.elinks):
-                data['elinks'].append( {} )
-                data['elinks'][n]['label'] = e.label
-                data['elinks'][n]['url'] = e.url
+        data['encyc_urls'] = []
+        for n,item in enumerate(self.encyc_urls):
+            data['encyc_urls'].append( {} )
+            data['encyc_urls'][n]['title'] = item.title
+            data['encyc_urls'][n]['json'] = api_reverse('rg-api-article', args=([item.url_title]), request=request)
+            data['encyc_urls'][n]['html'] = api_reverse('rg-article', args=([item.url_title]), request=request)
         return data
 
 
