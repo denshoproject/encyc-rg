@@ -193,13 +193,13 @@ install-elasticsearch: get-elasticsearch
 
 
 install-virtualenv:
-	apt-get --assume-yes install python3-pip python3-virtualenv
+	apt-get --assume-yes install python-pip python-virtualenv
 	test -d $(VIRTUALENV) || virtualenv --python=python3 --distribute --setuptools $(VIRTUALENV)
 
 install-setuptools: install-virtualenv
 	@echo ""
 	@echo "install-setuptools -----------------------------------------------------"
-	apt-get --assume-yes install python3-dev
+	apt-get --assume-yes install python-dev
 	source $(VIRTUALENV)/bin/activate; \
 	pip3 install -U bpython setuptools
 
