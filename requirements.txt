@@ -16,6 +16,11 @@ gunicorn                           # MIT      y
 markdown
 redis                              # MIT      y
 
+bpython
+curtsies
+greenlet
+pygments
+
 caniusepython3
 future
 pylint
