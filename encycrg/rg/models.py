@@ -20,6 +20,8 @@ from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from rest_framework.reverse import reverse as api_reverse
 
+from . import search
+
 DOCTYPE_CLASS = {}  # Maps doctype names to classes
 
 SEARCH_LIST_FIELDS = []
@@ -106,16 +108,16 @@ class Author(DocType):
     @staticmethod
     def dict_list(hit, request):
         data = OrderedDict()
-        data['id'] = hit['_source']['url_title']
-        data['doctype'] = u'authors'
+        data['id'] = hit.url_title
+        data['doctype'] = hit.meta.doc_type
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-author',
-            args=([hit['_source']['url_title']]),
+            args=([hit.url_title]),
             request=request,
         )
         data['links']['json'] = api_reverse(
-            'rg-api-author', args=([hit['_source']['url_title']]),
+            'rg-api-author', args=([hit.url_title]),
             request=request,
         )
         return data
@@ -290,17 +292,18 @@ class Page(DocType):
     @staticmethod
     def dict_list(hit, request):
         data = OrderedDict()
-        data['id'] = hit['_source']['url_title']
-        data['doctype'] = u'articles'
+        hit_dict = hit.__dict__
+        data['id'] = hit.url_title
+        data['doctype'] = hit.meta.doc_type
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-api-article',
-            args=([hit['_source']['url_title']]),
+            args=([hit.url_title]),
             request=request,
         )
         data['links']['json'] = api_reverse(
             'rg-api-article',
-            args=([hit['_source']['url_title']]),
+            args=([hit.url_title]),
             request=request
         )
         return data
@@ -379,37 +382,31 @@ class Page(DocType):
         return self.title_sort[0]
     
     @staticmethod
-    def pages(only_rg=True):
+    def pages(only_rg=True, start=0, stop=settings.MAX_SIZE):
         """Returns list of published light Page objects.
         
         @param only_rg: boolean Only return RG pages (rg_rgmediatype present)
         @returns: list
         """
-        KEY = u'encyc-front:pages'
-        TIMEOUT = 60*5
-        #data = cache.get(KEY)
-        data = None
-        if not data:
-            s = Search().doc_type(Page)[0:settings.MAX_SIZE]
-            if only_rg:
-                # require rg_rgmediatype
-                s = s.filter(Q('exists', field=['rg_rgmediatype']))
-            s = s.sort('title_sort')
-            s = s.fields(PAGE_LIST_FIELDS)
-            response = s.execute()
-            data = []
-            for hit in response:
-                if hitvalue(hit, 'published'):
-                    data.append(Page(
-                        url_title  = hitvalue(hit, 'url_title'),
-                        title      = hitvalue(hit, 'title'),
-                        title_sort = hitvalue(hit, 'title_sort'),
-                        published  = hitvalue(hit, 'published'),
-                        modified   = hitvalue(hit, 'modified'),
-                        categories = hitvalue(hit, 'categories'),
-                    ))
-            #cache.set(KEY, data, TIMEOUT)
-        return data
+        s = Search().doc_type(Page)
+        if only_rg:
+            # require rg_rgmediatype
+            s = s.filter(Q('exists', field=['rg_rgmediatype']))
+        s = s.sort('title_sort')
+        s = s.fields(PAGE_LIST_FIELDS)
+        query = s.to_dict()
+        count = s.count()
+        s = s[start:stop]
+        results = s.execute()
+        
+        return search.SearchResults(
+            mappings=models.DOCTYPE_CLASS,
+            query=query,
+            count=count,
+            results=results,
+            limit=limit,
+            offset=offset,
+        )
     
     @staticmethod
     def pages_by_category():
@@ -577,16 +574,16 @@ class Source(DocType):
     @staticmethod
     def dict_list(hit, request):
         data = OrderedDict()
-        data['id'] = hit['_source']['encyclopedia_id']
-        data['doctype'] = u'sources'
+        data['id'] = hit.encyclopedia_id
+        data['doctype'] = hit.meta.doc_type
         data['links'] = {}
         data['links']['html'] = api_reverse(
             'rg-source',
-            args=([hit['_source']['encyclopedia_id']]),
+            args=([hit.encyclopedia_id]),
             request=request,
         )
         data['links']['json'] = api_reverse(
-            'rg-api-source', args=([hit['_source']['encyclopedia_id']]),
+            'rg-api-source', args=([hit.encyclopedia_id]),
             request=request,
         )
         return data
@@ -943,9 +940,9 @@ class Facet(DocType):
     @staticmethod
     def dict_list(hit, request):
         data = OrderedDict()
-        data['id'] = hit['_source']['id']
-        data['title'] = hit['_source']['title']
-        data['description'] = hit['_source']['description']
+        data['id'] = hit.id
+        data['title'] = hit.title
+        data['description'] = hit.description
         return data
 
     def to_dict_list(self, request=None):
