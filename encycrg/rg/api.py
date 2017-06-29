@@ -58,7 +58,7 @@ def authors(request, format=None):
 @api_view(['GET'])
 def sources(request, format=None):
     s = search.Search().doc_type(models.Source).query("match_all")
-    s = s.sort('title_sort')
+    s = s.sort('encyclopedia_id')
     limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
     offset = int(request.GET.get('offset', 0))
     searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
@@ -128,14 +128,14 @@ def browse_field(request, fieldname, format=None):
     data = [
         {
             'term': term,
-            'count': count,
+            'count': aggs[term],
             'url': reverse(
                 'rg-api-browse-fieldvalue',
                 args=([fieldname, term]),
                 request=request
             ),
         }
-        for term,count in list(aggs.items())
+        for term in sorted(list(aggs.keys()))
     ]
     return Response(data)
 
@@ -149,7 +149,7 @@ def browse_field_value(request, fieldname, value, format=None):
                 fieldname: value,
             }
         }
-    })
+    }).sort('title_sort')
     limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
     offset = int(request.GET.get('offset', 0))
     searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
@@ -171,14 +171,14 @@ def categories(request, format=None):
     data = [
         {
             'term': term,
-            'count': count,
+            'count': aggs[term],
             'url': reverse(
                 'rg-api-browse-fieldvalue',
                 args=([fieldname, term]),
                 request=request
             ),
         }
-        for term,count in list(aggs.items())
+        for term in sorted(list(aggs.keys()))
     ]
     return Response(data)
 
@@ -188,7 +188,7 @@ def category(request, category, format=None):
     """
     s = search.Search().doc_type(models.Page).query(
         "match", categories=category
-    )
+    ).sort('title_sort')
     limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
     offset = int(request.GET.get('offset', 0))
     searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
