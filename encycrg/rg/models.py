@@ -107,6 +107,12 @@ class Author(DocType):
     
     @staticmethod
     def dict_list(hit, request):
+        """Structure a search results hit for listing
+        
+        @param hit: elasticsearch_dsl.result.Result
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
+        """
         data = OrderedDict()
         data['id'] = hit.url_title
         data['doctype'] = hit.meta.doc_type
@@ -123,6 +129,11 @@ class Author(DocType):
         return data
 
     def to_dict_list(self, request=None):
+        """Structure an Author for presentation in a SearchResults list
+        
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
+        """
         data = OrderedDict()
         data['id'] = self.url_title
         data['doctype'] = u'authors'
@@ -138,19 +149,30 @@ class Author(DocType):
         )
         return data
     
-    def dict_all(self, data=OrderedDict()):
-        """Return a dict with all fields
+    def dict_all(self, request=None):
+        """Return a dict with all Author fields
+        
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
         """
         def setval(self, data, fieldname):
             data[fieldname] = hitvalue(self, fieldname)
         
+        # basic data from list
+        data = self.to_dict_list(request)
+        data['articles'] = []
+        # fill in
         setval(self, data, 'title')
         setval(self, data, 'title_sort')
         #url_title
         setval(self, data, 'modified')
         #mw_api_url
         setval(self, data, 'body')
-        #article_titles
+        # overwrite
+        data['articles'] = [
+            api_reverse('rg-api-article', args=([url_title]), request=request)
+            for url_title in self.article_titles
+        ]
         return data
     
     def articles(self):
@@ -291,6 +313,12 @@ class Page(DocType):
     
     @staticmethod
     def dict_list(hit, request):
+        """Structure a search results hit for listing
+        
+        @param hit: elasticsearch_dsl.result.Result
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
+        """
         data = OrderedDict()
         hit_dict = hit.__dict__
         data['id'] = hit.url_title
@@ -309,7 +337,12 @@ class Page(DocType):
         return data
 
     def to_dict_list(self, request=None):
-        data = OrderedDict()
+        """Structure a Page for presentation in a SearchResults list
+        
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
+        """
+        data=OrderedDict()
         data['id'] = self.url_title
         data['doctype'] = u'articles'
         data['links'] = {}
@@ -325,12 +358,23 @@ class Page(DocType):
         )
         return data
     
-    def dict_all(self, data=OrderedDict()):
-        """Return a dict with all fields
+    def dict_all(self, request=None):
+        """Return a dict with all Page fields
+        
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
         """
         def setval(self, data, fieldname):
             data[fieldname] = hitvalue(self, fieldname)
         
+        # basic data from list
+        data = self.to_dict_list(request)
+        # put these at the top because OrderedDict
+        data['categories'] = []
+        data['topics'] = []
+        data['authors'] = []
+        data['sources'] = []
+        # fill in
         setval(self, data, 'title')
         setval(self, data, 'title_sort')
         #url_title
@@ -362,6 +406,20 @@ class Page(DocType):
         setval(self, data, 'rg_hasteachingaids')
         setval(self, data, 'rg_warnings')
         setval(self, data, 'body')
+        # overwrite
+        data['categories'] = [
+            api_reverse('rg-api-category', args=([category]), request=request)
+            for category in self.categories
+        ]
+        #'ddr_topic_terms': topic_term_ids,
+        data['sources'] = [
+            api_reverse('rg-api-source', args=([source_id]), request=request)
+            for source_id in self.source_ids
+        ]
+        data['authors'] = [
+            api_reverse('rg-api-author', args=([author_titles]), request=request)
+            for author_titles in self.authors_data['display']
+        ]
         return data
 
     def authors(self):
@@ -573,6 +631,12 @@ class Source(DocType):
 
     @staticmethod
     def dict_list(hit, request):
+        """Structure a search results hit for listing
+        
+        @param hit: elasticsearch_dsl.result.Result
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
+        """
         data = OrderedDict()
         data['id'] = hit.encyclopedia_id
         data['doctype'] = hit.meta.doc_type
@@ -589,6 +653,11 @@ class Source(DocType):
         return data
 
     def to_dict_list(self, request=None):
+        """Structure a Source for presentation in a SearchResults list
+        
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
+        """
         data = OrderedDict()
         data['id'] = self.encyclopedia_id
         data['doctype'] = u'sources'
@@ -605,12 +674,19 @@ class Source(DocType):
         )
         return data
 
-    def dict_all(self, data=OrderedDict()):
-        """Return a dict with all fields
+    def dict_all(self, request=None):
+        """Return a dict with all Source fields
+        
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
         """
         def setval(self, data, fieldname):
             data[fieldname] = hitvalue(self, fieldname)
         
+        # basic data from list
+        data = self.to_dict_list(request)
+        # put these at the top because OrderedDict
+        # fill in
         setval(self, data, 'encyclopedia_id')
         setval(self, data, 'densho_id')
         setval(self, data, 'psms_id')
@@ -859,7 +935,10 @@ class FacetTerm(DocType):
         return data
 
     def dict_all(self, request=None):
-        """Return a dict with all fields
+        """Return a dict with all FacetTerm fields
+        
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
         """
         data = OrderedDict()
         data['id'] = self.id
@@ -965,7 +1044,10 @@ class Facet(DocType):
         return data
 
     def dict_all(self, request=None):
-        """Return a dict with all fields
+        """Return a dict with all Facet fields
+        
+        @param request: django.http.request.HttpRequest
+        @returns: OrderedDict
         """
         data = OrderedDict()
         data['id'] = self.id

@@ -307,13 +307,9 @@ class SearchResults(object):
             if isinstance(o, dict) or isinstance(o, OrderedDict):
                 data['objects'].append(o)
             elif isinstance(o, Result):
-                data['objects'].append(
-                    self.mappings[o.meta.doc_type].dict_list(o, request)
-                )
+                data['objects'].append(self.mappings[o.meta.doc_type].dict_list(o, request))
             else:
-                data['objects'].append(
-                    o.to_dict_list(request=request)
-                )
+                data['objects'].append(o.to_dict_list(request=request))
         data['query'] = self.query
         return data
 
