@@ -49,7 +49,7 @@ def start_stop(limit, offset):
     >>> start_stop(10, 2)
     20,29
     """
-    start = limit * offset
+    start = offset
     stop = (start + limit) - 1
     return start,stop
     
