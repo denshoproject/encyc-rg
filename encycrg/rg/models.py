@@ -246,9 +246,9 @@ PAGE_BROWSABLE_FIELDS = [
     'rg_relatedevents',
     'rg_availability',
     'rg_freewebversion',
-    'rg_denshotopic',
+    #'rg_denshotopic',
     'rg_geography',
-    'rg_facility',
+    #'rg_facility',
     'rg_hasteachingaids',
 ]
 
@@ -288,9 +288,9 @@ class Page(DocType):
     rg_relatedevents = String()
     rg_availability = String(index='not_analyzed')
     rg_freewebversion = String(index='not_analyzed')
-    rg_denshotopic = String(index='not_analyzed', multi=True)
+    #rg_denshotopic = String(index='not_analyzed', multi=True)
     rg_geography = String(index='not_analyzed', multi=True)
-    rg_facility = String(index='not_analyzed', multi=True)
+    #rg_facility = String(index='not_analyzed', multi=True)
     rg_chronology = String(index='not_analyzed', multi=True)
     rg_hasteachingaids = String(index='not_analyzed')
     rg_warnings = String()
@@ -399,9 +399,9 @@ class Page(DocType):
         setval(self, data, 'rg_relatedevents')
         setval(self, data, 'rg_availability')
         setval(self, data, 'rg_freewebversion')
-        setval(self, data, 'rg_denshotopic')
+        #setval(self, data, 'rg_denshotopic')
         setval(self, data, 'rg_geography')
-        setval(self, data, 'rg_facility')
+        #setval(self, data, 'rg_facility')
         setval(self, data, 'rg_chronology')
         setval(self, data, 'rg_hasteachingaids')
         setval(self, data, 'rg_warnings')
