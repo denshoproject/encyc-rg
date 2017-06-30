@@ -14,12 +14,12 @@ DOWNLOADS_DIR=/tmp/$(APP)-install
 REQUIREMENTS=$(INSTALLDIR)/requirements.txt
 PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 
-VIRTUALENV=$(INSTALLDIR)/venv/$(APP)
+VIRTUALENV=$(INSTALLDIR)/env
 SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
 
 PACKAGE_BASE=/tmp/encycrg
 PACKAGE_TMP=$(PACKAGE_BASE)/encyc-rg
-PACKAGE_VENV=$(PACKAGE_TMP)/venv/encycrg
+PACKAGE_ENV=$(PACKAGE_TMP)/env
 # current branch name minus dashes or underscores
 PACKAGE_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
 # current commit date minus dashes
@@ -145,7 +145,7 @@ apt-upgrade:
 	apt-get --assume-yes upgrade
 
 install-core:
-	apt-get --assume-yes install bzip2 curl gdebi-core logrotate ntp p7zip-full wget
+	apt-get --assume-yes install bzip2 curl gdebi-core logrotate ntp p7zip-full wget python3
 
 git-config:
 	git config --global alias.st status
@@ -194,14 +194,14 @@ install-elasticsearch: get-elasticsearch
 
 install-virtualenv:
 	apt-get --assume-yes install python-pip python-virtualenv
-	test -d $(VIRTUALENV) || virtualenv --distribute --setuptools $(VIRTUALENV)
+	test -d $(VIRTUALENV) || virtualenv --python=python3 --distribute --setuptools $(VIRTUALENV)
 
 install-setuptools: install-virtualenv
 	@echo ""
 	@echo "install-setuptools -----------------------------------------------------"
 	apt-get --assume-yes install python-dev
 	source $(VIRTUALENV)/bin/activate; \
-	pip install -U bpython setuptools
+	pip3 install -U bpython setuptools
 
 
 get-app: get-encyc-rg get-static
@@ -217,14 +217,14 @@ clean-app: clean-encyc-rg
 
 get-encyc-rg:
 	git pull
-	pip install -U -r $(REQUIREMENTS)
+	pip3 install -U -r $(REQUIREMENTS)
 
 install-encyc-rg: install-virtualenv
 	@echo ""
 	@echo "encyc-rg --------------------------------------------------------------"
 	apt-get --assume-yes install imagemagick sqlite3 supervisor
 	source $(VIRTUALENV)/bin/activate; \
-	pip install -U -r $(REQUIREMENTS)
+	pip3 install -U -r $(REQUIREMENTS)
 # logs dir
 	-mkdir $(LOGS_BASE)
 	chown -R $(USER).root $(LOGS_BASE)
@@ -247,12 +247,12 @@ update-encyc-rg:
 	@echo "encyc-rg --------------------------------------------------------------"
 	git fetch && git pull
 	source $(VIRTUALENV)/bin/activate; \
-	pip install -U -r $(REQUIREMENTS)
+	pip3 install -U -r $(REQUIREMENTS)
 
 uninstall-encyc-rg:
 	cd $(INSTALLDIR)/encycrg
 	source $(VIRTUALENV)/bin/activate; \
-	-pip uninstall -r $(REQUIREMENTS)
+	-pip3 uninstall -r $(REQUIREMENTS)
 	-rm /usr/local/lib/python2.7/dist-packages/encycrg-*
 	-rm -Rf /usr/local/lib/python2.7/dist-packages/encycrg
 
@@ -402,7 +402,7 @@ package:
 	cp -R $(INSTALL_LOCAL) $(PACKAGE_TMP)
 	cd $(PACKAGE_TMP)
 	git clean -fd   # Remove all untracked files
-	virtualenv --relocatable $(PACKAGE_VENV)  # Make venv relocatable
+	virtualenv --relocatable $(PACKAGE_ENV)  # Make venv relocatable
 	-cd $(PACKAGE_BASE); tar czf $(PACKAGE_TGZ) encyc-rg
 
 rsync-packaged:

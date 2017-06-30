@@ -9,8 +9,11 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
+from __future__ import unicode_literals
 
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+import configparser
 import logging
 import os
 import sys
@@ -23,7 +26,7 @@ CONFIG_FILES = [
     '/etc/encyc/encycrg-local.cfg'
 ]
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 configs_read = config.read(CONFIG_FILES)
 if not configs_read:
     raise Exception('No config file!')

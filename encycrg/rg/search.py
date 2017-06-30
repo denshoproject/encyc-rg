@@ -1,22 +1,197 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+from past.builtins import basestring
+from builtins import object
 from collections import OrderedDict
 import json
 import logging
 logger = logging.getLogger(__name__)
+import urllib
 
-from elasticsearch_dsl import Index, Search, A
+from elasticsearch_dsl import Index, Search, A, Q, A
+from elasticsearch_dsl.query import MultiMatch, Match
 from elasticsearch_dsl.connections import connections
+from elasticsearch_dsl.result import Result
 
 from django.conf import settings
-
-from .models import DOCTYPE_CLASS, SEARCH_LIST_FIELDS, PAGE_BROWSABLE_FIELDS
-from .models import NotFoundError
+from django.core.paginator import Paginator
 
 
 # set default hosts and index
 connections.create_connection(hosts=settings.DOCSTORE_HOSTS)
 INDEX = Index(settings.DOCSTORE_INDEX)
+
+
+def es_offset(pagesize, thispage):
+    """Convert Django pagination to Elasticsearch limit/offset
+    
+    >>> es_offset(pagesize=10, thispage=1)
+    0
+    >>> es_offset(pagesize=10, thispage=2)
+    10
+    >>> es_offset(pagesize=10, thispage=3)
+    20
+    
+    @param pagesize: int Number of items per page
+    @param thispage: int The current page (1-indexed)
+    @returns: int offset
+    """
+    return pagesize * (thispage - 1)
+
+def start_stop(limit, offset):
+    """Convert Elasticsearch limit/offset to Python slicing start,stop
+    
+    >>> start_stop(10, 0)
+    0,9
+    >>> start_stop(10, 1)
+    10,19
+    >>> start_stop(10, 2)
+    20,29
+    """
+    start = offset
+    stop = (start + limit) - 1
+    return start,stop
+    
+def django_page(limit, offset):
+    """Convert Elasticsearch limit/offset pagination to Django page
+    
+    >>> django_page(limit=10, offset=0)
+    1
+    >>> django_page(limit=10, offset=10)
+    2
+    >>> django_page(limit=10, offset=20)
+    3
+    
+    @param limit: int Number of items per page
+    @param offset: int Start of current page
+    @returns: int page
+    """
+    return divmod(offset, limit)[0] + 1
+
+#def page_start_next(pagesize, thispage):
+#    """
+#    @param pagesize: int
+#    @param thispage: int
+#    @returns: page_start,page_next (int,int)
+#    """
+#    return (
+#        (thispage-1) * pagesize,
+#        (thispage) * pagesize,
+#    )
+
+#def pad_results(results, pagesize, thispage):
+#    """Returns result set objects with dummy objects before/after specified page
+#    
+#    This is necessary for displaying API results using the
+#    Django paginator.
+#    
+#    @param objects: dict Raw output of search API
+#    @param pagesize: int
+#    @param thispage: int
+#    @param total: int Total number of results
+#    @returns: list of objects
+#    """
+#    page_start = (thispage-1) * pagesize
+#    page_next = (thispage) * pagesize
+#    # pad before
+#    for n in range(0, page_start):
+#        results['objects'].insert(n, {'n':n})
+#    # pad after
+#    for n in range(page_next, results['total']):
+#        results['objects'].append({'n':n})
+#    return results['objects']
+
+
+
+class Searcher(object):
+    """
+    >>> s = Searcher(index, mappings=DOCTYPE_CLASS, fields=SEARCH_LIST_FIELDS)
+    >>> s.prep(request_data)
+    'ok'
+    >>> r = s.execute()
+    'ok'
+    >>> d = r.to_dict(request)
+    """
+    index = INDEX
+    mappings = {}
+    fields = []
+    q = OrderedDict()
+    query = {}
+    sort_cleaned = None
+    s = None
+    
+    def __init__(self, mappings, fields, search=None):
+        self.mappings = mappings
+        self.fields = fields
+        self.s = search
+    
+    def prep(self, request_data):
+        """
+        searcher.prep(request_data)
+        OR
+        searcher.s = Search()
+        
+        """
+        query = prep_query(
+            text=request_data.get('fulltext', ''),
+            must=request_data.get('must', []),
+            should=request_data.get('should', []),
+            mustnot=request_data.get('mustnot', []),
+            aggs={},
+        )
+        logger.debug(json.dumps(query))
+        if not query:
+            raise Exception("Searcher.prep: Can't do an empty search. Give me something to work with here.")
+        
+        s = Search.from_dict(query)
+        s = s.source(
+            include=self.fields,
+            exclude=[],
+        )
+        # doc_types
+        doctype_names = None
+        if isinstance(request_data.get('doctypes'), basestring):
+            doctype_names = request_data['doctypes'].split(',')
+        elif isinstance(request_data.get('doctypes'), list):
+            doctype_names = request_data['doctypes']
+        if not doctype_names:
+            doctype_names = list(self.mappings.keys())
+        doctypes = [self.mappings[d] for d in doctype_names]
+        s = s.doc_type(','.join(doctype_names))
+
+        if request_data.get('sort'):
+            sorts = ','.join(request_data['sort'])
+            s = s.sort(sorts)
+        self.s = s
+    
+    def execute(self, limit, offset):
+        """Execute a query and return SearchResults
+        
+        @param limit: int
+        @param offset: int
+        @returns: SearchResults
+        """
+        if not self.s:
+            raise Exception('Searcher has no ES Search object.')
+        start,stop = start_stop(limit, offset)
+        response = self.s[start:stop].execute()
+        return SearchResults(
+            query=self.query,
+            mappings=self.mappings,
+            count=response.hits.total,
+            results=response,
+            objects=[],
+            limit=limit,
+            offset=offset,
+        )
+
+
+class ESPaginator(Paginator):
+    """
+    Takes ES results automatically pads results
+    """
+    pass
 
 
 class SearchResults(object):
@@ -27,136 +202,117 @@ class SearchResults(object):
     >>> sr = search.run_search(request_data=q, request=None)
     """
     query = {}
-    _request = None
     aggregations = None
     objects = []
     total = -1
     limit = -1
     offset = -1
+    start = -1
+    stop = -1
+    prev_offset = -1
+    next_offset = -1
+    prev_api = u''
+    next_api = u''
     page_size = -1
-    prev_page_api = ''
-    next_page_api = ''
     this_page = -1
-    prev_page = ''
-    next_page = ''
+    prev_page = -1
+    next_page = -1
+    prev_html = u''
+    next_html = u''
 
-    def __init__(self, query={}, results=None, objects=[], limit=settings.DEFAULT_LIMIT, offset=0, request=None):
+    def __init__(self, mappings, query={}, count=-1, results=None, objects=[], limit=settings.DEFAULT_LIMIT, offset=0):
+        self.mappings = mappings
         if not (results or objects):
             return
         self.query = query
-        self._request = request
         self.limit = int(limit)
         self.offset = int(offset)
-        self.page_size = self.limit
+
+        if count != -1:
+            self.total = count
+        elif results and results.hits.total:
+            self.total = int(results.hits.total)
+        elif objects:
+            self.total = len(objects)
         
         if results:
-            self.objects = [
-                DOCTYPE_CLASS[hit['_type']].dict_list(hit, self._request)
-                for hit in results.hits.hits
-            ]
+            #self.objects = [
+            #    self.mappings[hit.meta.doc_type].dict_list(hit, self.request)
+            #    for hit in results
+            #]
+            self.objects = [hit for hit in results]
             self.aggregations = getattr(results, 'aggregations', {})
-            self.total = int(results.hits.total)
 
         elif objects:
             self.objects = objects
-            self.total = len(self.objects)
+
+        # elasticsearch
+        self.prev_offset = self.offset - self.limit
+        self.next_offset = self.offset + self.limit
+        if self.prev_offset < 0:
+            self.prev_offset = None
+        if self.next_offset >= self.total:
+            self.next_offset = None
+
+        # django
+        self.page_size = self.limit
+        self.this_page = django_page(self.limit, self.offset)
+        self.prev_page = u''
+        self.next_page = u''
         
-        # API pagination
-        p = offset - limit
-        n = offset + limit
-        if p < 0:
-            p = None
-        if n >= self.total:
-            n = None
-        if p is not None:
-            self.prev_page_api = '?limit=%s&offset=%s' % (limit, p)
-        if n:
-            self.next_page_api = '?limit=%s&offset=%s' % (limit, n)
         
         # Django pagination
+
+    def _make_prevnext_url(self, query, request=None):
+        if request:
+            return urllib.parse.urlunsplit([
+                request.META['wsgi.url_scheme'],
+                request.META['HTTP_HOST'],
+                request.META['PATH_INFO'],
+                query,
+                None,
+            ])
+        return '?%s' % query
     
-    def ordered_dict(self):
-        """Express search results in API and Redis-friendly dict
-        
+    def to_dict(self, request=None):
+        """Express search results in API and Redis-friendly structure
+        returns: dict
+        """
+        return self._dict({}, request=request)
+    
+    def ordered_dict(self, request=None):
+        """Express search results in API and Redis-friendly structure
         returns: OrderedDict
         """
-        data = OrderedDict()
+        return self._dict(OrderedDict(), request=request)
+    
+    def _dict(self, data, request=None):
         data['total'] = self.total
-        data['page_size'] = self.limit
-        data['prev_page'] = self.prev_page_api
-        data['next_page'] = self.next_page_api
+        data['limit'] = self.limit
+        data['offset'] = self.offset
+        data['prev_offset'] = self.prev_offset
+        data['next_offset'] = self.next_offset
+        data['page_size'] = self.page_size
+        data['this_page'] = self.this_page
+        data['prev_api'] = self._make_prevnext_url(
+            u'limit=%s&offset=%s' % (self.limit, self.prev_offset),
+            request
+        )
+        data['next_api'] = self._make_prevnext_url(
+            u'limit=%s&offset=%s' % (self.limit, self.next_offset),
+            request
+        )
         data['objects'] = []
         for o in self.objects:
             if isinstance(o, dict) or isinstance(o, OrderedDict):
                 data['objects'].append(o)
+            elif isinstance(o, Result):
+                data['objects'].append(self.mappings[o.meta.doc_type].dict_list(o, request))
             else:
-                data['objects'].append(
-                    o.to_dict_list(request=self._request)
-                )
+                data['objects'].append(o.to_dict_list(request=request))
         data['query'] = self.query
         return data
 
-
-def run_search(request_data, request, sort_fields=[], limit=settings.DEFAULT_LIMIT, offset=0):
-    """Return object children list in Django REST Framework format.
-    
-    Returns a paged list with count/prev/next metadata
-    
-    @returns: dict
-    """
-    q = OrderedDict()
-    q = {}
-    q['fulltext'] = request_data.get('fulltext')
-    q['must'] = request_data.get('must', [])
-    q['should'] = request_data.get('should', [])
-    q['mustnot'] = request_data.get('mustnot', [])
-    q['doctypes'] = request_data.get('doctypes', [])
-    q['sort'] = request_data.get('sort', [])
-    q['offset'] = request_data.get('offset', 0)
-    q['limit'] = request_data.get('limit', limit)
-    
-    if not (q['fulltext'] or q['must'] or q['should'] or q['mustnot']):
-        return q,[]
-
-    if not isinstance(q['doctypes'], basestring):
-        doctypes = q['doctypes']
-    elif isinstance(q['doctypes'], list):
-        doctypes = ','.join(q['doctypes'])
-    else:
-        raise Exception('doctypes must be a string or a list')
-    if not doctypes:
-        doctypes = DOCTYPE_CLASS.keys()
-    
-    query = prep_query(
-        text=q['fulltext'],
-        must=q['must'],
-        should=q['should'],
-        mustnot=q['mustnot'],
-        aggs={},
-    )
-    logger.debug(json.dumps(query))
-    if not query:
-        raise Exception("Can't do an empty search. Give me something to work with here.")
-    
-    sort_cleaned = _clean_sort(q['sort'])
-    
-    s = Search.from_dict(query)
-    for d in doctypes:
-        s = s.doc_type(DOCTYPE_CLASS[d])
-    #s = s.sort(...)
-    #s = s[from_:from_ + size]
-    s = s.source(
-        include=SEARCH_LIST_FIELDS,
-        exclude=[],
-    )
-    results = s.execute()
-    return SearchResults(
-        query=query,
-        results=results,
-        limit=limit,
-        offset=offset,
-        request=request,
-    )
 
 def prep_query(text='', must=[], should=[], mustnot=[], aggs={}):
     """Assembles a dict conforming to the Elasticsearch query DSL.
@@ -198,16 +354,22 @@ def prep_query(text='', must=[], should=[], mustnot=[], aggs={}):
     @param aggs: dict Elasticsearch aggregations subquery (see above)
     @returns: dict
     """
+    assert isinstance(text, basestring)
+    assert isinstance(must, list)
+    assert isinstance(should, list)
+    assert isinstance(mustnot, list)
+    assert isinstance(aggs, dict)
     body = {
-        "query": {
-            "bool": {
-                "must": must,
-                "should": should,
-                "must_not": mustnot,
-            }
-        }
+        'query': {},
     }
+    if text or must or should or mustnot:
+        body['query']['bool'] = {}
+    if must:    body['query']['bool']['must'] = must
+    if should:  body['query']['bool']['should'] = should
+    if mustnot: body['query']['bool']['must_not'] = mustnot
     if text:
+        if not body['query']['bool'].get('must'):
+            body['query']['bool']['must'] = []
         body['query']['bool']['must'].append(
             {
                 "match": {
@@ -215,57 +377,11 @@ def prep_query(text='', must=[], should=[], mustnot=[], aggs={}):
                 }
             }
         )
+    if not body['query']:
+        body['query'] = {"match_all": {}}
     if aggs:
         body['aggregations'] = aggs
     return body
-
-def _clean_dict(data):
-    """Remove null or empty fields; ElasticSearch chokes on them.
-    
-    >>> d = {'a': 'abc', 'b': 'bcd', 'x':'' }
-    >>> _clean_dict(d)
-    >>> d
-    {'a': 'abc', 'b': 'bcd'}
-    
-    @param data: Standard DDR list-of-dicts data structure.
-    """
-    if data and isinstance(data, dict):
-        for key in data.keys():
-            if not data[key]:
-                del(data[key])
-
-def _clean_sort( sort ):
-    """Take list of [a,b] lists, return comma-separated list of a:b pairs
-    
-    >>> _clean_sort( 'whatever' )
-    >>> _clean_sort( [['a', 'asc'], ['b', 'asc'], 'whatever'] )
-    >>> _clean_sort( [['a', 'asc'], ['b', 'asc']] )
-    'a:asc,b:asc'
-    """
-    cleaned = ''
-    if sort and isinstance(sort,list):
-        all_lists = [1 if isinstance(x, list) else 0 for x in sort]
-        if not 0 in all_lists:
-            cleaned = ','.join([':'.join(x) for x in sort])
-    return cleaned
-
-def execute(doctypes=[], query={}, sort=[], fields=[], from_=0, size=settings.MAX_SIZE):
-    """Executes a query, get a list of zero or more hits.
-    
-    The "query" arg must be a dict that conforms to the Elasticsearch query DSL.
-    See docstore.search_query for more info.
-    
-    @param doctypes: list Type of object ('collection', 'entity', 'file')
-    @param query: dict The search definition using Elasticsearch Query DSL
-    @param sort: list of (fieldname,direction) tuples
-    @param fields: str
-    @param from_: int Index of document from which to start results
-    @param size: int Number of results to return
-    @returns raw ElasticSearch query output
-    """
-    logger.debug('search(index=%s, doctypes=%s, query=%s, sort=%s, fields=%s, from_=%s, size=%s' % (
-        INDEX, doctypes, query, sort, fields, from_, size
-    ))
 
 def aggs_dict(aggregations):
     """Simplify aggregations data in search results
@@ -286,5 +402,5 @@ def aggs_dict(aggregations):
             bucket['key']: bucket['doc_count']
             for bucket in data['buckets']
         }
-        for fieldname,data in aggregations.iteritems()
+        for fieldname,data in list(aggregations.items())
     }
