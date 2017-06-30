@@ -258,14 +258,15 @@ def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
         term = models.FacetTerm.get(term_id)
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    data = [
-        {
-            'title': url.replace(u'/', u'').replace(u'%20', u' '),
-            'json': reverse('rg-api-article', args=([url]), request=request),
-            'html': reverse('rg-article', args=([url]), request=request),
-        }
-        for url in term.encyc_urls
-    ]
+    data = []
+    for item in term.encyc_urls:
+        d = OrderedDict()
+        d['id'] = item['url_title'].replace(u'/', u'').replace(u'%20', u' ')
+        d['doctype'] = 'articles'
+        d['links'] = {}
+        d['links']['json'] = reverse('rg-api-article', args=([item['url_title']]), request=request)
+        d['links']['html'] = reverse('rg-article', args=([item['url_title']]), request=request)
+        data.append(d)
     return Response(data)
 
 

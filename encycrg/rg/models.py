@@ -989,10 +989,13 @@ class FacetTerm(DocType):
                 data['locations'][n]['geopoint']['lng'] = loc.geopoint.lng
         data['encyc_urls'] = []
         for n,item in enumerate(self.encyc_urls):
-            data['encyc_urls'].append( {} )
-            data['encyc_urls'][n]['title'] = item.title
-            data['encyc_urls'][n]['json'] = api_reverse('rg-api-article', args=([item.url_title]), request=request)
-            data['encyc_urls'][n]['html'] = api_reverse('rg-article', args=([item.url_title]), request=request)
+            d = OrderedDict()
+            d['id'] = item.title.replace(u'/', u'').replace(u'%20', u' ')
+            d['doctype'] = 'articles'
+            d['links'] = {}
+            d['links']['json'] = api_reverse('rg-api-article', args=([item.url_title]), request=request)
+            d['links']['html'] = api_reverse('rg-article', args=([item.url_title]), request=request)
+            data['encyc_urls'].append(d)
         return data
 
 
