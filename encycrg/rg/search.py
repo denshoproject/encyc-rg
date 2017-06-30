@@ -24,7 +24,7 @@ INDEX = Index(settings.DOCSTORE_INDEX)
 
 
 def es_offset(pagesize, thispage):
-    """Calculate ES offset given Django page args
+    """Convert Django pagination to Elasticsearch limit/offset
     
     >>> es_offset(pagesize=10, thispage=1)
     0
@@ -40,7 +40,7 @@ def es_offset(pagesize, thispage):
     return pagesize * (thispage - 1)
 
 def start_stop(limit, offset):
-    """ES-dsl uses Python slicing API for pagination
+    """Convert Elasticsearch limit/offset to Python slicing start,stop
     
     >>> start_stop(10, 0)
     0,9
@@ -53,14 +53,14 @@ def start_stop(limit, offset):
     stop = (start + limit) - 1
     return start,stop
     
-def django_thispage(limit, offset):
-    """Calculate Django page from ES limit and offset
+def django_page(limit, offset):
+    """Convert Elasticsearch limit/offset pagination to Django page
     
-    >>> django_thispage(limit=10, offset=0)
+    >>> django_page(limit=10, offset=0)
     1
-    >>> django_thispage(limit=10, offset=10)
+    >>> django_page(limit=10, offset=10)
     2
-    >>> django_thispage(limit=10, offset=20)
+    >>> django_page(limit=10, offset=20)
     3
     
     @param limit: int Number of items per page
@@ -256,7 +256,7 @@ class SearchResults(object):
 
         # django
         self.page_size = self.limit
-        self.this_page = django_thispage(self.limit, self.offset)
+        self.this_page = django_page(self.limit, self.offset)
         self.prev_page = u''
         self.next_page = u''
         
