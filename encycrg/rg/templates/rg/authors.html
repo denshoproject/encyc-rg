@@ -1,0 +1,13 @@
+{% extends "rg/base.html" %}
+
+{% block content %}
+
+<h1>
+Authors
+</h1>
+
+{% for author in authors %}
+<a href="{{ author.links.html }}">{{ author.id }}</a><br/>
+{% endfor %}
+
+{% endblock content %}

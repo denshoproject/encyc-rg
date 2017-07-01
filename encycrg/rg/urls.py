@@ -48,7 +48,7 @@ urlpatterns = [
     url(r"^sources/$", views.sources, name='rg-sources'),
     
     url(r'^api/1.0/$', api.index, name='rg-api-index'),
-    url(r'^$', views.Index.as_view(), name='rg-index'),
+    url(r'^$', views.index, name='rg-index'),
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)
 

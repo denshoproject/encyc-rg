@@ -1,0 +1,46 @@
+{% extends "rg/base.html" %}
+
+{% block title %}
+{{ article.title }}
+{% endblock %}
+
+{% block content %}
+<h1>
+{{ article.title }}
+</h1>
+
+{% if article.authors %}
+<dl>
+  <dt>Authors</dt>
+  {% for x in article.authors %}
+  <dd>{{ x }}</dd>{% endfor %}
+</dl>
+{% endif %}
+
+{% if article.categories %}
+<dl>
+  <dt>Categories</dt>
+  {% for x in article.categories %}
+  <dd>{{ x }}</dd>{% endfor %}
+</dl>
+{% endif %}
+
+{% if article.topics %}
+<dl>
+  <dt>Topics</dt>
+  {% for x in article.topics %}
+  <dd>{{ x }}</dd>{% endfor %}
+</dl>
+{% endif %}
+
+{% if article.sources %}
+<dl>
+  <dt>Sources</dt>
+  {% for x in article.sources %}
+  <dd>{{ x }}</dd>{% endfor %}
+</dl>
+{% endif %}
+
+{{ article.body|safe }}
+
+{% endblock content %}

@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <title>{% block title %}{% endblock %}</title>
+  </head>
+  <body>
+
+    <h3>
+      <a href="{% url "rg-index" %}">encyc-rg</a>
+    </h3>
+
+    <p>
+        <a href="{% url "rg-articles" %}">Articles</a>
+      | <a href="{% url "rg-categories" %}">Categories</a>
+      | <a href="{% url "rg-authors" %}">Authors</a>
+    </p>
+
+{% block content %}{% endblock content %}
+
+{% block footer %}
+    <hr size="1" />
+    <p>
+      encyc-rg footer <a href="{{ api_url }}">{{ api_url }}</a>
+    </p>
+{% endblock footer %}
+
+  </body>
+</html>

@@ -1,0 +1,23 @@
+{% extends "rg/base.html" %}
+
+{% block title %}
+{{ author.title }}
+{% endblock %}
+
+{% block content %}
+
+<h1>
+{{ author.title }}
+</h1>
+
+{{ author.body|safe }}
+
+{% if author.articles %}
+<dl>
+  <dt>Articles</dt>
+  {% for x in author.articles %}
+  <dd>{{ x }}</dd>{% endfor %}
+</dl>
+{% endif %}
+
+{% endblock content %}
