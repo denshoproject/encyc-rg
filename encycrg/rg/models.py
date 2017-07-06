@@ -170,7 +170,11 @@ class Author(DocType):
         setval(self, data, 'body')
         # overwrite
         data['articles'] = [
-            api_reverse('rg-api-article', args=([url_title]), request=request)
+            {
+                'json': api_reverse('rg-api-article', args=([url_title]), request=request),
+                'html': api_reverse('rg-article', args=([url_title]), request=request),
+                'title': url_title,
+            }
             for url_title in self.article_titles
         ]
         return data
@@ -237,20 +241,20 @@ PAGE_LIST_FIELDS = [
     'categories',
 ]
 
-PAGE_BROWSABLE_FIELDS = [
-    'rg_rgmediatype',
-    'rg_interestlevel',
-    'rg_readinglevel',
-    'rg_theme',
-    'rg_genre',
-    'rg_relatedevents',
-    'rg_availability',
-    'rg_freewebversion',
-    #'rg_denshotopic',
-    'rg_geography',
-    #'rg_facility',
-    'rg_hasteachingaids',
-]
+PAGE_BROWSABLE_FIELDS = {
+    'rg_rgmediatype': 'Media Type',
+    'rg_interestlevel': 'Interest Level',
+    'rg_readinglevel': 'Reading Level',
+    'rg_theme': 'Theme',
+    'rg_genre': 'Genre',
+    'rg_relatedevents': 'Related Events',
+    'rg_availability': 'Availability',
+    'rg_freewebversion': 'Free Web Version',
+    #'rg_denshotopic': 'Topic',
+    'rg_geography': 'Geography',
+    #'rg_facility': 'Facility',
+    'rg_hasteachingaids': 'Has Teaching Aids',
+}
 
 @python_2_unicode_compatible
 class Page(DocType):
@@ -325,7 +329,7 @@ class Page(DocType):
         data['doctype'] = hit.meta.doc_type
         data['links'] = {}
         data['links']['html'] = api_reverse(
-            'rg-api-article',
+            'rg-article',
             args=([hit.url_title]),
             request=request,
         )
@@ -408,16 +412,28 @@ class Page(DocType):
         setval(self, data, 'body')
         # overwrite
         data['categories'] = [
-            api_reverse('rg-api-category', args=([category]), request=request)
+            {
+                'json': api_reverse('rg-api-category', args=([category]), request=request),
+                'html': api_reverse('rg-category', args=([category]), request=request),
+                'title': category,
+            }
             for category in self.categories
         ]
         #'ddr_topic_terms': topic_term_ids,
         data['sources'] = [
-            api_reverse('rg-api-source', args=([source_id]), request=request)
+            {
+                'json': api_reverse('rg-api-source', args=([source_id]), request=request),
+                'html': api_reverse('rg-source', args=([source_id]), request=request),
+                'id': source_id,
+            }
             for source_id in self.source_ids
         ]
         data['authors'] = [
-            api_reverse('rg-api-author', args=([author_titles]), request=request)
+            {
+                'json': api_reverse('rg-api-author', args=([author_titles]), request=request),
+                'html': api_reverse('rg-author', args=([author_titles]), request=request),
+                'title': author_titles,
+            }
             for author_titles in self.authors_data['display']
         ]
         return data
@@ -832,6 +848,10 @@ DOCTYPE_CLASS['sources'] = Source
 SEARCH_LIST_FIELDS = AUTHOR_LIST_FIELDS + PAGE_LIST_FIELDS + SOURCE_LIST_FIELDS
 
 
+TERM_TITLES = {}  # values set later
+
+FACILITY_TYPES = {}
+
 class Location(InnerObjectWrapper):
     pass
 
@@ -937,6 +957,8 @@ class FacetTerm(DocType):
     def dict_all(self, request=None):
         """Return a dict with all FacetTerm fields
         
+        NOTE: we assume that TERM_TITLES is populated when this is called.
+        
         @param request: django.http.request.HttpRequest
         @returns: OrderedDict
         """
@@ -961,20 +983,40 @@ class FacetTerm(DocType):
             data['_title'] = self._title
             data['description'] = self.description
             data['path'] = self.path
+
+            def term_listitem(facet_id, tid, request=None):
+                term_id = '-'.join([facet_id, str(tid)])
+                item = TERM_TITLES.get(term_id)
+                if item:
+                    title = item['title']
+                    path = item['path']
+                else:
+                    title = term_id
+                    path = ''
+                d = OrderedDict()
+                d['id'] = term_id
+                d['json'] = api_reverse('rg-api-term', args=([u'%s-%s' % (facet_id, tid)]), request=request)
+                d['html'] = api_reverse('rg-term', args=([u'%s-%s' % (facet_id, tid)]), request=request)
+                d['path'] = path
+                d['title'] = title
+                return d
+            
             if self.parent_id:
                 data['parent_id'] = api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, self.parent_id)]), request=request)
+                data['parent'] = term_listitem(self.facet_id, self.parent_id, request)
             else:
                 data['parent_id'] = u''
+                data['parent'] = None
             data['ancestors'] = [
-                api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, tid)]), request=request)
+                term_listitem(self.facet_id, tid, request)
                 for tid in self.ancestors
             ]
             data['children'] = [
-                api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, tid)]), request=request)
+                term_listitem(self.facet_id, tid, request)
                 for tid in self.children
             ]
             data['siblings'] = [
-                api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, tid)]), request=request)
+                term_listitem(self.facet_id, tid, request)
                 for tid in self.siblings
             ]
             data['weight'] = self.weight
@@ -997,6 +1039,30 @@ class FacetTerm(DocType):
             d['links']['html'] = api_reverse('rg-article', args=([item.url_title]), request=request)
             data['encyc_urls'].append(d)
         return data
+
+TERM_TITLES = {
+    term.id: {
+        'id': term.id,
+        'title': term.title,
+        'path': term.path,
+    }
+    for term in FacetTerm.terms(request=None)
+}
+
+def facility_types():
+    return sorted(set([
+        term.type
+        for term in FacetTerm.terms(request=None, facet_id='facility')
+    ]))
+
+def facility_type(type_id):
+    return [
+        term
+        for term in FacetTerm.terms(request=None, facet_id='facility')
+        if term.type == type_id
+    ]
+
+
 
 
 @python_2_unicode_compatible

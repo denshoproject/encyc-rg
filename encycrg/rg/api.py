@@ -100,15 +100,30 @@ def source(request, url_title, format=None):
 def browse(request, format=None):
     """INDEX DOCS
     """
-    data = OrderedDict()
-    data['categories'] = reverse('rg-api-categories', request=request)
-    data['topics'] = reverse('rg-api-terms', args=(['topics']), request=request)
-    data['facilities'] = reverse('rg-api-terms', args=(['facility']), request=request)
-    for field in models.PAGE_BROWSABLE_FIELDS:
-        label = field.replace(u'rg_', u'')
-        data[label] = reverse(
-            'rg-api-browse-field', args=([field]), request=request
-        )
+    data = [
+        #{
+        #'title': 'categories',
+        #'json': reverse('rg-api-categories', request=request),
+        #'html': reverse('rg-categories', request=request),
+        #},
+        #{
+        #'title': 'topics',
+        #'json': reverse('rg-api-terms', args=(['topics']), request=request),
+        #'html': reverse('rg-terms', args=(['topics']), request=request),
+        #},
+        #{
+        #'title': 'facilities',
+        #'json': reverse('rg-api-terms', args=(['facility']), request=request),
+        #'html': reverse('rg-terms', args=(['facility']), request=request),
+        #},
+    ]
+    for key,val in models.PAGE_BROWSABLE_FIELDS.items():
+        data.append({
+            'id': key,
+            'title': val,
+            'json': reverse('rg-api-browse-field', args=([key]), request=request),
+            'html': reverse('rg-browse-field', args=([key]), request=request),
+        })
     return Response(data)
 
 @api_view(['GET'])
@@ -129,8 +144,13 @@ def browse_field(request, fieldname, format=None):
         {
             'term': term,
             'count': aggs[term],
-            'url': reverse(
+            'json': reverse(
                 'rg-api-browse-fieldvalue',
+                args=([fieldname, term]),
+                request=request
+            ),
+            'html': reverse(
+                'rg-browse-fieldvalue',
                 args=([fieldname, term]),
                 request=request
             ),
@@ -172,9 +192,14 @@ def categories(request, format=None):
         {
             'term': term,
             'count': aggs[term],
-            'url': reverse(
+            'api_url': reverse(
                 'rg-api-browse-fieldvalue',
                 args=([fieldname, term]),
+                request=request
+            ),
+            'url': reverse(
+                'rg-category',
+                args=([term]),
                 request=request
             ),
         }
