@@ -36,14 +36,27 @@ urlpatterns = [
     
     url(r'^terms/(?P<term_id>[\w\d-]+)/$', views.term, name='rg-term'),
     url(r"^facets/(?P<facet_id>[\w\W]+)/$", views.facet, name='rg-facet'),
+    url(r"^facets/$", views.facets, name='rg-facets'),
+    
+    url(r"^facilities/types/(?P<type_id>[\w\W]+)/$", views.facility_type, name='rg-facility-type'),
+    url(r'^facilities/(?P<term_id>[\w\d-]+)/$', views.facility, name='rg-facility'),
+    url(r"^facilities/$", views.facilities, name='rg-facilities'),
+
+    url(r'^topics/(?P<term_id>[\w\d-]+)/$', views.topic, name='rg-topic'),
+    url(r"^topics/$", views.topics, name='rg-topics'),
+    
     url(r"^categories/(?P<url_title>[\w\W]+)/$", views.category, name='rg-category'),
     url(r"^categories/$", views.categories, name='rg-categories'),
     
-    url(r"^articles/(?P<url_title>[\w\W]+)/$", views.article, name='rg-article'),
+    url(r"^browse/(?P<fieldname>[\w\W]+)/(?P<value>[\w\W]+)/$", views.browse_field_value, name='rg-browse-fieldvalue'),
+    url(r"^browse/(?P<fieldname>[\w\W]+)/$", views.browse_field, name='rg-browse-field'),
+    url(r"^browse/$", views.browse, name='rg-browse'),
+        
+    url(r"^wiki/(?P<url_title>[\w\W]+)/$", views.article, name='rg-article'),
     url(r"^authors/(?P<url_title>[\w\W]+)/$", views.author, name='rg-author'),
     url(r"^sources/(?P<url_title>[\w\W]+)/$", views.source, name='rg-source'),
     
-    url(r"^articles/$", views.articles, name='rg-articles'),
+    url(r"^wiki/$", views.articles, name='rg-articles'),
     url(r"^authors/$", views.authors, name='rg-authors'),
     url(r"^sources/$", views.sources, name='rg-sources'),
     

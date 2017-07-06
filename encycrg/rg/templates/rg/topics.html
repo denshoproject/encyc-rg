@@ -2,18 +2,19 @@
 
 
 {% block title %}
-Articles
+Topics
 {% endblock %}
 
 {% block headline %}
-Articles
+Topics
 {% endblock %}
 
 
 {% block content %}
 
-{% for article in articles %}
-<a href="{{ article.links.html }}">{{ article.id }}</a><br/>
+{% for term in query.objects %}
+<a href="{{ term.links.html }}">{{ term.path }}</a>
+<br/>
 {% endfor %}
 
 {% endblock content %}

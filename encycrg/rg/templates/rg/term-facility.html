@@ -1,0 +1,50 @@
+{% extends "rg/base.html" %}
+
+
+{% block title %}
+{{ term.title }}
+{% endblock %}
+
+{% block headline %}
+{{ term.title }}
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<ul>
+  <li>
+    <a href="{% url "rg-facilities" %}">Facilities</a>
+  </li>
+  <li>
+    <a href="{% url "rg-facility-type" term.type %}">{{ term.type }}</a>
+  </li>
+  <li>
+    {{ term.title }}
+  </li>
+</ul>
+{% endblock breadcrumbs %}
+
+
+{% block content %}
+{{ term.description|safe }}
+
+{% if term.locations %}
+<h3>Locations</h3>
+{% for loc in term.locations %}
+{{ loc.label }}
+<a href="https://www.google.com/maps/@{{ loc.geopoint.lat }},{{ loc.geopoint.lng }},10z">map</a>
+<br/>
+{% endfor %}
+{% endif %}
+
+{% if term.encyc_urls %}
+<h3>Articles</h3>
+<p>
+{% for article in term.encyc_urls %}
+<a href="{{ article.links.html }}">{{ article.id }}</a>
+<br/>
+{% endfor %}
+</p>
+{% endif %}
+
+{% endblock content %}

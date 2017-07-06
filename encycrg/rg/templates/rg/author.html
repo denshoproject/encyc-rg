@@ -1,22 +1,26 @@
 {% extends "rg/base.html" %}
 
+
 {% block title %}
 {{ author.title }}
 {% endblock %}
 
-{% block content %}
-
-<h1>
+{% block headline %}
 {{ author.title }}
-</h1>
+{% endblock %}
+
+
+{% block content %}
 
 {{ author.body|safe }}
 
 {% if author.articles %}
 <dl>
   <dt>Articles</dt>
-  {% for x in author.articles %}
-  <dd>{{ x }}</dd>{% endfor %}
+  {% for article in author.articles %}
+  <dd>
+    <a href="{{ article.html }}">{{ article.title }}</a>
+  </dd>{% endfor %}
 </dl>
 {% endif %}
 

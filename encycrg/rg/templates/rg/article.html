@@ -1,43 +1,54 @@
 {% extends "rg/base.html" %}
 
+
 {% block title %}
 {{ article.title }}
 {% endblock %}
 
-{% block content %}
-<h1>
+{% block headline %}
 {{ article.title }}
-</h1>
+{% endblock %}
+
+
+{% block content %}
 
 {% if article.authors %}
 <dl>
   <dt>Authors</dt>
-  {% for x in article.authors %}
-  <dd>{{ x }}</dd>{% endfor %}
+  {% for author in article.authors %}
+  <dd>
+    <a href="{{ author.html }}">{{ author.title }}</a>
+  </dd>{% endfor %}
 </dl>
 {% endif %}
 
 {% if article.categories %}
 <dl>
   <dt>Categories</dt>
-  {% for x in article.categories %}
-  <dd>{{ x }}</dd>{% endfor %}
+  {% for category in article.categories %}
+  <dd>
+    <a href="{{ category.html }}">{{ category.title }}</a>
+  </dd>{% endfor %}
 </dl>
 {% endif %}
 
 {% if article.topics %}
 <dl>
   <dt>Topics</dt>
-  {% for x in article.topics %}
-  <dd>{{ x }}</dd>{% endfor %}
+  {% for topic in article.topics %}
+  <dd>
+    <a href="{{ topic.html }}">{{ topic.title }}</a>
+  </dd>{% endfor %}
 </dl>
 {% endif %}
 
 {% if article.sources %}
 <dl>
   <dt>Sources</dt>
-  {% for x in article.sources %}
-  <dd>{{ x }}</dd>{% endfor %}
+  {% for source in article.sources %}
+  <dd>
+    <a href="{{ source.html }}">{{ source.title }}</a>
+  </dd>{% endfor %}
 </dl>
 {% endif %}
 

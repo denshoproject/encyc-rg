@@ -2,18 +2,18 @@
 
 
 {% block title %}
-Articles
+Facilities
 {% endblock %}
 
 {% block headline %}
-Articles
+Facilities
 {% endblock %}
 
 
 {% block content %}
 
-{% for article in articles %}
-<a href="{{ article.links.html }}">{{ article.id }}</a><br/>
+{% for type_id in facility_types %}
+<a href="{% url "rg-facility-type" type_id %}">{{ type_id }}</a><br/>
 {% endfor %}
 
 {% endblock content %}

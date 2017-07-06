@@ -1,0 +1,37 @@
+{% extends "rg/base.html" %}
+
+
+{% block title %}
+{{ url_title }}
+{% endblock %}
+
+{% block headline %}
+{{ url_title }}
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<ul>
+  <li>
+    <a href="{% url "rg-categories" %}">Categories</a>
+  </li>
+  <li>
+    {{ url_title }}
+  </li>
+</ul>
+{% endblock breadcrumbs %}
+
+
+{% block content %}
+
+{% if query.objects %}
+<dl>
+  <dt>Articles</dt>
+  {% for object in query.objects %}
+  <dd>
+    <a href="{{ object.links.html }}">{{ object.id }}</a>
+  </dd>{% endfor %}
+</dl>
+{% endif %}
+
+{% endblock content %}

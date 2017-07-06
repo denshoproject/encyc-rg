@@ -1,0 +1,33 @@
+{% extends "rg/base.html" %}
+
+
+{% block title %}
+{{ field_title }}
+{% endblock %}
+
+{% block headline %}
+{{ field_title }}
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<ul>
+  <li>
+    <a href="{% url "rg-browse" %}">Browse</a>
+  </li>
+  <li>
+    {{ field_title }}
+  </li>
+</ul>
+{% endblock breadcrumbs %}
+
+
+{% block content %}
+
+{% for item in query %}
+<a href="{{ item.html }}">{{ item.term }}</a>
+({{ item.count }})
+<br/>
+{% endfor %}
+
+{% endblock content %}

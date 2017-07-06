@@ -2,18 +2,19 @@
 
 
 {% block title %}
-Articles
+Browse
 {% endblock %}
 
 {% block headline %}
-Articles
+Browse
 {% endblock %}
 
 
 {% block content %}
 
-{% for article in articles %}
-<a href="{{ article.links.html }}">{{ article.id }}</a><br/>
+{% for item in databox_fields %}
+<a href="{{ item.html }}">{{ item.title }}</a>
+<br/>
 {% endfor %}
 
 {% endblock content %}
