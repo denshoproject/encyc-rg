@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import json
 import logging
 logger = logging.getLogger(__name__)
 from urllib.parse import urlparse, urlunparse
-
-import requests
 
 from django.http import HttpResponse, Http404
 from django.shortcuts import render
@@ -13,6 +10,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.debug import technical_500_response
 
+from . import api
 from . import models
 
 
@@ -62,76 +60,75 @@ def mkurl(request, path, query=None):
 
 def articles(request):
     api_url = mkurl(request, reverse('rg-api-articles'))
-    r = requests.get(api_url)
+    r = api.articles(request, format='json')
     return render(request, 'rg/articles.html', {
-        'articles': json.loads(r.text)['objects'],
+        'articles': r.data['objects'],
         'api_url': api_url,
     })
 
 def article(request, url_title):
     api_url = mkurl(request, reverse('rg-api-article', args=([url_title])))
-    r = requests.get(api_url)
+    r = api.article(request, url_title, format='json')
     if r.status_code == 404:
         raise Http404("No article with that title.")
     return render(request, 'rg/article.html', {
-        'article': json.loads(r.text),
+        'article': r.data,
         'api_url': api_url,
     })
 
 
-
 def authors(request):
     api_url = mkurl(request, reverse('rg-api-authors'))
-    r = requests.get(api_url)
+    r = api.authors(request, format='json')
     return render(request, 'rg/authors.html', {
-        'authors': json.loads(r.text)['objects'],
+        'authors': r.data['objects'],
         'api_url': api_url,
     })
 
 def author(request, url_title):
     api_url = mkurl(request, reverse('rg-api-author', args=([url_title])))
-    r = requests.get(api_url)
+    r = api.author(request, url_title, format='json')
     if r.status_code == 404:
         raise Http404("No author with that title.")
     return render(request, 'rg/author.html', {
-        'author': json.loads(r.text),
+        'author': r.data,
         'api_url': api_url,
     })
 
 
 def sources(request):
     api_url = mkurl(request, reverse('rg-api-sources'))
-    r = requests.get(api_url)
+    r = api.sources(request, format='json')
     return render(request, 'rg/sources.html', {
-        'sources': json.loads(r.text)['objects'],
+        'sources': r.data['objects'],
         'api_url': api_url,
     })
 
 def source(request, url_title):
     api_url = mkurl(request, reverse('rg-api-source', args=([url_title])))
-    r = requests.get(api_url)
+    r = api.source(request, url_title, format='json')
     if r.status_code == 404:
         raise Http404("No source with that title.")
     return render(request, 'rg/source.html', {
-        'source': json.loads(r.text),
+        'source': r.data,
         'api_url': api_url,
     })
 
 
 def categories(request):
     api_url = mkurl(request, reverse('rg-api-categories'))
-    r = requests.get(api_url)
+    r = api.categories(request, format='json')
     return render(request, 'rg/categories.html', {
-        'categories': json.loads(r.text),
+        'categories': r.data,
         'api_url': api_url,
     })
 
 def category(request, url_title):
     api_url = mkurl(request, reverse('rg-api-category', args=([url_title])))
-    r = requests.get(api_url)
+    r = api.category(request, category=url_title, format='json')
     return render(request, 'rg/category.html', {
         'url_title': url_title,
-        'query': json.loads(r.text),
+        'query': r.data,
         'api_url': api_url,
     })
 
@@ -150,8 +147,8 @@ def facility_type(request, type_id):
 
 def facility(request, term_id):
     api_url = mkurl(request, reverse('rg-api-term', args=([term_id])))
-    r = requests.get(api_url)
-    term = json.loads(r.text)
+    r = api.term(request, term_id, format='json')
+    term = r.data
     template = 'rg/term-%s.html' % term['facet_id']
     return render(request, template, {
         'term': term,
@@ -162,17 +159,17 @@ def facility(request, term_id):
 def topics(request):
     facet_id = 'topics'
     api_url = mkurl(request, reverse('rg-api-terms', args=([facet_id])))
-    r = requests.get(api_url)
+    r = api.terms(request, facet_id, format='json')
     return render(request, 'rg/topics.html', {
         'facet_id': facet_id,
-        'query': json.loads(r.text),
+        'query': r.data,
         'api_url': api_url,
     })
 
 def topic(request, term_id):
     api_url = mkurl(request, reverse('rg-api-term', args=([term_id])))
-    r = requests.get(api_url)
-    term = json.loads(r.text)
+    r = api.term(request, term_id, format='json')
+    term = r.data
     template = 'rg/term-%s.html' % term['facet_id']
     return render(request, template, {
         'term': term,
@@ -182,9 +179,9 @@ def topic(request, term_id):
 
 def browse(request):
     api_url = mkurl(request, reverse('rg-api-browse'))
-    r = requests.get(api_url)
+    r = api.browse(request, format='json')
     return render(request, 'rg/browse.html', {
-        'databox_fields': json.loads(r.text),
+        'databox_fields': r.data,
         'api_url': api_url,
     })
 
@@ -192,47 +189,47 @@ def browse_field(request, fieldname):
     if 'rg_' not in fieldname:
         fieldname = 'rg_%s' % fieldname
     api_url = mkurl(request, reverse('rg-api-browse-field', args=([fieldname])))
-    r = requests.get(api_url)
+    r = api.browse_field(request, fieldname, format='json')
     return render(request, 'rg/browse-field.html', {
         'fieldname': fieldname,
         'field_title': models.PAGE_BROWSABLE_FIELDS[fieldname],
-        'query': json.loads(r.text),
+        'query': r.data,
         'api_url': api_url,
     })
 
 def browse_field_value(request, fieldname, value):
     api_url = mkurl(request, reverse('rg-api-browse-fieldvalue', args=([fieldname, value])))
-    r = requests.get(api_url)
+    r = api.browse_field_value(request, fieldname, value, format='json')
     return render(request, 'rg/browse-fieldvalue.html', {
         'fieldname': fieldname,
         'field_title': models.PAGE_BROWSABLE_FIELDS[fieldname],
         'value': value,
-        'query': json.loads(r.text),
+        'query': r.data,
         'api_url': api_url,
     })
 
 
 def facets(request):
     api_url = mkurl(request, reverse('rg-api-facets'))
-    r = requests.get(api_url)
+    r = api.facets(request, format='json')
     return render(request, 'rg/facets.html', {
-        'facets': json.loads(r.text),
+        'facets': r.data,
         'api_url': api_url,
     })
 
 def facet(request, facet_id):
     api_url = mkurl(request, reverse('rg-api-terms', args=([facet_id])))
-    r = requests.get(api_url)
+    r = api.facets(request, facet_id, format='json')
     return render(request, 'rg/facet.html', {
         'facet_id': facet_id,
-        'query': json.loads(r.text),
+        'query': r.data,
         'api_url': api_url,
     })
 
 def term(request, term_id):
     api_url = mkurl(request, reverse('rg-api-term', args=([term_id])))
-    r = requests.get(api_url)
-    term = json.loads(r.text)
+    r = api.term(request, term_id, format='json')
+    term = r.data
     template = 'rg/term-%s.html' % term['facet_id']
     return render(request, template, {
         'term': term,
