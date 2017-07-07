@@ -252,7 +252,7 @@ def search_ui(request):
     }
     
     if form.is_valid() and form.cleaned_data.get('fulltext'):
-        s = search.Search().doc_type(models.Page)
+        s = models.Page.search()
         s = s.query(
             search.MultiMatch(
                 query=form.cleaned_data.get('fulltext'),

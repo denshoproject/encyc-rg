@@ -454,6 +454,16 @@ class Page(DocType):
 
     def first_letter(self):
         return self.title_sort[0]
+
+    @staticmethod
+    def search():
+        """RG-only Page Search
+        
+        @returns: elasticsearch_dsl.Search
+        """
+        s = search.Search().doc_type(Page)
+        s = s.filter('exists', field='rg_rgmediatype')
+        return s
     
     @staticmethod
     def pages(only_rg=True, start=0, stop=settings.MAX_SIZE):
@@ -462,7 +472,7 @@ class Page(DocType):
         @param only_rg: boolean Only return RG pages (rg_rgmediatype present)
         @returns: list
         """
-        s = Search().doc_type(Page)
+        s = Page.search()
         if only_rg:
             # require rg_rgmediatype
             s = s.filter(Q('exists', field=['rg_rgmediatype']))

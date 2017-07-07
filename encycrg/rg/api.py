@@ -37,8 +37,7 @@ def index(request, format=None):
 
 @api_view(['GET'])
 def articles(request, format=None):
-    s = search.Search().doc_type(models.Page).query("match_all")
-    s = s.sort('title_sort')
+    s = models.Page.search().query("match_all").sort('title_sort')
     limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
     offset = int(request.GET.get('offset', 0))
     searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
@@ -130,7 +129,7 @@ def browse(request, format=None):
 def browse_field(request, fieldname, format=None):
     """List databox terms and counts
     """
-    s = search.Search().doc_type(models.Page).query("match_all")
+    s = models.Page.search().query("match_all")
     s.aggs.bucket(
         fieldname,
         search.A(
@@ -163,7 +162,7 @@ def browse_field(request, fieldname, format=None):
 def browse_field_value(request, fieldname, value, format=None):
     """List of articles tagged with databox term.
     """
-    s = search.Search().doc_type(models.Page).from_dict({
+    s = models.Page.search().from_dict({
         "query": {
             "match": {
                 fieldname: value,
@@ -184,7 +183,7 @@ def categories(request, format=None):
     """CATEGORIES DOCS
     """
     fieldname = 'categories'
-    s = search.Search().doc_type(models.Page).query("match_all")
+    s = models.Page.search().query("match_all")
     s.aggs.bucket(fieldname, search.A('terms', field=fieldname))
     response = s.execute()
     aggs = search.aggs_dict(response.aggregations.to_dict())[fieldname]
@@ -211,7 +210,8 @@ def categories(request, format=None):
 def category(request, category, format=None):
     """CATEGORY DOCS
     """
-    s = search.Search().doc_type(models.Page).query(
+    s = models.Page.search().query("match_all")
+    s = s.query(
         "match", categories=category
     ).sort('title_sort')
     limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
