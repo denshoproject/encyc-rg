@@ -1,0 +1,92 @@
+{% extends "rg/base.html" %}
+{% load bootstrap_pagination %}
+
+
+{% block title %}
+Search
+{% endblock %}
+
+{% block headline %}
+Search
+{% endblock %}
+
+
+{% block content %}
+
+<form action="{{ this_url }}" method="get">
+  
+  {{ search_form.fulltext }}
+
+  <input type="submit" value="submit"/>
+
+  <h4>Filters</h4>
+  
+  <p>
+  <b>Category</b>
+  <br />
+  {{ search_form.filter_category }}
+  </p>
+  
+  <p>
+  <b>Topics</b>
+  <br />
+  {{ search_form.filter_topics }}
+  </p>
+  
+  <p>
+  <b>Facilities</b>
+  <br />
+  {{ search_form.filter_facility }}
+  </p>
+  
+  <p>
+  <b>Genre</b>
+  <br />
+  {{ search_form.filter_genre }}
+  </p>
+  
+  <p>
+    <button class="btn btn-sm btn-primary"><i class="fa fa-filter"></i> Apply filters</button> <span class="muted small" style="padding-left:20px;">Use &lt;Ctrl&gt; or (⌘) keys to select multiple terms</span>
+  </p>
+  
+</form>
+
+<!-- --------------------------------------------------------------- -->
+
+<div id="querymeta">
+
+{% if terms %}
+  <div class="terms">
+    <b>Terms</b>
+
+    <strong><a href="{% url "ui-browse-facet" terms.field %}">{{ terms.field }}</a>:</strong>
+    {{ terms.term }}
+
+  </div>
+{% endif %}
+
+</div><!-- .querymeta -->
+
+{% if page.object_list %}
+<div id="item-count">
+  {{ paginator.count }} items<br/>
+</div>
+
+{% if paginator.num_pages > 1 %}
+{% bootstrap_paginate page range=10 show_first_last="true" %}
+{% endif %}
+
+{% for object in page.object_list %}
+<a href="{{ object.links.html }}">{{ object.id }}</a><br/>
+{% endfor %}
+
+{% if paginator.num_pages > 1 %}
+{% bootstrap_paginate page range=10 show_first_last="true" %}
+{% endif %}
+
+</div> <!-- .row results content -->
+{% endif %}
+
+{{ query_json|safe }}
+
+{% endblock content %}

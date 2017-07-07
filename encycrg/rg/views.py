@@ -4,6 +4,8 @@ import logging
 logger = logging.getLogger(__name__)
 from urllib.parse import urlparse, urlunparse
 
+from django.conf import settings
+from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
 from django.shortcuts import render
 from django.urls import reverse
@@ -11,7 +13,12 @@ from django.views import View
 from django.views.debug import technical_500_response
 
 from . import api
+from . import forms
 from . import models
+from . import search
+
+MAPPINGS=models.DOCTYPE_CLASS
+FIELDS=models.SEARCH_LIST_FIELDS
 
 
 def _mkurl(request, path, query=None):
@@ -231,3 +238,42 @@ def term(request, term_id):
         'term': r.data,
         'api_url': api_url,
     })
+
+
+def search_ui(request):
+    api_url = _mkurl(request, reverse('rg-api-search'))
+    form = forms.SearchForm(request.GET)
+    thispage = int(request.GET.get('page', 0))
+    limit = settings.DEFAULT_LIMIT
+    offset = search.es_offset(limit, thispage)
+    context = {
+        'search_form': form,
+        'api_url': api_url,
+    }
+    
+    if form.is_valid() and form.cleaned_data.get('fulltext'):
+        s = search.Search().doc_type(models.Page)
+        s = s.query(
+            search.MultiMatch(
+                query=form.cleaned_data.get('fulltext'),
+                fields=['title', 'body']
+            )
+        )
+        if form.cleaned_data.get('filter_category'):
+            s = s.filter('terms', categories=form.cleaned_data['filter_category'])
+        if form.cleaned_data.get('filter_topics'):
+            s = s.filter('terms', topics=form.cleaned_data['filter_topics'])
+        if form.cleaned_data.get('filter_facility'):
+            s = s.filter('terms', facility=form.cleaned_data['filter_facility'])
+        
+        searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
+        results = searcher.execute(limit, offset)
+        if results.objects:
+            paginator = Paginator(
+                results.ordered_dict(request=request, pad=True)['objects'],
+                results.page_size,
+            )
+            context['paginator'] = paginator
+            context['page'] = paginator.page(results.this_page)
+    
+    return render(request, 'rg/search.html', context)
