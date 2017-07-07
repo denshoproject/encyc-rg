@@ -96,6 +96,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     #
+    'bootstrap_pagination',
     'rest_framework',
     #
     'encycrg',
