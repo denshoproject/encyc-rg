@@ -32,73 +32,192 @@ def index(request, format=None):
     data['search'] = reverse('rg-api-search', request=request)
     return Response(data)
 
-
-# ----------------------------------------------------------------------
-
 @api_view(['GET'])
 def articles(request, format=None):
-    s = models.Page.search().query("match_all").sort('title_sort')
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    data = searcher.execute(limit, offset).ordered_dict(request)
-    return Response(data)
+    return Response(
+        _articles(request).ordered_dict(request)
+    )
 
 @api_view(['GET'])
 def authors(request, format=None):
-    s = search.Search().doc_type(models.Author).query("match_all")
-    s = s.sort('title_sort')
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    data = searcher.execute(limit, offset).ordered_dict(request)
-    return Response(data)
+    return Response(
+        _authors(request).ordered_dict(request)
+    )
 
 @api_view(['GET'])
 def sources(request, format=None):
-    s = search.Search().doc_type(models.Source).query("match_all")
-    s = s.sort('encyclopedia_id')
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    data = searcher.execute(limit, offset).ordered_dict(request)
-    return Response(data)
-
+    return Response(
+        _sources(request).ordered_dict(request)
+    )
 
 @api_view(['GET'])
 def article(request, url_title, format=None):
     """DOCUMENTATION GOES HERE.
     """
     try:
-        page = models.Page.get(url_title)
-        #page.scrub()
+        return Response(
+            _article(request, url_title).dict_all(request=request)
+        )
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    return Response(page.dict_all(request=request))
 
 @api_view(['GET'])
 def author(request, url_title, format=None):
     try:
-        author = models.Author.get(url_title)
+        return Response(
+            _author(request, url_title).dict_all(request=request)
+        )
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    return Response(author.dict_all(request=request))
 
 @api_view(['GET'])
 def source(request, url_title, format=None):
     try:
-        source = models.Source.get(url_title)
+        return Response(
+            _source(request, url_title).dict_all(request=request)
+        )
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    return Response(source.dict_all(request=request))
-
-
-# ----------------------------------------------------------------------
 
 @api_view(['GET'])
 def browse(request, format=None):
     """INDEX DOCS
     """
+    return Response(
+        _browse(request)
+    )
+
+@api_view(['GET'])
+def browse_field(request, fieldname, format=None):
+    """List databox terms and counts
+    """
+    return Response(
+        _browse_field(request, fieldname)
+    )
+
+@api_view(['GET'])
+def browse_field_value(request, fieldname, value, format=None):
+    """List of articles tagged with databox term.
+    """
+    return Response(
+        _browse_field_value(request, fieldname, value).ordered_dict(request)
+    )
+
+@api_view(['GET'])
+def categories(request, format=None):
+    """CATEGORIES DOCS
+    """
+    return Response(
+        _categories(request)
+    )
+
+@api_view(['GET'])
+def category(request, category, format=None):
+    return Response(
+        _category(request, category).ordered_dict(request)
+    )
+
+@api_view(['GET'])
+def facets(request, format=None):
+    return Response(
+        _facets(request).ordered_dict(request)
+    )
+
+@api_view(['GET'])
+def facet(request, facet_id, format=None):
+    try:
+        return Response(
+            _facet(request, facet_id)
+        )
+    except models.NotFoundError:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def terms(request, facet_id, format=None):
+    return Response(
+        _terms(request, facet_id).ordered_dict(request)
+    )
+
+@api_view(['GET'])
+def term(request, term_id, format=None):
+    try:
+        return Response(
+            _term(request, term_id)
+        )
+    except models.NotFoundError:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
+    return Response(
+        _term_objects(request, term_id, limit=limit, offset=offset)
+    )
+
+class SearchUI(APIView):
+    """
+    <a href="/api/1.0/search/help/">Search API help</a>
+    """
+    
+    def get(self, request, format=None):
+        """
+        Search API info and UI.
+        """
+        return Response({})
+    
+    def post(self, request, format=None):
+        """
+        Return search results.
+        """
+        query = json.loads(request.data['_content'])
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+        offset = int(request.GET.get('offset', 0))
+        searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS)
+        searcher.prep(query)
+        data = searcher.execute(limit, offset).ordered_dict(request)
+        return Response(data)
+
+
+# ----------------------------------------------------------------------
+
+def _articles(request, limit=None, offset=None):
+    s = models.Page.search().query("match_all").sort('title_sort')
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
+    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
+    return searcher.execute(limit, offset)
+
+def _authors(request, limit=None, offset=None):
+    s = search.Search().doc_type(models.Author).query("match_all")
+    s = s.sort('title_sort')
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
+    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
+    return searcher.execute(limit, offset)
+
+def _sources(request, limit=None, offset=None):
+    s = search.Search().doc_type(models.Source).query("match_all")
+    s = s.sort('encyclopedia_id')
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
+    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
+    return searcher.execute(limit, offset)
+
+def _article(request, url_title):
+    return models.Page.get(url_title)
+
+def _author(request, url_title):
+    return models.Author.get(url_title)
+
+def _source(request, url_title):
+    return models.Source.get(url_title)
+
+def _browse(request):
     data = [
         #{
         #'title': 'categories',
@@ -123,12 +242,9 @@ def browse(request, format=None):
             'json': reverse('rg-api-browse-field', args=([key]), request=request),
             'html': reverse('rg-browse-field', args=([key]), request=request),
         })
-    return Response(data)
+    return data
 
-@api_view(['GET'])
-def browse_field(request, fieldname, format=None):
-    """List databox terms and counts
-    """
+def _browse_field(request, fieldname):
     s = models.Page.search().query("match_all")
     s.aggs.bucket(
         fieldname,
@@ -156,12 +272,9 @@ def browse_field(request, fieldname, format=None):
         }
         for term in sorted(list(aggs.keys()))
     ]
-    return Response(data)
+    return data
 
-@api_view(['GET'])
-def browse_field_value(request, fieldname, value, format=None):
-    """List of articles tagged with databox term.
-    """
+def _browse_field_value(request, fieldname, value, limit=None, offset=None):
     s = models.Page.search().from_dict({
         "query": {
             "match": {
@@ -169,19 +282,14 @@ def browse_field_value(request, fieldname, value, format=None):
             }
         }
     }).sort('title_sort')
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
     searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    data = searcher.execute(limit, offset).ordered_dict(request)
-    return Response(data)
+    return searcher.execute(limit, offset)
 
-
-# ----------------------------------------------------------------------
-
-@api_view(['GET'])
-def categories(request, format=None):
-    """CATEGORIES DOCS
-    """
+def _categories(request):
     fieldname = 'categories'
     s = models.Page.search().query("match_all")
     s.aggs.bucket(fieldname, search.A('terms', field=fieldname))
@@ -204,81 +312,67 @@ def categories(request, format=None):
         }
         for term in sorted(list(aggs.keys()))
     ]
-    return Response(data)
+    return data
 
-@api_view(['GET'])
-def category(request, category, format=None):
+def _category(request, category, limit=None, offset=None):
     """CATEGORY DOCS
     """
     s = models.Page.search().query("match_all")
     s = s.query(
         "match", categories=category
     ).sort('title_sort')
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
     searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    data = searcher.execute(limit, offset).ordered_dict(request)
-    return Response(data)
+    return searcher.execute(limit, offset)
 
-
-# ----------------------------------------------------------------------
-
-@api_view(['GET'])
-def facets(request, format=None):
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    return Response(
-        search.SearchResults(
-            mappings=models.DOCTYPE_CLASS,
-            objects=models.Facet.facets(request),
-            limit=limit,
-            offset=offset,
-        ).ordered_dict(request)
+def _facets(request, limit=None, offset=None):
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
+    return search.SearchResults(
+        mappings=models.DOCTYPE_CLASS,
+        objects=models.Facet.facets(request),
+        limit=limit,
+        offset=offset,
     )
 
-@api_view(['GET'])
-def facet(request, facet_id, format=None):
-    try:
-        facet = models.Facet.get(facet_id)
-    except models.NotFoundError:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+def _facet(request, facet_id):
+    facet = models.Facet.get(facet_id)
     data = facet.dict_all(request)
     data['links']['children'] = reverse(
         'rg-api-terms',
         args=([facet_id]),
         request=request
     )
-    return Response(data)
+    return data
 
-@api_view(['GET'])
-def terms(request, facet_id, format=None):
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    return Response(
-        search.SearchResults(
-            mappings=MAPPINGS,
-            objects=models.FacetTerm.terms(request, facet_id),
-            limit=limit,
-            offset=offset,
-        ).ordered_dict(request)
+def _terms(request, facet_id, limit=None, offset=None):
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
+    return search.SearchResults(
+        mappings=MAPPINGS,
+        objects=models.FacetTerm.terms(request, facet_id),
+        limit=limit,
+        offset=offset,
     )
 
-@api_view(['GET'])
-def term(request, term_id, format=None):
-    try:
-        term = models.FacetTerm.get(term_id)
-    except models.NotFoundError:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+def _term(request, term_id):
+    term = models.FacetTerm.get(term_id)
     data = term.dict_all(request)
     data['links']['children'] = reverse(
         'rg-api-term-objects',
         args=([term_id]),
         request=request
     )
-    return Response(data)
+    return data
 
-@api_view(['GET'])
-def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
+def _term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
     try:
         term = models.FacetTerm.get(term_id)
     except models.NotFoundError:
@@ -292,30 +386,4 @@ def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
         d['links']['json'] = reverse('rg-api-article', args=([item['url_title']]), request=request)
         d['links']['html'] = reverse('rg-article', args=([item['url_title']]), request=request)
         data.append(d)
-    return Response(data)
-
-
-# ----------------------------------------------------------------------
-
-class SearchUI(APIView):
-    """
-    <a href="/api/1.0/search/help/">Search API help</a>
-    """
-    
-    def get(self, request, format=None):
-        """
-        Search API info and UI.
-        """
-        return Response({})
-    
-    def post(self, request, format=None):
-        """
-        Return search results.
-        """
-        query = json.loads(request.data['_content'])
-        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-        offset = int(request.GET.get('offset', 0))
-        searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS)
-        searcher.prep(query)
-        data = searcher.execute(limit, offset).ordered_dict(request)
-        return Response(data)
+    return data
