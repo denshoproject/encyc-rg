@@ -1,11 +1,13 @@
 PROJECT=encyc
 APP=encycrg
 USER=encyc
+VERSION=0.1.0
 
 SHELL = /bin/bash
 DEBIAN_CODENAME := $(shell lsb_release -sc)
 DEBIAN_RELEASE := $(shell lsb_release -sr)
 
+GIT_SOURCE_URL=https://github.com/densho/encyc-rg
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
 INSTALL_BASE=/usr/local/src
@@ -16,6 +18,13 @@ PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 
 VIRTUALENV=$(INSTALLDIR)/env
 SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
+
+FPM_ARCH=amd64
+FPM_FILE=encyc-rg_$(VERSION)_$(FPM_ARCH).deb
+FPM_VENDOR=Densho.org
+FPM_MAINTAINER=<geoffrey.jost@densho.org>
+FPM_DESCRIPTION=Densho Encyclopedia Resource Guide site
+FPM_BASE=usr/local/src/encyc-rg
 
 PACKAGE_BASE=/tmp/encycrg
 PACKAGE_TMP=$(PACKAGE_BASE)/encyc-rg
@@ -394,6 +403,39 @@ git-status:
 
 
 package:
+	@echo ""
+	@echo "FPM packaging ----------------------------------------------------------"
+	-rm -Rf $(FPM_FILE)
+	virtualenv --relocatable $(VIRTUALENV)  # Make venv relocatable
+	fpm   \
+	--verbose   \
+	--input-type dir   \
+	--output-type deb   \
+	--name encyc-rg   \
+	--version $(VERSION)   \
+	--package $(FPM_FILE)   \
+	--url "$(GIT_SOURCE_URL)"   \
+	--vendor "$(FPM_VENDOR)"   \
+	--maintainer "$(FPM_MAINTAINER)"   \
+	--description "$(FPM_DESCRIPTION)"   \
+	--depends "python3"   \
+	--depends "imagemagick"   \
+	--depends "sqlite3"   \
+	--chdir $(INSTALLDIR)   \
+	conf=$(FPM_BASE)   \
+	docs=$(FPM_BASE)   \
+	encycrg=$(FPM_BASE)   \
+	env=$(FPM_BASE)   \
+	conf/settings.py=$(FPM_BASE)/encycrg/encycrg   \
+	COPYRIGHT=$(FPM_BASE)   \
+	INSTALL=$(FPM_BASE)   \
+	LICENSE=$(FPM_BASE)   \
+	Makefile=$(FPM_BASE)   \
+	README.rst=$(FPM_BASE)   \
+	requirements.txt=$(FPM_BASE)
+
+
+package-old:
 	@echo ""
 	@echo "packaging --------------------------------------------------------------"
 	-rm -Rf $(PACKAGE_TMP)
