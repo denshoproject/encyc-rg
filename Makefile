@@ -406,7 +406,7 @@ package:
 	@echo ""
 	@echo "FPM packaging ----------------------------------------------------------"
 	-rm -Rf $(FPM_FILE)
-	virtualenv --relocatable $(VIRTUALENV)  # Make venv relocatable
+	virtualenv --python=python3 --relocatable $(VIRTUALENV)  # Make venv relocatable
 	fpm   \
 	--verbose   \
 	--input-type dir   \
