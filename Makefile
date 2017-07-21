@@ -421,6 +421,7 @@ package:
 	--depends "python3"   \
 	--depends "imagemagick"   \
 	--depends "sqlite3"   \
+	--depends "supervisor"   \
 	--chdir $(INSTALLDIR)   \
 	conf=$(FPM_BASE)   \
 	docs=$(FPM_BASE)   \
@@ -428,6 +429,7 @@ package:
 	env=$(FPM_BASE)   \
 	conf/settings.py=$(FPM_BASE)/encycrg/encycrg   \
 	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg   \
+	conf/gunicorn.conf=$(SUPERVISOR_GUNICORN_CONF)   \
 	COPYRIGHT=$(FPM_BASE)   \
 	INSTALL=$(FPM_BASE)   \
 	LICENSE=$(FPM_BASE)   \
