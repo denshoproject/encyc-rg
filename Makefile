@@ -427,12 +427,18 @@ package:
 	encycrg=$(FPM_BASE)   \
 	env=$(FPM_BASE)   \
 	conf/settings.py=$(FPM_BASE)/encycrg/encycrg   \
+	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg   \
 	COPYRIGHT=$(FPM_BASE)   \
 	INSTALL=$(FPM_BASE)   \
 	LICENSE=$(FPM_BASE)   \
 	Makefile=$(FPM_BASE)   \
 	README.rst=$(FPM_BASE)   \
 	requirements.txt=$(FPM_BASE)
+
+secret-key:
+	@echo ""
+	@echo "secret-key -------------------------------------------------------------"
+	date +%s | sha256sum | base64 | head -c 50 > $(CONF_BASE)/encycrg-secret-key.txt
 
 
 package-old:
