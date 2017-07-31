@@ -32,8 +32,7 @@ if not configs_read:
     raise Exception('No config file!')
 
 # SECURITY WARNING: keep the secret key used in production secret!
-with open('/etc/encyc/encycrg-secret-key.txt') as f:
-    SECRET_KEY = f.read().strip()
+SECRET_KEY = config.get('security', 'secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config.getboolean('debug', 'debug')

@@ -1,11 +1,11 @@
 PROJECT=encyc
 APP=encycrg
 USER=encyc
-VERSION=0.1.0
 
 SHELL = /bin/bash
 DEBIAN_CODENAME := $(shell lsb_release -sc)
 DEBIAN_RELEASE := $(shell lsb_release -sr)
+VERSION := $(shell cat VERSION)
 
 GIT_SOURCE_URL=https://github.com/densho/encyc-rg
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
@@ -19,8 +19,9 @@ PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 VIRTUALENV=$(INSTALLDIR)/env
 SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
 
+FPM_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
 FPM_ARCH=amd64
-FPM_FILE=encyc-rg_$(VERSION)_$(FPM_ARCH).deb
+FPM_FILE=encyc-rg_$(VERSION)_$(FPM_BRANCH)_$(FPM_ARCH).deb
 FPM_VENDOR=Densho.org
 FPM_MAINTAINER=<geoffrey.jost@densho.org>
 FPM_DESCRIPTION=Densho Encyclopedia Resource Guide site
@@ -402,6 +403,9 @@ git-status:
 	cd $(INSTALLDIR) && git status
 
 
+# http://fpm.readthedocs.io/en/latest/
+# https://stackoverflow.com/questions/32094205/set-a-custom-install-directory-when-making-a-deb-package-with-fpm
+# https://brejoc.com/tag/fpm/
 package:
 	@echo ""
 	@echo "FPM packaging ----------------------------------------------------------"
