@@ -403,6 +403,9 @@ git-status:
 	cd $(INSTALLDIR) && git status
 
 
+# http://fpm.readthedocs.io/en/latest/
+# https://stackoverflow.com/questions/32094205/set-a-custom-install-directory-when-making-a-deb-package-with-fpm
+# https://brejoc.com/tag/fpm/
 package:
 	@echo ""
 	@echo "FPM packaging ----------------------------------------------------------"
