@@ -27,7 +27,18 @@
 {% block footer %}
     <hr size="1" />
     <p>
-      encyc-rg footer <a href="{{ api_url }}">{{ api_url }}</a>
+      api:<a href="{{ api_url }}">{{ api_url }}</a>
+      <br/>
+      {{ docstore_hosts }}
+      {{ docstore_index }}
+      <br/>
+      {{ git_commit }}
+      {{ git_branch }}
+      v{{ version }}
+      <br/>
+      served by {{ pid }}
+      on {{ host }}
+      at {{ time|date:"Y-m-d" }}T{{ time|time:"H:i:s(T)" }}
     </p>
 {% endblock footer %}
 

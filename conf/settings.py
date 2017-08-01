@@ -16,10 +16,33 @@ standard_library.install_aliases()
 import configparser
 import logging
 import os
+import subprocess
 import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+with open(os.path.join(BASE_DIR, '..', 'VERSION'), 'r') as f:
+    VERSION = f.read()
+
+# report Git branch and commit
+# This branch is the one with the leading '* '.
+#try:
+GIT_BRANCH = [
+    b.decode().replace('*','').strip()
+    for b in subprocess.check_output(['git', 'branch']).splitlines()
+    if '*' in b.decode()
+][0]
+#except:
+#    GIT_BRANCH = 'unknown'
+#try:
+    # $ git log --pretty=oneline
+    # a21740293f... COMMIT MESSAGE
+GIT_COMMIT = subprocess.check_output([
+    'git','log','--pretty=oneline','-1'
+]).decode().strip().split(' ')[0]
+#except:
+#    GIT_COMMIT = 'unknown'
 
 CONFIG_FILES = [
     '/etc/encyc/encycrg.cfg',
@@ -179,6 +202,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'rg.context_processors.sitewide',
             ],
         },
     },
