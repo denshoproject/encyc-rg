@@ -427,19 +427,21 @@ package:
 	--depends "sqlite3"   \
 	--depends "supervisor"   \
 	--chdir $(INSTALLDIR)   \
+	.git=$(FPM_BASE)   \
+	.gitignore=$(FPM_BASE)   \
 	conf=$(FPM_BASE)   \
-	docs=$(FPM_BASE)   \
+	COPYRIGHT=$(FPM_BASE)   \
 	encycrg=$(FPM_BASE)   \
 	env=$(FPM_BASE)   \
-	conf/settings.py=$(FPM_BASE)/encycrg/encycrg   \
-	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg   \
-	conf/gunicorn.conf=$(SUPERVISOR_GUNICORN_CONF)   \
-	COPYRIGHT=$(FPM_BASE)   \
 	INSTALL=$(FPM_BASE)   \
 	LICENSE=$(FPM_BASE)   \
 	Makefile=$(FPM_BASE)   \
 	README.rst=$(FPM_BASE)   \
-	requirements.txt=$(FPM_BASE)
+	requirements.txt=$(FPM_BASE)  \
+	VERSION=$(FPM_BASE)  \
+	conf/settings.py=$(FPM_BASE)/encycrg/encycrg   \
+	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg   \
+	conf/gunicorn.conf=$(SUPERVISOR_GUNICORN_CONF)
 
 secret-key:
 	@echo ""
