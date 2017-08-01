@@ -65,49 +65,55 @@ def debug(request):
 
         
 def articles(request):
-    api_url = _mkurl(request, reverse('rg-api-articles'))
-    r = api.articles(request, format='json')
     return render(request, 'rg/articles.html', {
-        'articles': r.data['objects'],
-        'api_url': api_url,
+        'results': api._articles(request, limit=settings.MAX_SIZE),
+        'api_url': _mkurl(request, reverse('rg-api-articles')),
     })
+    #api_url = _mkurl(request, reverse('rg-api-articles'))
+    #r = api.get_articles(request)
+    #paginator = Paginator(
+    #    r.ordered_dict(request=request, pad=True)['objects'],
+    #    r.page_size
+    #)
+    #page = paginator.page(r.this_page)
+    #return render(request, 'rg/articles.html', {
+    #    'paginator': paginator,
+    #    'page': page,
+    #    'api_url': api_url,
+    #})
 
 def article(request, url_title):
-    api_url = _mkurl(request, reverse('rg-api-article', args=([url_title])))
-    r = api.article(request, url_title, format='json')
-    if r.status_code == 404:
+    try:
+        article = api._article(request, url_title)
+    except models.NotFoundError:
         raise Http404("No article with that title.")
     return render(request, 'rg/article.html', {
-        'article': r.data,
-        'api_url': api_url,
+        'article': article,
+        'api_url': _mkurl(request, reverse('rg-api-article', args=([url_title]))),
     })
 
 
 def authors(request):
-    api_url = _mkurl(request, reverse('rg-api-authors'))
-    r = api.authors(request, format='json')
     return render(request, 'rg/authors.html', {
-        'authors': r.data['objects'],
-        'api_url': api_url,
+        'results': api._authors(request, limit=settings.MAX_SIZE),
+        'api_url': _mkurl(request, reverse('rg-api-authors')),
     })
 
 def author(request, url_title):
-    api_url = _mkurl(request, reverse('rg-api-author', args=([url_title])))
-    r = api.author(request, url_title, format='json')
-    if r.status_code == 404:
+    try:
+        author = api._author(request, url_title)
+    except models.NotFoundError:
         raise Http404("No author with that title.")
     return render(request, 'rg/author.html', {
-        'author': r.data,
-        'api_url': api_url,
+        'author': author,
+        'api_url': _mkurl(request, reverse('rg-api-author', args=([url_title]))),
     })
 
 
 def sources(request):
-    api_url = _mkurl(request, reverse('rg-api-sources'))
-    r = api.sources(request, format='json')
     return render(request, 'rg/sources.html', {
-        'sources': r.data['objects'],
-        'api_url': api_url,
+        'sources': api._sources(request),
+        'api_url': _mkurl(request, reverse('rg-api-sources')),
     })
 
 def source(request, url_title):

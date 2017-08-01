@@ -12,8 +12,14 @@ Authors
 
 {% block content %}
 
-{% for author in authors %}
-<a href="{{ author.links.html }}">{{ author.id }}</a><br/>
+<div id="item-count">
+  {{ results.total }} authors<br/>
+</div>
+
+{% for author in results.ordered_dict.objects %}
+<div class="author-list">
+  <a href="{{ author.links.html }}">{{ author.id }}</a>
+</div>
 {% endfor %}
 
 {% endblock content %}

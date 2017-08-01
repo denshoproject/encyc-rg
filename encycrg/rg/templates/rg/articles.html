@@ -1,4 +1,5 @@
 {% extends "rg/base.html" %}
+{% load bootstrap_pagination %}
 
 
 {% block title %}
@@ -12,8 +13,14 @@ Articles
 
 {% block content %}
 
-{% for article in articles %}
-<a href="{{ article.links.html }}">{{ article.id }}</a><br/>
+<div id="item-count">
+  {{ results.total }} articles<br/>
+</div>
+
+{% for article in results.ordered_dict.objects %}
+<div class="article-list">
+  <a href="{{ article.links.html }}">{{ article.id }}</a>
+</div>
 {% endfor %}
 
 {% endblock content %}

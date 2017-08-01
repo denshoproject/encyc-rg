@@ -18,6 +18,7 @@
 <dl>
   <dt>Articles</dt>
   {% for article in author.articles %}
+  {{ article }}
   <dd>
     <a href="{{ article.html }}">{{ article.title }}</a>
   </dd>{% endfor %}

@@ -480,17 +480,18 @@ class Page(DocType):
         s = s.fields(PAGE_LIST_FIELDS)
         query = s.to_dict()
         count = s.count()
-        s = s[start:stop]
+        if (start != 0) or (stop != settings.MAX_SIZE):
+            s = s[start:stop]
         results = s.execute()
         
         return search.SearchResults(
-            mappings=models.DOCTYPE_CLASS,
+            mappings=DOCTYPE_CLASS,
             query=query,
             count=count,
             results=results,
-            limit=limit,
-            offset=offset,
-        )
+            #limit=limit,
+            #offset=offset,
+        ).objects
     
     @staticmethod
     def pages_by_category():
@@ -542,17 +543,17 @@ class Page(DocType):
         """
         # return list of dicts rather than an Elasticsearch results object
         terms = []
-        for t in Elasticsearch.topics_by_url().get(self.absolute_url(), []):
-            term = {
-                key: val
-                for key,val in list(t.items())
-            }
-            term.pop('encyc_urls')
-            term['ddr_topic_url'] = u'%s/%s/' % (
-                settings.DDR_TOPICS_BASE,
-                term['id']
-            )
-            terms.append(term)
+        #for t in Elasticsearch.topics_by_url().get(self.absolute_url(), []):
+        #    term = {
+        #        key: val
+        #        for key,val in list(t.items())
+        #    }
+        #    term.pop('encyc_urls')
+        #    term['ddr_topic_url'] = u'%s/%s/' % (
+        #        settings.DDR_TOPICS_BASE,
+        #        term['id']
+        #    )
+        #    terms.append(term)
         return terms
     
     def ddr_terms_objects(self, size=100):
