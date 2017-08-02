@@ -43,6 +43,30 @@ GIT_COMMIT = subprocess.check_output([
 ]).decode().strip().split(' ')[0]
 #except:
 #    GIT_COMMIT = 'unknown'
+ 
+def package_debs(package, apt_cache_dir='/var/cache/apt/archives'):
+    """
+    @param package: str Package name
+    @param apt_cache_dir: str Absolute path
+    @returns: list of .deb files matching package and version
+    """
+    cmd = 'dpkg --status %s' % package
+    try:
+        dpkg_raw = subprocess.check_output(cmd.split(' ')).decode()
+    except subprocess.CalledProcessError:
+        return ''
+    data = {}
+    for line in dpkg_raw.splitlines():
+        if line and isinstance(line,str) and (':' in line):
+            key,val = line.split(':', 1)
+            data[key.strip().lower()] = val.strip()
+    pkg_paths = [
+        path for path in os.listdir(apt_cache_dir)
+        if (package in path) and (data['version'] in path)
+    ]
+    return pkg_paths
+
+PACKAGES = package_debs('encycrg-%s' % GIT_BRANCH)
 
 CONFIG_FILES = [
     '/etc/encyc/encycrg.cfg',

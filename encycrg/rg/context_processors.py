@@ -19,6 +19,7 @@ def sitewide(request):
         'git_commit': settings.GIT_COMMIT[:10],
         'git_branch': settings.GIT_BRANCH,
         'version': settings.VERSION,
+        'packages': settings.PACKAGES,
         'docstore_hosts': docstore_hosts,
         'docstore_index': settings.DOCSTORE_INDEX,
     }
