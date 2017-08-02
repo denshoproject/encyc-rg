@@ -21,7 +21,8 @@ SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
 
 FPM_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
 FPM_ARCH=amd64
-FPM_FILE=encyc-rg_$(VERSION)_$(FPM_BRANCH)_$(FPM_ARCH).deb
+FPM_NAME=$(APP)-$(FPM_BRANCH)
+FPM_FILE=$(FPM_NAME)_$(VERSION)_$(FPM_ARCH).deb
 FPM_VENDOR=Densho.org
 FPM_MAINTAINER=<geoffrey.jost@densho.org>
 FPM_DESCRIPTION=Densho Encyclopedia Resource Guide site
@@ -415,7 +416,7 @@ package:
 	--verbose   \
 	--input-type dir   \
 	--output-type deb   \
-	--name encyc-rg   \
+	--name $(FPM_NAME)   \
 	--version $(VERSION)   \
 	--package $(FPM_FILE)   \
 	--url "$(GIT_SOURCE_URL)"   \
