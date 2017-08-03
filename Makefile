@@ -407,7 +407,7 @@ git-status:
 # http://fpm.readthedocs.io/en/latest/
 # https://stackoverflow.com/questions/32094205/set-a-custom-install-directory-when-making-a-deb-package-with-fpm
 # https://brejoc.com/tag/fpm/
-package:
+deb:
 	@echo ""
 	@echo "FPM packaging ----------------------------------------------------------"
 	-rm -Rf $(FPM_FILE)
@@ -448,25 +448,3 @@ secret-key:
 	@echo ""
 	@echo "secret-key -------------------------------------------------------------"
 	date +%s | sha256sum | base64 | head -c 50 > $(CONF_BASE)/encycrg-secret-key.txt
-
-
-package-old:
-	@echo ""
-	@echo "packaging --------------------------------------------------------------"
-	-rm -Rf $(PACKAGE_TMP)
-	-rm -Rf $(PACKAGE_BASE)/*.tgz
-	-mkdir -p $(PACKAGE_BASE)
-	cp -R $(INSTALL_LOCAL) $(PACKAGE_TMP)
-	cd $(PACKAGE_TMP)
-	git clean -fd   # Remove all untracked files
-	virtualenv --relocatable $(PACKAGE_ENV)  # Make venv relocatable
-	-cd $(PACKAGE_BASE); tar czf $(PACKAGE_TGZ) encyc-rg
-
-rsync-packaged:
-	@echo ""
-	@echo "rsync-packaged ---------------------------------------------------------"
-	rsync -avz --delete $(PACKAGE_BASE)/encyc-rg $(PACKAGE_RSYNC_DEST)
-
-install-packaged: install-prep install-dependencies install-static install-configs mkdirs syncdb install-daemon-configs
-	@echo ""
-	@echo "install packaged -------------------------------------------------------"
