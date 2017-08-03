@@ -23,8 +23,8 @@ Log in to your VM and become `root`.  Then add a `encyc` user, install the prere
     # adduser encyc
     [enter info]
     # apt-get install git-core
-    # git clone git@github.com:densho/encyc-rg.git /usr/local/src/encyc-rg
-    # cd /usr/local/src/encyc-rg/encycrg
+    # git clone git@github.com:densho/encyc-rg.git /opt/encyc-rg
+    # cd /opt/encyc-rg/encycrg
 
     # If you are testing a branch, switch to that branch.
     # git checkout -b BRANCHNAME origin/BRANCHNAME
@@ -51,7 +51,7 @@ Edit `/etc/encyc/rglocal.cfg` to include the following text.::
     static_root=/var/www/encycrg/static
     media_root=/var/www/encycrg/media
 
-To get the nice Django error messages edit `/usr/local/src/encyc-rg/encycrg/encycrg/settings.py`.  **WARNING: setting `DEBUG = True` in a production environment is a security risk!**::
+To get the nice Django error messages edit `/opt/encyc-rg/encycrg/encycrg/settings.py`.  **WARNING: setting `DEBUG = True` in a production environment is a security risk!**::
 
     DEBUG = True
     THUMBNAIL_DEBUG = False

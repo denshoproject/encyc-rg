@@ -10,13 +10,13 @@ VERSION := $(shell cat VERSION)
 GIT_SOURCE_URL=https://github.com/densho/encyc-rg
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
-INSTALL_BASE=/usr/local/src
+INSTALL_BASE=/opt
 INSTALLDIR=$(INSTALL_BASE)/encyc-rg
 DOWNLOADS_DIR=/tmp/$(APP)-install
 REQUIREMENTS=$(INSTALLDIR)/requirements.txt
 PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 
-VIRTUALENV=$(INSTALLDIR)/env
+VIRTUALENV=$(INSTALLDIR)/venv/encycrg
 SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
 
 FPM_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
@@ -26,7 +26,7 @@ FPM_FILE=$(FPM_NAME)_$(VERSION)_$(FPM_ARCH).deb
 FPM_VENDOR=Densho.org
 FPM_MAINTAINER=<geoffrey.jost@densho.org>
 FPM_DESCRIPTION=Densho Encyclopedia Resource Guide site
-FPM_BASE=usr/local/src/encyc-rg
+FPM_BASE=opt/encyc-rg
 
 PACKAGE_BASE=/tmp/encycrg
 PACKAGE_TMP=$(PACKAGE_BASE)/encyc-rg
@@ -433,7 +433,7 @@ package:
 	conf=$(FPM_BASE)   \
 	COPYRIGHT=$(FPM_BASE)   \
 	encycrg=$(FPM_BASE)   \
-	env=$(FPM_BASE)   \
+	venv=$(FPM_BASE)   \
 	INSTALL=$(FPM_BASE)   \
 	LICENSE=$(FPM_BASE)   \
 	Makefile=$(FPM_BASE)   \
