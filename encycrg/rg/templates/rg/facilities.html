@@ -12,8 +12,12 @@ Facilities
 
 {% block content %}
 
-{% for type_id in facility_types %}
-<a href="{% url "rg-facility-type" type_id %}">{{ type_id }}</a><br/>
+{% for ftype in facility_types.values %}
+<a href="{% url "rg-facility-type" ftype.type %}">
+  {{ ftype.type }}
+  ({{ ftype.count }})
+</a>
+<br/>
 {% endfor %}
 
 {% endblock content %}

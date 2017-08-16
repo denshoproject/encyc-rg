@@ -1061,10 +1061,14 @@ TERM_TITLES = {
 }
 
 def facility_types():
-    return sorted(set([
-        term.type
-        for term in FacetTerm.terms(request=None, facet_id='facility')
-    ]))
+    types = {}
+    for term in FacetTerm.terms(request=None, facet_id='facility'):
+        if types.get(term.type):
+            types[term.type]['count'] += 1
+        else:
+            types[term.type] = term.dict_all()
+            types[term.type]['count'] = 1
+    return types
 
 def facility_type(type_id):
     return [
