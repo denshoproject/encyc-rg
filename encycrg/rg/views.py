@@ -129,18 +129,16 @@ def source(request, url_title):
 
 def categories(request):
     api_url = _mkurl(request, reverse('rg-api-categories'))
-    r = api.categories(request, format='json')
     return render(request, 'rg/categories.html', {
-        'categories': r.data,
+        'categories': api._categories(request),
         'api_url': api_url,
     })
 
 def category(request, url_title):
     api_url = _mkurl(request, reverse('rg-api-category', args=([url_title])))
-    r = api.category(request, category=url_title, format='json')
     return render(request, 'rg/category.html', {
         'url_title': url_title,
-        'query': r.data,
+        'results': api._category(request, category=url_title, limit=settings.MAX_SIZE),
         'api_url': api_url,
     })
 

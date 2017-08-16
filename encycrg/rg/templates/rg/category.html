@@ -24,14 +24,14 @@
 
 {% block content %}
 
-{% if query.objects %}
-<dl>
-  <dt>Articles</dt>
-  {% for object in query.objects %}
-  <dd>
-    <a href="{{ object.links.html }}">{{ object.id }}</a>
-  </dd>{% endfor %}
-</dl>
-{% endif %}
+<div id="item-count">
+  {{ results.total }} articles<br/>
+</div>
+
+{% for article in results.ordered_dict.objects %}
+<div class="article-list">
+  <a href="{{ article.links.html }}">{{ article.id }}</a>
+</div>
+{% endfor %}
 
 {% endblock content %}
