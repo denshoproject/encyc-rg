@@ -7,6 +7,7 @@ from urllib.parse import urlparse, urlunparse
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
+from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
@@ -83,9 +84,15 @@ def articles(request):
     #})
 
 def article(request, url_title):
+    article = None
     try:
         article = api._article(request, url_title)
     except models.NotFoundError:
+        # Bad title might just be an author link
+        if '_' in url_title:
+            url_title = url_title.replace('_',' ')
+        if url_title in api._article_titles(request, limit=settings.MAX_SIZE):
+            return HttpResponsePermanentRedirect(reverse('rg-author', args=([url_title])))
         raise Http404("No article with that title.")
     return render(request, 'rg/article.html', {
         'article': article,

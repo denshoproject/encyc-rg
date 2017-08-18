@@ -54,7 +54,8 @@ urlpatterns = [
     
     url(r"^search/$", views.search_ui, name='rg-search'),
     
-    url(r"^wiki/(?P<url_title>[\w\W]+)/$", views.article, name='rg-article'),
+    #url(r"^wiki/(?P<url_title>[\w\W]+)/$", views.article, name='rg-article'),
+    url(r"^wiki/(?P<url_title>[\w\W ,.:\(\)-/]+)/$", views.article, name='rg-article'),
     url(r"^authors/(?P<url_title>[\w\W]+)/$", views.author, name='rg-author'),
     url(r"^sources/(?P<url_title>[\w\W]+)/$", views.source, name='rg-source'),
     

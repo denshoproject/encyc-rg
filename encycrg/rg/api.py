@@ -188,6 +188,12 @@ def _articles(request, limit=None, offset=None):
     searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
     return searcher.execute(limit, offset)
 
+def _article_titles(request, limit=None, offset=None):
+    return [
+        author.url_title
+        for author in _authors(request, limit=limit, offset=offset).objects
+    ]
+
 def _authors(request, limit=None, offset=None):
     s = search.Search().doc_type(models.Author).query("match_all")
     s = s.sort('title_sort')
