@@ -52,6 +52,13 @@
 </dl>
 {% endif %}
 
+<dl>
+  <dt>Encyclopedia</dt>
+  <dd>
+    <a href="{{ article.encyclopedia_url }}" class="encyc">{{ article.title }}</a>
+  </dd>
+</dl>
+
 {{ article.body|safe }}
 
 {% endblock content %}

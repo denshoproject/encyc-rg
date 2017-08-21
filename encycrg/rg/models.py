@@ -6,6 +6,7 @@ from builtins import object
 from collections import OrderedDict
 import logging
 logger = logging.getLogger(__name__)
+import os
 
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Index
@@ -314,6 +315,9 @@ class Page(DocType):
     
     def absolute_url(self):
         return reverse('rg-page', args=([self.title]))
+    
+    def encyclopedia_url(self):
+        return os.path.join(settings.ENCYCLOPEDIA_URL, self.title)
     
     @staticmethod
     def dict_list(hit, request):

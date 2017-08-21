@@ -83,6 +83,9 @@ THUMBNAIL_GEOMETRY='512x512>'
 THUMBNAIL_COLORSPACE='sRGB'
 THUMBNAIL_OPTIONS=''
 
+ENCYCLOPEDIA_URL = config.get('encycrg', 'encyclopedia_url')
+
+
 # ----------------------------------------------------------------------
 
 ADMINS = (
