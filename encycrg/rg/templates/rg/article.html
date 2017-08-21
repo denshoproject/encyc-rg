@@ -47,7 +47,8 @@
   <dt>Sources</dt>
   {% for source in article.sources %}
   <dd>
-    <a href="{{ source.html }}">{{ source.title }}</a>
+    <img src="{{ source.img_url }}" width="100" />
+    {{ source.caption }}
   </dd>{% endfor %}
 </dl>
 {% endif %}

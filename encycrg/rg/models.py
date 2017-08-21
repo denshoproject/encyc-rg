@@ -648,10 +648,10 @@ class Source(DocType):
         return reverse('rg-source', args=([self.encyclopedia_id]))
     
     def img_url(self):
-        return os.path.join(settings.SOURCES_MEDIA_URL, self.img_path)
+        return os.path.join(settings.MEDIA_URL, self.img_path)
     
     def img_url_local(self):
-        return os.path.join(settings.SOURCES_MEDIA_URL_LOCAL, self.img_path)
+        return os.path.join(settings.MEDIA_URL_LOCAL, self.img_path)
     
     #def streaming_url(self):
     #    return os.path.join(settings.SOURCES_MEDIA_URL, self.streaming_path)
