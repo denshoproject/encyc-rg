@@ -5,6 +5,7 @@
 
                                    # LICENSE  Python3
                                    
+beautifulsoup4                     # MIT      y
 django>=1.11                       # MIT      y
 django-bootstrap-pagination        # MIT      ???
 django-filter

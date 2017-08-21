@@ -16,6 +16,7 @@ from django.views.debug import technical_500_response
 from . import api
 from . import forms
 from . import models
+from . import parsing
 from . import search
 
 MAPPINGS=models.DOCTYPE_CLASS
@@ -84,6 +85,7 @@ def articles(request):
     #})
 
 def article(request, url_title):
+    article_titles = api._article_titles(request, limit=settings.MAX_SIZE)
     article = None
     try:
         article = api._article(request, url_title)
@@ -91,9 +93,14 @@ def article(request, url_title):
         # Bad title might just be an author link
         if '_' in url_title:
             url_title = url_title.replace('_',' ')
-        if url_title in api._article_titles(request, limit=settings.MAX_SIZE):
+        if url_title in article_titles:
             return HttpResponsePermanentRedirect(reverse('rg-author', args=([url_title])))
         raise Http404("No article with that title.")
+
+    article.body = parsing.mark_links(
+        article.body, article_titles, settings.ENCYCLOPEDIA_URL
+    )
+    
     return render(request, 'rg/article.html', {
         'article': article,
         'api_url': _mkurl(request, reverse('rg-api-article', args=([url_title]))),
