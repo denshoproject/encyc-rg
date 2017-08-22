@@ -182,7 +182,7 @@ class SearchUI(APIView):
 def _articles(request, limit=None, offset=None):
     s = models.Page.search().query("match_all").sort('title_sort')
     if not limit:
-        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+        limit = int(request.GET.get('limit', settings.MAX_SIZE))
     if not offset:
         offset = int(request.GET.get('offset', 0))
     searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
