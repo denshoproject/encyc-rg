@@ -180,11 +180,9 @@ class Searcher(object):
         start,stop = start_stop(limit, offset)
         response = self.s[start:stop].execute()
         return SearchResults(
-            query=self.query,
             mappings=self.mappings,
-            count=response.hits.total,
+            query=self.query,
             results=response,
-            objects=[],
             limit=limit,
             offset=offset,
         )
@@ -228,19 +226,33 @@ class SearchResults(object):
         self.query = query
         self.limit = int(limit)
         self.offset = int(offset)
-
-        if results and results.hits.total:
-            self.total = int(results.hits.total)
-        elif objects:
-            self.total = len(objects)
-        else:
-            self.total = count
         
         if results:
+            # objects
             self.objects = [hit for hit in results]
-            self.aggregations = getattr(results, 'aggregations', {})
+            if results.hits.total:
+                self.total = int(results.hits.total)
+
+            # aggregations
+            self.aggregations = {}
+            if hasattr(results, 'aggregations'):
+                for field in results.aggregations.to_dict().keys():
+                    self.aggregations[field] = [
+                        {
+                            'key': bucket['key'],
+                            'doc_count': str(bucket['doc_count']),
+                        }
+                        for bucket in results.aggregations[field].buckets
+                        if bucket['key'] and bucket['doc_count']
+                    ]
+
         elif objects:
+            # objects
             self.objects = objects
+            self.total = len(objects)
+
+        else:
+            self.total = count
 
         # elasticsearch
         self.prev_offset = self.offset - self.limit
@@ -260,6 +272,11 @@ class SearchResults(object):
         self.page_next = self.this_page * self.page_size
         self.pad_before = range(0, self.page_start)
         self.pad_after = range(self.page_next, self.total)
+    
+    def __repr__(self):
+        return u"<SearchResults '%s' [%s]>" % (
+            self.query, self.total
+        )
 
     def _make_prevnext_url(self, query, request=None):
         if request:
@@ -319,6 +336,7 @@ class SearchResults(object):
             data['objects'] += [{'n':n} for n in range(self.page_next, self.total)]
         
         data['query'] = self.query
+        data['aggregations'] = self.aggregations
         return data
 
 
@@ -407,7 +425,7 @@ def aggs_dict(aggregations):
     """
     return {
         fieldname: {
-            bucket['key']: bucket['doc_count']
+            bucket['key']: str(bucket['doc_count'])
             for bucket in data['buckets']
         }
         for fieldname,data in list(aggregations.items())

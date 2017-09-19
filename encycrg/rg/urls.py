@@ -32,7 +32,7 @@ urlpatterns = [
     url(r"^api/1.0/sources/$", api.sources, name='rg-api-sources'),
     
     url(r'^api/1.0/search/help/$', TemplateView.as_view(template_name="rg/api/search-help.html"), name='rg-api-search-help'),
-    url(r"^api/1.0/search/$", api.SearchUI.as_view(), name='rg-api-search'),
+    url(r"^api/1.0/search/$", api.search_form, name='rg-api-search'),
     
     url(r'^terms/(?P<term_id>[\w\d-]+)/$', views.term, name='rg-term'),
     url(r"^facets/(?P<facet_id>[\w\W]+)/$", views.facet, name='rg-facet'),

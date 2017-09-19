@@ -153,28 +153,11 @@ def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
         _term_objects(request, term_id, limit=limit, offset=offset)
     )
 
-class SearchUI(APIView):
-    """
-    <a href="/api/1.0/search/help/">Search API help</a>
-    """
-    
-    def get(self, request, format=None):
-        """
-        Search API info and UI.
-        """
-        return Response({})
-    
-    def post(self, request, format=None):
-        """
-        Return search results.
-        """
-        query = json.loads(request.data['_content'])
-        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-        offset = int(request.GET.get('offset', 0))
-        searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS)
-        searcher.prep(query)
-        data = searcher.execute(limit, offset).ordered_dict(request)
-        return Response(data)
+@api_view(['GET'])
+def search_form(request, format=None):
+    return Response(
+        _search(request).ordered_dict(request)
+    )
 
 
 # ----------------------------------------------------------------------
@@ -393,3 +376,33 @@ def _term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
         d['links']['html'] = reverse('rg-article', args=([item['url_title']]), request=request)
         data.append(d)
     return data
+
+def _search(request):
+    params = request.query_params
+    thispage = int(request.GET.get('page', 0))
+    limit = settings.DEFAULT_LIMIT
+    offset = search.es_offset(limit, thispage)
+
+    # construct search
+    s = models.Page.search().query(
+        search.MultiMatch(
+            query=params.get('fulltext'),
+            fields=['title', 'body']
+        )
+    )
+    if params.get('filter_category'):
+        s = s.filter('terms', categories=params['filter_category'])
+    if params.get('filter_topics'):
+        s = s.filter('terms', topics=params['filter_topics'])
+    if params.get('filter_facility'):
+        s = s.filter('terms', facility=params['filter_facility'])
+
+    # aggregations
+    for fieldname in models.PAGE_BROWSABLE_FIELDS.keys():
+        s.aggs.bucket(fieldname, 'terms', field=fieldname)
+
+    return search.Searcher(
+        mappings=MAPPINGS,
+        fields=FIELDS,
+        search=s,
+    ).execute(limit, offset)

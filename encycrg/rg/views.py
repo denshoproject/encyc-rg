@@ -253,7 +253,10 @@ def term(request, term_id):
 
 
 def search_ui(request):
-    api_url = _mkurl(request, reverse('rg-api-search'))
+    api_url = '%s?%s' % (
+        _mkurl(request, reverse('rg-api-search')),
+        request.META['QUERY_STRING']
+    )
     form = forms.SearchForm(request.GET)
     thispage = int(request.GET.get('page', 0))
     limit = settings.DEFAULT_LIMIT

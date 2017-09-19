@@ -242,6 +242,8 @@ PAGE_LIST_FIELDS = [
     'categories',
 ]
 
+# fields for browsing
+# fields for search aggregations
 PAGE_BROWSABLE_FIELDS = {
     'rg_rgmediatype': 'Media Type',
     'rg_interestlevel': 'Interest Level',
@@ -256,6 +258,7 @@ PAGE_BROWSABLE_FIELDS = {
     #'rg_facility': 'Facility',
     'rg_hasteachingaids': 'Has Teaching Aids',
 }
+
 
 @python_2_unicode_compatible
 class Page(DocType):
