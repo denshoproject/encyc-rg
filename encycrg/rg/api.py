@@ -378,29 +378,59 @@ def _term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
     return data
 
 def _search(request):
-    params = request.query_params
-    thispage = int(request.GET.get('page', 0))
+    """Search Page objects
+    
+    @param request: WSGIRequest
+    @returns: search.SearchResults
+    """
+    if hasattr(request, 'query_params'):
+        # api (rest_framework)
+        params = dict(request.query_params)
+    elif hasattr(request, 'GET'):
+        # web ui (regular Django)
+        params = dict(request.GET)
+    else:
+        params = {}
+        
+    # scrub params
+    bad_fields = [
+        key for key in params.keys()
+        if key not in models.PAGE_SEARCH_FIELDS + ['page']
+    ]
+    for key in bad_fields:
+        params.pop(key)
+        
+    if params.get('page'):
+        thispage = int(params.pop('page')[-1])
+    else:
+        thispage = 0
     limit = settings.DEFAULT_LIMIT
     offset = search.es_offset(limit, thispage)
 
-    # construct search
-    s = models.Page.search().query(
-        search.MultiMatch(
-            query=params.get('fulltext'),
-            fields=['title', 'body']
+    s = models.Page.search()
+    
+    if params.get('fulltext'):
+        # MultiMatch chokes on lists
+        fulltext = params.pop('fulltext')
+        if isinstance(fulltext, list) and (len(fulltext) == 1):
+            fulltext = fulltext[0]
+        # fulltext search
+        s = s.query(
+            search.MultiMatch(
+                query=fulltext,
+                fields=['title', 'body']
+            )
         )
-    )
-    if params.get('filter_category'):
-        s = s.filter('terms', categories=params['filter_category'])
-    if params.get('filter_topics'):
-        s = s.filter('terms', topics=params['filter_topics'])
-    if params.get('filter_facility'):
-        s = s.filter('terms', facility=params['filter_facility'])
-
+        
+    # filters
+    for key,val in params.items():
+        if key in models.PAGE_SEARCH_FIELDS:
+            s = s.filter('terms', **{key: val})
+    
     # aggregations
     for fieldname in models.PAGE_BROWSABLE_FIELDS.keys():
         s.aggs.bucket(fieldname, 'terms', field=fieldname)
-
+    
     return search.Searcher(
         mappings=MAPPINGS,
         fields=FIELDS,

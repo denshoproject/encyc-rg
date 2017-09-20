@@ -259,6 +259,9 @@ PAGE_BROWSABLE_FIELDS = {
     'rg_hasteachingaids': 'Has Teaching Aids',
 }
 
+PAGE_SEARCH_FIELDS = [x for x in PAGE_BROWSABLE_FIELDS.keys()]
+PAGE_SEARCH_FIELDS.insert(0, 'fulltext')
+
 
 @python_2_unicode_compatible
 class Page(DocType):

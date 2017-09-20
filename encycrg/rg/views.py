@@ -252,43 +252,30 @@ def term(request, term_id):
     })
 
 
+
 def search_ui(request):
     api_url = '%s?%s' % (
         _mkurl(request, reverse('rg-api-search')),
         request.META['QUERY_STRING']
     )
-    form = forms.SearchForm(request.GET)
-    thispage = int(request.GET.get('page', 0))
-    limit = settings.DEFAULT_LIMIT
-    offset = search.es_offset(limit, thispage)
+    
+    results = api._search(request)
+    form = forms.SearchForm(
+        search_results=results,
+        data=request.GET
+    )
     context = {
-        'search_form': form,
         'api_url': api_url,
+        'results': results,
+        'search_form': form,
     }
     
-    if form.is_valid() and form.cleaned_data.get('fulltext'):
-        s = models.Page.search()
-        s = s.query(
-            search.MultiMatch(
-                query=form.cleaned_data.get('fulltext'),
-                fields=['title', 'body']
-            )
+    if results.objects:
+        paginator = Paginator(
+            results.ordered_dict(request=request, pad=True)['objects'],
+            results.page_size,
         )
-        if form.cleaned_data.get('filter_category'):
-            s = s.filter('terms', categories=form.cleaned_data['filter_category'])
-        if form.cleaned_data.get('filter_topics'):
-            s = s.filter('terms', topics=form.cleaned_data['filter_topics'])
-        if form.cleaned_data.get('filter_facility'):
-            s = s.filter('terms', facility=form.cleaned_data['filter_facility'])
-        
-        searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-        results = searcher.execute(limit, offset)
-        if results.objects:
-            paginator = Paginator(
-                results.ordered_dict(request=request, pad=True)['objects'],
-                results.page_size,
-            )
-            context['paginator'] = paginator
-            context['page'] = paginator.page(results.this_page)
+        context['paginator'] = paginator
+        context['page'] = paginator.page(results.this_page)
     
     return render(request, 'rg/search.html', context)

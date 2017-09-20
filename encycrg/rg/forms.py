@@ -1,8 +1,11 @@
+from collections import OrderedDict
 import logging
 logger = logging.getLogger(__name__)
 
 from django import forms
 from django.conf import settings
+
+from . import models
 
 
 class SearchFormBasic(forms.Form):
@@ -19,52 +22,52 @@ class SearchFormBasic(forms.Form):
     )
 
 
-CATEGORY_CHOICES = [
-    ('Arts', 'Arts'),
-    ('Camps', 'Camps'),
-    ('Chroniclers', 'Chroniclers'),
-    ('Definitions', 'Definitions'),
-    ('Legal', 'Legal'),
-    ('Military', 'Military'),
-    ('Newspapers', 'Newspapers'),
-    ('Organizations', 'Organizations'),
-    ('People', 'People'),
-    ('Prewar', 'Prewar'),
-]
-GENRE_CHOICES = []
-TOPICS_CHOICES = [
-]
-FACILITY_CHOICES = [
-    ('Manzanar', 'Manzanar'),
-    ('Minidoka', 'Minidoka'),
-]
-
 class SearchForm(forms.Form):
-    fulltext = forms.CharField(
-        max_length=255,
-        required=False,
-        widget=forms.TextInput(
-            attrs={
-                'id': 'id_query',
-                'class': 'form-control',
-                'placeholder': 'Search...',
-            }
-        )
-    )
+    field_order = models.PAGE_SEARCH_FIELDS
     
-    filter_category = forms.MultipleChoiceField(
-        choices=CATEGORY_CHOICES,
-        required=False,
-    )
-    filter_genre = forms.MultipleChoiceField(
-        choices=GENRE_CHOICES,
-        required=False,
-    )
-    filter_topics = forms.MultipleChoiceField(
-        choices=TOPICS_CHOICES,
-        required=False,
-    )
-    filter_facility = forms.MultipleChoiceField(
-        choices=FACILITY_CHOICES,
-        required=False,
-    )
+    def __init__( self, *args, **kwargs ):
+        if kwargs.get('search_results'):
+            self.search_results = kwargs.pop('search_results')
+        super(SearchForm, self).__init__(*args, **kwargs)
+        self.fields = self.construct_form(self.search_results)
+
+    def construct_form(self, search_results):
+        fields = [
+            (
+                'fulltext',
+                forms.CharField(
+                    max_length=255,
+                    required=False,
+                    widget=forms.TextInput(
+                        attrs={
+                            'id': 'id_query',
+                            'class': 'form-control',
+                            'placeholder': 'Search...',
+                        }
+                    ),
+                )
+            )
+        ]
+        
+        # fill in options and doc counts from aggregations
+        if search_results.aggregations:
+            for fieldname in search_results.aggregations.keys():
+                choices = [
+                    (
+                        item['key'],
+                        '%s (%s)' % (item['key'], item['doc_count'])
+                    )
+                    for item in search_results.aggregations[fieldname]
+                ]
+                if choices:
+                    fields.append((
+                        fieldname,
+                        forms.MultipleChoiceField(
+                            choices=choices,
+                            required=False,
+                        ),
+                    ))
+        
+        # Django Form object takes an OrderedDict rather than list
+        fields = OrderedDict(fields)
+        return fields
