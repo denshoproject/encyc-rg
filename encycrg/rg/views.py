@@ -258,24 +258,30 @@ def search_ui(request):
         _mkurl(request, reverse('rg-api-search')),
         request.META['QUERY_STRING']
     )
-    
-    results = api._search(request)
-    form = forms.SearchForm(
-        search_results=results,
-        data=request.GET
-    )
     context = {
         'api_url': api_url,
-        'results': results,
-        'search_form': form,
     }
-    
-    if results.objects:
-        paginator = Paginator(
-            results.ordered_dict(request=request, pad=True)['objects'],
-            results.page_size,
+
+    if request.GET.get('fulltext'):
+
+        results = api._search(request)
+        form = forms.SearchForm(
+            search_results=results,
+            data=request.GET
         )
-        context['paginator'] = paginator
-        context['page'] = paginator.page(results.this_page)
+        context['results'] = results
+        context['search_form'] = form
+        
+        if results.objects:
+            paginator = Paginator(
+                results.ordered_dict(request=request, pad=True)['objects'],
+                results.page_size,
+            )
+            context['paginator'] = paginator
+            context['page'] = paginator.page(results.this_page)
+
+    else:
+        context['search_form'] = forms.SearchForm()
+        
     
     return render(request, 'rg/search.html', context)

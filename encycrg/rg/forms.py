@@ -24,6 +24,7 @@ class SearchFormBasic(forms.Form):
 
 class SearchForm(forms.Form):
     field_order = models.PAGE_SEARCH_FIELDS
+    search_results = None
     
     def __init__( self, *args, **kwargs ):
         if kwargs.get('search_results'):
@@ -50,7 +51,7 @@ class SearchForm(forms.Form):
         ]
         
         # fill in options and doc counts from aggregations
-        if search_results.aggregations:
+        if search_results and search_results.aggregations:
             for fieldname in search_results.aggregations.keys():
                 choices = [
                     (
