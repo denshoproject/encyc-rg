@@ -17,10 +17,10 @@ Articles
   {{ results.total }} articles<br/>
 </div>
 
-{% for article in results.ordered_dict.objects %}
 <div class="article-list">
-  <a href="{{ article.links.html }}">{{ article.id }}</a>
-</div>
+{% for article in results.ordered_dict.objects %}
+  <a href="{{ article.links.html }}">{{ article.id }}</a><br/>
 {% endfor %}
+</div>
 
 {% endblock content %}
