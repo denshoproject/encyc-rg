@@ -6,7 +6,9 @@
 {% endblock %}
 
 {% block headline %}
-{{ value }}
+<a href="{% url "rg-browse" %}">Browse</a>
+&gt; <a href="{% url "rg-browse-field" fieldname %}">{{ field_title }}</a>
+&gt; {{ value }}
 {% endblock %}
 
 
