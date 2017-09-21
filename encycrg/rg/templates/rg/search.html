@@ -13,15 +13,24 @@ Search
 
 {% block content %}
 
+<table>
 <form action="{{ this_url }}" method="get">
-  
-  {{ search_form.as_p }}
 
   <p>
-    <button class="btn btn-sm btn-primary"><i class="fa fa-filter"></i> Search</button> <span class="muted small" style="padding-left:20px;">Use &lt;Ctrl&gt; or (⌘) keys to select multiple terms</span>
+    <span class="muted small">Use &lt;Ctrl&gt; or (⌘) keys to select multiple terms</span>
   </p>
   
+  {{ search_form.as_table }}
+
+  <tr>
+    <td></td>
+    <td>
+      <button class="btn btn-sm btn-primary"><i class="fa fa-filter"></i> Search</button>
+    </td>
+  </tr>
+
 </form>
+</table>
 
 <!-- --------------------------------------------------------------- -->
 
