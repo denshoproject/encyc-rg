@@ -64,6 +64,8 @@ class SearchForm(forms.Form):
                     fields.append((
                         fieldname,
                         forms.MultipleChoiceField(
+                            label=models.PAGE_BROWSABLE_FIELDS.get(
+                                fieldname, fieldname),
                             choices=choices,
                             required=False,
                         ),
