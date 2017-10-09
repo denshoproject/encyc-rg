@@ -441,8 +441,7 @@ deb:
 	requirements.txt=$(FPM_BASE)  \
 	VERSION=$(FPM_BASE)  \
 	conf/settings.py=$(FPM_BASE)/encycrg/encycrg   \
-	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg   \
-	conf/gunicorn.conf=$(SUPERVISOR_GUNICORN_CONF)
+	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
 
 secret-key:
 	@echo ""
