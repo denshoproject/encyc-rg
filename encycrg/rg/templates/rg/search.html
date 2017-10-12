@@ -13,19 +13,102 @@ Search
 
 {% block content %}
 
-<table>
+<table width="100%">
 <form action="{{ this_url }}" method="get">
 
-  <p>
-    <span class="muted small">Use &lt;Ctrl&gt; or (⌘) keys to select multiple terms</span>
-  </p>
-  
-  {{ search_form.as_table }}
+  <tr>
+    <td colspan="2">
+
+      {{ search_form.fulltext }}
+      <button class="btn btn-sm btn-primary"><i class="fa fa-filter"></i> Search</button>
+      <br/>
+      <span class="muted small">Use &lt;Ctrl&gt; or (⌘) keys to select multiple terms</span>
+    </td>
+  </tr>
 
   <tr>
-    <td></td>
-    <td>
-      <button class="btn btn-sm btn-primary"><i class="fa fa-filter"></i> Search</button>
+    <td valign="top">
+
+<div class="search-filter">
+  <strong>{{ search_form.rg_rgmediatype.label }}</strong>
+  <br/>
+  {{ search_form.rg_rgmediatype }}
+</div>
+
+<div class="search-filter">
+  <strong>{{ search_form.rg_interestlevel.label }}</strong>
+  <br/>
+  {{ search_form.rg_interestlevel }}
+</div>
+
+<div class="search-filter">
+  <strong>{{ search_form.rg_readinglevel.label }}</strong>
+  <br/>
+  {{ search_form.rg_readinglevel }}
+</div>
+
+<div class="search-filter">
+  <strong>{{ search_form.rg_theme.label }}</strong>
+  <br/>
+  {{ search_form.rg_theme }}
+</div>
+
+<div class="search-filter">
+  <strong>{{ search_form.rg_genre.label }}</strong>
+  <br/>
+  {{ search_form.rg_genre }}
+</div>
+
+<div class="search-filter">
+  <strong>{{ search_form.rg_relatedevents.label }}</strong>
+  <br/>
+  {{ search_form.rg_relatedevents }}
+</div>
+
+<div class="search-filter">
+  <strong>{{ search_form.rg_availability.label }}</strong>
+  <br/>
+  {{ search_form.rg_availability }}
+</div>
+
+<div class="search-filter">
+  <strong>{{ search_form.rg_freewebversion.label }}</strong>
+  <br/>
+  {{ search_form.rg_freewebversion }}
+</div>
+
+<div class="search-filter">
+  <strong>{{ search_form.rg_geography.label }}</strong>
+  <br/>
+  {{ search_form.rg_geography }}
+</div>
+
+<div class="search-filter">
+  <strong>{{ search_form.rg_hasteachingaids.label }}</strong>
+  <br/>
+  {{ search_form.rg_hasteachingaids }}
+</div>
+
+    </td>
+    <td valign="top">
+
+{% if page.object_list %}
+<div id="item-count">
+  {{ paginator.count }} items<br/>
+</div>
+
+{% if paginator.num_pages > 1 %}
+{% bootstrap_paginate page range=10 show_first_last="true" %}
+{% endif %}
+
+{% for object in page.object_list %}
+<a href="{{ object.links.html }}">{{ object.id }}</a><br/>
+{% endfor %}
+
+{% if paginator.num_pages > 1 %}
+{% bootstrap_paginate page range=10 show_first_last="true" %}
+{% endif %}
+
     </td>
   </tr>
 
@@ -47,23 +130,6 @@ Search
 {% endif %}
 
 </div><!-- .querymeta -->
-
-{% if page.object_list %}
-<div id="item-count">
-  {{ paginator.count }} items<br/>
-</div>
-
-{% if paginator.num_pages > 1 %}
-{% bootstrap_paginate page range=10 show_first_last="true" %}
-{% endif %}
-
-{% for object in page.object_list %}
-<a href="{{ object.links.html }}">{{ object.id }}</a><br/>
-{% endfor %}
-
-{% if paginator.num_pages > 1 %}
-{% bootstrap_paginate page range=10 show_first_last="true" %}
-{% endif %}
 
 </div> <!-- .row results content -->
 {% endif %}
