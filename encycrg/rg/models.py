@@ -57,15 +57,19 @@ response = s.execute()
 
 """
 
-def hitvalue(hit, field):
+def hitvalue(hit, field, is_list=False):
     """
     For some reason, Search hit objects wrap values in lists.
     returns the value inside the list.
     """
     if not hasattr(hit, field):
+        if is_list:
+            return []
         return None
     value = getattr(hit, field)
-    if value and (isinstance(value, AttrList) or isinstance(value, list)):
+    if isinstance(value, AttrList):
+        value = list(value)
+    if value and isinstance(value, list) and not is_list:
         value = value[0]
     return value
 
@@ -378,8 +382,8 @@ class Page(DocType):
         @param request: django.http.request.HttpRequest
         @returns: OrderedDict
         """
-        def setval(self, data, fieldname):
-            data[fieldname] = hitvalue(self, fieldname)
+        def setval(self, data, fieldname, is_list=False):
+            data[fieldname] = hitvalue(self, fieldname, is_list)
         
         # basic data from list
         data = self.to_dict_list(request)
@@ -402,23 +406,23 @@ class Page(DocType):
         #mw_api_url
         setval(self, data, 'coordinates')
         #self, 'authors_data'
-        setval(self, data, 'rg_rgmediatype')
+        setval(self, data, 'rg_rgmediatype', is_list=1)
         setval(self, data, 'rg_title')
         setval(self, data, 'rg_creators')
-        setval(self, data, 'rg_interestlevel')
-        setval(self, data, 'rg_readinglevel')
-        setval(self, data, 'rg_theme')
-        setval(self, data, 'rg_genre')
-        setval(self, data, 'rg_pov')
-        setval(self, data, 'rg_relatedevents')
-        setval(self, data, 'rg_availability')
-        setval(self, data, 'rg_freewebversion')
+        setval(self, data, 'rg_interestlevel', is_list=1)
+        setval(self, data, 'rg_readinglevel', is_list=1)
+        setval(self, data, 'rg_theme', is_list=1)
+        setval(self, data, 'rg_genre', is_list=1)
+        setval(self, data, 'rg_pov', is_list=1)
+        setval(self, data, 'rg_relatedevents', is_list=1)
+        setval(self, data, 'rg_availability', is_list=1)
+        setval(self, data, 'rg_freewebversion', is_list=1)
         #setval(self, data, 'rg_denshotopic')
-        setval(self, data, 'rg_geography')
+        setval(self, data, 'rg_geography', is_list=1)
         #setval(self, data, 'rg_facility')
-        setval(self, data, 'rg_chronology')
-        setval(self, data, 'rg_hasteachingaids')
-        setval(self, data, 'rg_warnings')
+        setval(self, data, 'rg_chronology', is_list=1)
+        setval(self, data, 'rg_hasteachingaids', is_list=1)
+        setval(self, data, 'rg_warnings', is_list=1)
         setval(self, data, 'body')
         # overwrite
         data['categories'] = [
