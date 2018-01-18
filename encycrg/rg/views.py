@@ -66,8 +66,16 @@ def debug(request):
 
         
 def articles(request):
+    results = api._articles(request, limit=settings.MAX_SIZE)
+    articles_grouped = []
+    initial = ''
+    for article in results.to_dict()['objects']:
+        if article['id'][0] != initial:
+            initial = article['id'][0]
+            articles_grouped.append(initial)
+        articles_grouped.append(article)
     return render(request, 'rg/articles.html', {
-        'results': api._articles(request, limit=settings.MAX_SIZE),
+        'articles_grouped': articles_grouped,
         'api_url': _mkurl(request, reverse('rg-api-articles')),
     })
     #api_url = _mkurl(request, reverse('rg-api-articles'))

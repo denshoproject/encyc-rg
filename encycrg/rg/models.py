@@ -374,6 +374,7 @@ class Page(DocType):
             args=([self.url_title]),
             request=request,
         )
+        data['title_sort'] = self.title_sort
         return data
     
     def dict_all(self, request=None):

@@ -168,7 +168,7 @@ def _articles(request, limit=None, offset=None):
         limit = int(request.GET.get('limit', settings.MAX_SIZE))
     if not offset:
         offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
+    searcher = search.Searcher(mappings=MAPPINGS, fields=models.PAGE_LIST_FIELDS, search=s)
     return searcher.execute(limit, offset)
 
 def _article_titles(request, limit=None, offset=None):

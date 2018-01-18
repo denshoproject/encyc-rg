@@ -17,10 +17,23 @@ Articles
   {{ results.total }} articles<br/>
 </div>
 
+<div id="contents">
+  {% for article in articles_grouped %}
+  {% if not article.id %}
+  <a href="#{{ article }}">{{ article }}</a>
+  {% endif %}
+  {% endfor %}
+</div>
+
 <div class="article-list">
-{% for article in results.ordered_dict.objects %}
+  {% for article in articles_grouped %}
+  {% if not article.id %}
+  <a name="{{ article }}"></a>
+  <h2>{{ article }}</h2>
+  {% else %}
   <a href="{{ article.links.html }}">{{ article.id }}</a><br/>
-{% endfor %}
+  {% endif %}
+  {% endfor %}
 </div>
 
 {% endblock content %}
