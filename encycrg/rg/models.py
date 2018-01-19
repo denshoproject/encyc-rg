@@ -549,7 +549,7 @@ class Page(DocType):
         
         @returns: list
         """
-        return [Source.get(sid) for sid in self.source_ids]
+        return Source.mget(self.source_ids, missing='skip')
     
     def topics(self):
         """List of DDR topics associated with this page.
