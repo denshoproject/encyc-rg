@@ -112,6 +112,8 @@ def articles(request):
     #    'api_url': api_url,
     #})
 
+ARTICLE_MEDIA_TEMPLATES = []
+
 def article(request, url_title):
     article_titles = api._article_titles(request, limit=settings.MAX_SIZE)
     article = None
@@ -124,7 +126,12 @@ def article(request, url_title):
         if url_title in article_titles:
             return HttpResponsePermanentRedirect(reverse('rg-author', args=([url_title])))
         raise Http404("No article with that title. (%s)" % err)
-    return render(request, 'rg/article.html', {
+    # some mediatypes have special templates
+    template = 'rg/article.html'
+    if article.rg_rgmediatype and article.rg_rgmediatype[0] \
+    and (article.rg_rgmediatype[0] in ARTICLE_MEDIA_TEMPLATES):
+        template = 'rg/article-%s.html' % article.rg_rgmediatype[0]
+    return render(request, template, {
         'article': article,
         'api_url': _mkurl(request, reverse('rg-api-article', args=([url_title]))),
     })

@@ -244,6 +244,7 @@ PAGE_LIST_FIELDS = [
     'published',
     'modified',
     'categories',
+    'rg_rgmediatype',
 ]
 
 # fields for browsing
@@ -375,6 +376,11 @@ class Page(DocType):
             request=request,
         )
         data['title_sort'] = self.title_sort
+        
+        def setval(self, data, fieldname, is_list=False):
+            data[fieldname] = hitvalue(self, fieldname, is_list)
+        
+        setval(self, data, 'rg_rgmediatype', is_list=1)
         return data
     
     def dict_all(self, request=None):
