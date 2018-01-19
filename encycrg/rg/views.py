@@ -64,18 +64,39 @@ class Debug(Exception):
 def debug(request):
     return technical_500_response(request, Debug, Debug(DEBUG_TEXT), None)
 
-        
+
+def _initial_char(text):
+    for char in text:
+        if char.isdigit():
+            return '1'
+        elif char.isalpha():
+            return char
+    return char
+
+def _group_articles_by_initial(articles):
+    initials = []
+    groups = {}
+    for article in articles:
+        initial = _initial_char(article['id'])
+        initials.append(initial)
+        if not groups.get(initial):
+            groups[initial] = []
+        groups[initial].append(article)
+    initials = sorted(set(initials))
+    return initials, [
+        (initial, groups.pop(initial))
+        for initial in initials
+    ]
+
 def articles(request):
     results = api._articles(request, limit=settings.MAX_SIZE)
-    articles_grouped = []
-    initial = ''
-    for article in results.to_dict()['objects']:
-        if article['id'][0] != initial:
-            initial = article['id'][0]
-            articles_grouped.append(initial)
-        articles_grouped.append(article)
+    initials,groups = _group_articles_by_initial(
+        results.to_dict()['objects']
+    )
     return render(request, 'rg/articles.html', {
-        'articles_grouped': articles_grouped,
+        'num_articles': results.total,
+        'initials': initials,
+        'groups': groups,
         'api_url': _mkurl(request, reverse('rg-api-articles')),
     })
     #api_url = _mkurl(request, reverse('rg-api-articles'))

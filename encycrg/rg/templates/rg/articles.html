@@ -14,25 +14,24 @@ Articles
 {% block content %}
 
 <div id="item-count">
-  {{ results.total }} articles<br/>
+  {{ num_articles }} articles<br/>
 </div>
 
 <div id="contents">
-  {% for article in articles_grouped %}
-  {% if not article.id %}
-  <a href="#{{ article }}">{{ article }}</a>
-  {% endif %}
+  {% for initial in initials %}
+  <a href="#{{ initial }}">{{ initial }}</a>
   {% endfor %}
 </div>
 
+
+
 <div class="article-list">
-  {% for article in articles_grouped %}
-  {% if not article.id %}
-  <a name="{{ article }}"></a>
-  <h2>{{ article }}</h2>
-  {% else %}
-  <a href="{{ article.links.html }}">{{ article.id }}</a><br/>
-  {% endif %}
+  {% for initial,articles in groups %}
+  <a name="{{ initial }}"></a>
+  <h2>{{ initial }}</h2>
+  {% for article in articles %}
+    <a href="{{ article.links.html }}">{{ article.id }}</a><br/>
+  {% endfor %}
   {% endfor %}
 </div>
 
