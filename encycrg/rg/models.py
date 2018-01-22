@@ -245,6 +245,7 @@ PAGE_LIST_FIELDS = [
     'modified',
     'categories',
     'rg_rgmediatype',
+    'rg_interestlevel',
 ]
 
 # fields for browsing
@@ -381,6 +382,7 @@ class Page(DocType):
             data[fieldname] = hitvalue(self, fieldname, is_list)
         
         setval(self, data, 'rg_rgmediatype', is_list=1)
+        setval(self, data, 'rg_interestlevel', is_list=1)
         return data
     
     def dict_all(self, request=None):
