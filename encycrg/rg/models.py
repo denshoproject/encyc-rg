@@ -467,12 +467,13 @@ class Page(DocType):
         @returns: list
         """
         objects = []
-        for url_title in self.authors_data['display']:
-            try:
-                author = Author.get(url_title)
-            except NotFoundError:
-                author = url_title
-            objects.append(author)
+        if self.authors_data:
+            for url_title in self.authors_data['display']:
+                try:
+                    author = Author.get(url_title)
+                except NotFoundError:
+                    author = url_title
+                objects.append(author)
         return objects
 
     def first_letter(self):
