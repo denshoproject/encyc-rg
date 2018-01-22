@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 import os
 
-from elasticsearch.exceptions import NotFoundError
+from elasticsearch.exceptions import NotFoundError, TransportError
 from elasticsearch_dsl import Index
 from elasticsearch_dsl import DocType, InnerObjectWrapper, analysis
 from elasticsearch_dsl import String, Date, Nested, Boolean
@@ -558,7 +558,12 @@ class Page(DocType):
         
         @returns: list
         """
-        return Source.mget(self.source_ids, missing='skip')
+        try:
+            return Source.mget(self.source_ids, missing='skip')
+        except TransportError as err:
+            if err.status_code == 400:
+                return []
+            raise err
     
     def topics(self):
         """List of DDR topics associated with this page.
