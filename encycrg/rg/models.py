@@ -18,7 +18,7 @@ from elasticsearch_dsl.utils import AttrList
 
 from django.conf import settings
 from django.core.cache import cache
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from rest_framework.reverse import reverse as api_reverse
 
 from . import search
