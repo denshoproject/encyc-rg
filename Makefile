@@ -19,14 +19,14 @@ PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 VIRTUALENV=$(INSTALLDIR)/venv/encycrg
 SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
 
-FPM_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
-FPM_ARCH=amd64
-FPM_NAME=$(APP)-$(FPM_BRANCH)
-FPM_FILE=$(FPM_NAME)_$(VERSION)_$(FPM_ARCH).deb
-FPM_VENDOR=Densho.org
-FPM_MAINTAINER=<geoffrey.jost@densho.org>
-FPM_DESCRIPTION=Densho Encyclopedia Resource Guide site
-FPM_BASE=opt/encyc-rg
+DEB_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
+DEB_ARCH=amd64
+DEB_NAME=$(APP)-$(DEB_BRANCH)
+DEB_FILE=$(DEB_NAME)_$(VERSION)_$(DEB_ARCH).deb
+DEB_VENDOR=Densho.org
+DEB_MAINTAINER=<geoffrey.jost@densho.org>
+DEB_DESCRIPTION=Densho Encyclopedia Resource Guide site
+DEB_BASE=opt/encyc-rg
 
 PACKAGE_BASE=/tmp/encycrg
 PACKAGE_TMP=$(PACKAGE_BASE)/encyc-rg
@@ -412,37 +412,37 @@ git-status:
 deb:
 	@echo ""
 	@echo "FPM packaging ----------------------------------------------------------"
-	-rm -Rf $(FPM_FILE)
+	-rm -Rf $(DEB_FILE)
 	virtualenv --python=python3 --relocatable $(VIRTUALENV)  # Make venv relocatable
 	fpm   \
 	--verbose   \
 	--input-type dir   \
 	--output-type deb   \
-	--name $(FPM_NAME)   \
+	--name $(DEB_NAME)   \
 	--version $(VERSION)   \
-	--package $(FPM_FILE)   \
+	--package $(DEB_FILE)   \
 	--url "$(GIT_SOURCE_URL)"   \
-	--vendor "$(FPM_VENDOR)"   \
-	--maintainer "$(FPM_MAINTAINER)"   \
-	--description "$(FPM_DESCRIPTION)"   \
+	--vendor "$(DEB_VENDOR)"   \
+	--maintainer "$(DEB_MAINTAINER)"   \
+	--description "$(DEB_DESCRIPTION)"   \
 	--depends "python3"   \
 	--depends "imagemagick"   \
 	--depends "sqlite3"   \
 	--depends "supervisor"   \
 	--chdir $(INSTALLDIR)   \
-	.git=$(FPM_BASE)   \
-	.gitignore=$(FPM_BASE)   \
-	conf=$(FPM_BASE)   \
-	COPYRIGHT=$(FPM_BASE)   \
-	encycrg=$(FPM_BASE)   \
-	venv=$(FPM_BASE)   \
-	INSTALL=$(FPM_BASE)   \
-	LICENSE=$(FPM_BASE)   \
-	Makefile=$(FPM_BASE)   \
-	README.rst=$(FPM_BASE)   \
-	requirements.txt=$(FPM_BASE)  \
-	VERSION=$(FPM_BASE)  \
-	conf/settings.py=$(FPM_BASE)/encycrg/encycrg   \
+	.git=$(DEB_BASE)   \
+	.gitignore=$(DEB_BASE)   \
+	conf=$(DEB_BASE)   \
+	COPYRIGHT=$(DEB_BASE)   \
+	encycrg=$(DEB_BASE)   \
+	venv=$(DEB_BASE)   \
+	INSTALL=$(DEB_BASE)   \
+	LICENSE=$(DEB_BASE)   \
+	Makefile=$(DEB_BASE)   \
+	README.rst=$(DEB_BASE)   \
+	requirements.txt=$(DEB_BASE)  \
+	VERSION=$(DEB_BASE)  \
+	conf/settings.py=$(DEB_BASE)/encycrg/encycrg   \
 	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
 
 secret-key:
