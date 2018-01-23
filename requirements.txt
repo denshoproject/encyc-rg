@@ -8,7 +8,6 @@
 beautifulsoup4                     # MIT      y
 django>=1.11                       # MIT      y
 django-bootstrap-pagination        # MIT      ???
-django-filter
 django-redis                       # BSD      y
 django-redis-cache
 django-redis-sessions
