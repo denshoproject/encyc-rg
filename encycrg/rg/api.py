@@ -260,6 +260,7 @@ def _browse_field(request, fieldname):
             ),
         }
         for term in sorted(list(aggs.keys()))
+        if term
     ]
     return data
 
