@@ -132,7 +132,7 @@ def article(request, url_title):
     and (article.rg_rgmediatype[0] in ARTICLE_MEDIA_TEMPLATES):
         template = 'rg/article-%s.html' % article.rg_rgmediatype[0]
     return render(request, template, {
-        'article': article,
+        'article': article.dict_all(request=request),
         'api_url': _mkurl(request, reverse('rg-api-article', args=([url_title]))),
     })
 

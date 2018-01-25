@@ -4,6 +4,7 @@ from future.utils import python_2_unicode_compatible
 from builtins import str
 from builtins import object
 from collections import OrderedDict
+import json
 import logging
 logger = logging.getLogger(__name__)
 import os
@@ -293,6 +294,7 @@ class Page(DocType):
             'parsed': String(index='not_analyzed', multi=True),
         }
     )
+    databoxes = String(index='not_analyzed', multi=True)
     
     rg_rgmediatype = String(index='not_analyzed', multi=True)
     rg_title = String()
@@ -415,6 +417,7 @@ class Page(DocType):
         #mw_api_url
         setval(self, data, 'coordinates')
         #self, 'authors_data'
+        data['databoxes'] = {}
         setval(self, data, 'rg_rgmediatype', is_list=1)
         setval(self, data, 'rg_title')
         setval(self, data, 'rg_creators')
@@ -442,6 +445,10 @@ class Page(DocType):
             }
             for category in self.categories
         ]
+        for text in getattr(self, 'databoxes', []):
+            key,databox_text = text.split('|')
+            if key and databox_text:
+                data['databoxes'][key] = json.loads(databox_text)
         #'ddr_topic_terms': topic_term_ids,
         data['sources'] = [
             {
