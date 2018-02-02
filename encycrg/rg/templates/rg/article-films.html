@@ -1,0 +1,78 @@
+{% extends "rg/base.html" %}
+
+
+{% block title %}
+{{ article.title }}
+{% endblock %}
+
+{% block headline %}
+{{ article.title }}
+{% endblock %}
+
+
+{% block content %}
+
+<h2>
+  THIS IS A FILM TEMPLATE.<br/>
+  Except for this statement it is exactly like the standard template.<br/>
+  That's where you come in.
+</h2>
+
+{% if article.authors %}
+<dl>
+  <dt>Authors</dt>
+  {% for author in article.authors %}
+  <dd>
+    <a href="{{ author.html }}">{{ author.title }}</a>
+  </dd>{% endfor %}
+</dl>
+{% endif %}
+
+{% if article.categories %}
+<dl>
+  <dt>Categories</dt>
+  {% for category in article.categories %}
+  <dd>
+    <a href="{{ category.html }}">{{ category.title }}</a>
+  </dd>{% endfor %}
+</dl>
+{% endif %}
+
+{% if article.topics %}
+<dl>
+  <dt>Topics</dt>
+  {% for topic in article.topics %}
+  <dd>
+    <a href="{{ topic.html }}">{{ topic.title }}</a>
+  </dd>{% endfor %}
+</dl>
+{% endif %}
+
+{% if article.sources %}
+<dl>
+  <dt>Sources</dt>
+  {% for source in article.sources %}
+  <dd>
+    <img src="{{ source.img_url }}" width="100" />
+    {{ source.caption }}
+  </dd>{% endfor %}
+</dl>
+{% endif %}
+
+<dl>
+  <dt>Encyclopedia</dt>
+  <dd>
+    <a href="{{ article.encyclopedia_url }}" class="encyc">{{ article.title }}</a>
+  </dd>
+</dl>
+
+<dl>
+  <dt>Databoxes</dt>
+  <dd>
+    {{ article.databoxes }}
+  </dd>
+</dl>
+
+{{ article.body|safe }}
+
+{% endblock content %}
