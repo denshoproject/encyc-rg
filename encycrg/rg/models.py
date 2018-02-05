@@ -9,6 +9,8 @@ import logging
 logger = logging.getLogger(__name__)
 import os
 
+from bs4 import BeautifulSoup
+
 from elasticsearch.exceptions import NotFoundError, TransportError
 from elasticsearch_dsl import Index
 from elasticsearch_dsl import DocType, InnerObjectWrapper, analysis
@@ -269,7 +271,6 @@ PAGE_BROWSABLE_FIELDS = {
 PAGE_SEARCH_FIELDS = [x for x in PAGE_BROWSABLE_FIELDS.keys()]
 PAGE_SEARCH_FIELDS.insert(0, 'fulltext')
 
-
 @python_2_unicode_compatible
 class Page(DocType):
     """
@@ -332,6 +333,27 @@ class Page(DocType):
     
     def encyclopedia_url(self):
         return os.path.join(settings.ENCYCLOPEDIA_URL, self.title)
+
+    def prepare(self):
+        soup = BeautifulSoup(self.body, 'html.parser')
+        
+        # rm databox display tables (note: 'Display' appended to databox name)
+        #   <div id="rgdatabox-CoreDisplay">
+        for d in [d.split('|')[0] for d in self.databoxes]:
+            if soup.find(id='%sDisplay' % d):
+                soup.find(id='%sDisplay' % d).decompose()
+        
+        # rm table of contents div
+        #   <div class="toc" id="toc">...
+        if soup.find(id='toc'):
+            soup.find(id='toc').decompose()
+        
+        # rm internal top links
+        #   <div class="toplink">...
+        for tag in soup.find_all(class_="toplink"):
+            tag.decompose()
+     
+        self.body = soup.prettify()
     
     @staticmethod
     def dict_list(hit, request):

@@ -198,7 +198,10 @@ def _sources(request, limit=None, offset=None):
     return searcher.execute(limit, offset)
 
 def _article(request, url_title):
-    return models.Page.get(url_title)
+    # TODO cache this stuff
+    article = models.Page.get(url_title)
+    article.prepare()
+    return article
 
 def _author(request, url_title):
     return models.Author.get(url_title)
