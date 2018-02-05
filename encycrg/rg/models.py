@@ -271,6 +271,13 @@ PAGE_BROWSABLE_FIELDS = {
 PAGE_SEARCH_FIELDS = [x for x in PAGE_BROWSABLE_FIELDS.keys()]
 PAGE_SEARCH_FIELDS.insert(0, 'fulltext')
 
+ACCORDION_SECTIONS = [
+    ('moreinfo', 'For_More_Information'),
+    ('reviews', 'Reviews'),
+    ('footnotes', 'Footnotes'),
+    ('related', 'Related_articles'),
+]
+
 @python_2_unicode_compatible
 class Page(DocType):
     """
@@ -352,6 +359,16 @@ class Page(DocType):
         #   <div class="toplink">...
         for tag in soup.find_all(class_="toplink"):
             tag.decompose()
+        
+        # rm sections from soup, to separate blocks of HTML
+        #   <div class="section" id="For_More_Information">
+        #   <div class="section" id="Reviews">
+        #   <div class="section" id="Footnotes">
+        #   <div class="section" id="Related_articles">
+        for fieldname,sectionid in ACCORDION_SECTIONS:
+            if soup.find(id=sectionid):
+                tag = soup.find(id=sectionid).extract()
+                setattr(self, fieldname, tag.prettify())
      
         self.body = soup.prettify()
     
@@ -458,6 +475,8 @@ class Page(DocType):
         setval(self, data, 'rg_hasteachingaids', is_list=1)
         setval(self, data, 'rg_warnings', is_list=1)
         setval(self, data, 'body')
+        for fieldname,sectionid in ACCORDION_SECTIONS:
+            setval(self, data, fieldname)
         # overwrite
         data['categories'] = [
             {
