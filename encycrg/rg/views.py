@@ -22,6 +22,19 @@ from . import search
 MAPPINGS=models.DOCTYPE_CLASS
 FIELDS=models.SEARCH_LIST_FIELDS
 
+def load_templates(default):
+    logger.info('loading templates')
+    mt = {}
+    for m in models.Page.mediatypes():
+        try:
+            mt[m] = get_template('rg/article-%s.html' % m)
+        except:
+            mt[m] = default
+    return mt
+
+DEFAULT_ARTICLE_LIST_TEMPLATE = get_template('rg/article.html')
+MEDIATYPE_TEMPLATES = load_templates(DEFAULT_ARTICLE_LIST_TEMPLATE)
+
 
 def _mkurl(request, path, query=None):
     return urlunparse((
@@ -126,15 +139,15 @@ def article(request, url_title):
             return HttpResponsePermanentRedirect(reverse('rg-author', args=([url_title])))
         raise Http404("No article with that title. (%s)" % err)
     # some mediatypes have special templates
-    try:
-        template = get_template('rg/article-%s.html' % article.rg_rgmediatype[0])
-    except:
-        template = get_template('rg/article.html')
+    t = MEDIATYPE_TEMPLATES.get(
+        article['rg_rgmediatype'][0],
+        DEFAULT_ARTICLE_LIST_TEMPLATE
+    )
     context = {
         'article': article.dict_all(request=request),
         'api_url': _mkurl(request, reverse('rg-api-article', args=([url_title]))),
     }
-    return HttpResponse(template.render(context, request))
+    return HttpResponse(t.render(context, request))
 
 
 def authors(request):
