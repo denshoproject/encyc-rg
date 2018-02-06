@@ -42,6 +42,8 @@ SECRET_KEY = config.get('security', 'secret_key')
 DEBUG = config.getboolean('debug', 'debug')
 GITPKG_DEBUG = config.getboolean('debug', 'gitpkg_debug')
 
+LOG_LEVEL = config.get('debug', 'log_level')
+
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = [
@@ -298,3 +300,28 @@ else:
     GIT_BRANCH = []
     GIT_COMMIT = ''
     PACKAGES = []
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/var/log/encyc/rg.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+    ## This is the only way I found to write log entries from the whole DDR stack.
+    #'root': {
+    #    'level': LOG_LEVEL,
+    #    'handlers': ['file'],
+    #},
+}
