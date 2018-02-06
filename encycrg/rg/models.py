@@ -592,6 +592,21 @@ class Page(DocType):
             cache.set(KEY, data, TIMEOUT)
         return data
 
+    @staticmethod
+    def mediatypes(pages=None):
+        KEY = u'encyc-rg:rgmediatypes'
+        TIMEOUT = 60*5
+        data = cache.get(KEY)
+        if not data:
+            if not pages:
+                pages = Page.pages()
+            mediatypes = []
+            for page in pages:
+                mediatypes += page.rg_rgmediatype
+            data = set(mediatypes)
+            cache.set(KEY, data, TIMEOUT)
+        return data
+
     def scrub(self):
         """remove internal editorial markers.
         
