@@ -1,5 +1,5 @@
 {% extends "rg/base.html" %}
-{% load bootstrap_pagination %}
+{% load rg_tags bootstrap_pagination %}
 
 
 {% block title %}
@@ -102,7 +102,7 @@ Search
 {% endif %}
 
 {% for object in page.object_list %}
-<a href="{{ object.links.html }}">{{ object.id }}</a><br/>
+{% article object %}
 {% endfor %}
 
 {% if paginator.num_pages > 1 %}
