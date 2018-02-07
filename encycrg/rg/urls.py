@@ -65,7 +65,8 @@ urlpatterns = [
     url(r"^authors/$", views.authors, name='rg-authors'),
     url(r"^sources/$", views.sources, name='rg-sources'),
     
-    url(r'^api/1.0/$', api.index, name='rg-api-index'),
+    url(r'^about/$', TemplateView.as_view(template_name="rg/about.html"), name='rg-about'),
+    url(r'^terms/$', TemplateView.as_view(template_name="rg/terms-of-use.html"), name='rg-terms'),
     url(r'^$', views.index, name='rg-index'),
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)
