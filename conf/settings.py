@@ -61,6 +61,8 @@ DOCSTORE_INDEX = config.get('elasticsearch', 'docstore_index')
 DEFAULT_LIMIT = 25
 MAX_SIZE = 10000
 
+BASE_TEMPLATE = 'rg/base.html'
+
 # Filesystem path and URL for static media (mostly used for interfaces).
 STATIC_ROOT = config.get('media', 'static_root')
 

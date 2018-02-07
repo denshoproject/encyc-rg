@@ -13,6 +13,7 @@ def sitewide(request):
     )
     return {
         'request': request,
+        'base_template': settings.BASE_TEMPLATE,
         'pid': os.getpid(),
         'host': os.uname()[1],
         'time': datetime.now(),
