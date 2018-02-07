@@ -109,6 +109,8 @@ Search
 {% bootstrap_paginate page range=10 show_first_last="true" %}
 {% endif %}
 
+{% endif %}
+
     </td>
   </tr>
 
@@ -130,9 +132,6 @@ Search
 {% endif %}
 
 </div><!-- .querymeta -->
-
-</div> <!-- .row results content -->
-{% endif %}
 
 {{ query_json|safe }}
 
