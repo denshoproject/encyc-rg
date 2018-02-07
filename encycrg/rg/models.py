@@ -271,6 +271,19 @@ PAGE_BROWSABLE_FIELDS = {
 PAGE_SEARCH_FIELDS = [x for x in PAGE_BROWSABLE_FIELDS.keys()]
 PAGE_SEARCH_FIELDS.insert(0, 'fulltext')
 
+MEDIATYPE_INFO = {
+    'albums': {'label': 'Albums', 'icon': 'fa-music'},
+    'articles': {'label': 'Articles', 'icon': 'fa-newspaper'},
+    'books': {'label': 'Books', 'icon': 'fa-book'},
+    'curriculum': {'label': 'Curriculum', 'icon': 'fa-tasks'},
+    'essays': {'label': 'Essays', 'icon': 'fa-edit'},
+    'exhibitions': {'label': 'Museum Exhibitions', 'icon': 'fa-university'},
+    'films': {'label': 'Films and Video', 'icon': 'fa-film'},
+    'plays': {'label': 'Plays', 'icon': 'fa-ticket'},
+    'short': {'label': 'stories, "Short Stories', 'icon': 'fa-file-alt'},
+    'websites': {'label': 'Websites', 'icon': 'fa-laptop'},
+}
+
 ACCORDION_SECTIONS = [
     ('moreinfo', 'For_More_Information'),
     ('reviews', 'Reviews'),
@@ -423,6 +436,9 @@ class Page(DocType):
             data[fieldname] = hitvalue(self, fieldname, is_list)
         
         setval(self, data, 'rg_rgmediatype', is_list=1)
+        if MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
+            data['mediatype_label'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['label']
+            data['mediatype_icon'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['icon']
         setval(self, data, 'rg_interestlevel', is_list=1)
         return data
     
@@ -458,6 +474,9 @@ class Page(DocType):
         #self, 'authors_data'
         data['databoxes'] = {}
         setval(self, data, 'rg_rgmediatype', is_list=1)
+        if MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
+            data['mediatype_label'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['label']
+            data['mediatype_icon'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['icon']
         setval(self, data, 'rg_title')
         setval(self, data, 'rg_creators')
         setval(self, data, 'rg_interestlevel', is_list=1)
