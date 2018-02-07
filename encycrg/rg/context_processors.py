@@ -14,6 +14,7 @@ def sitewide(request):
     return {
         'request': request,
         'base_template': settings.BASE_TEMPLATE,
+        'static_url': settings.STATIC_URL,
         'pid': os.getpid(),
         'host': os.uname()[1],
         'time': datetime.now(),
