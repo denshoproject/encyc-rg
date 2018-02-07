@@ -1,3 +1,35 @@
-<div class="article-list" style="border:1px dashed orange;">
-  <a href="{{ article.links.html }}">{{ article.id }}</a>
+<div class="media searchResultsList">
+  <a href="{{ article.links.html }}"><span class="media-left bg-color-2">
+      <i class="fa {{ article.mediatype_icon }}" aria-hidden="true"></i>
+  </span></a>
+  <div class="media-body">
+    <h3 class="media-heading color-2">
+      <a href="{{ article.links.html }}" class="color-2">
+        {{ article.id }}
+      </a>
+    </h3>
+    <ul class="list-inline">
+      <li>
+        <i class="fa fa-cubes" aria-hidden="true"></i>
+        {{ article.mediatype_label }}
+      </li>
+      {% if article.rg_interestlevel %}
+      <li>
+        <i class="fa fa-graduation-cap" aria-hidden="true"></i>
+        {% for level in article.rg_interestlevel %}
+        {{ level }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      </li>
+      {% endif %}{# article.rg_interestlevel #}
+    </ul>
+    <p>
+      {{ article }}
+    </p>
+    <p>
+      <a href="{{ article.links.html }}" class="btn btn-link btn-xs">
+        <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+        View
+      </a>
+    </p>
+  </div>
 </div>
