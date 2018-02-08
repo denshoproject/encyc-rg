@@ -452,6 +452,7 @@ deb-jessie:
 	conf=$(DEB_BASE)   \
 	COPYRIGHT=$(DEB_BASE)   \
 	encycrg=$(DEB_BASE)   \
+	static=$(MEDIA_BASE)   \
 	venv=$(DEB_BASE)   \
 	INSTALL=$(DEB_BASE)   \
 	LICENSE=$(DEB_BASE)   \
@@ -491,6 +492,7 @@ deb-stretch:
 	conf=$(DEB_BASE)   \
 	COPYRIGHT=$(DEB_BASE)   \
 	encycrg=$(DEB_BASE)   \
+	static=$(MEDIA_BASE)   \
 	venv=$(DEB_BASE)   \
 	INSTALL=$(DEB_BASE)   \
 	LICENSE=$(DEB_BASE)   \
