@@ -5,16 +5,18 @@
 Browse
 {% endblock %}
 
-{% block headline %}
-Browse
-{% endblock %}
 
-
-{% block content %}
+{% block container %}
+<div class="row">
+  <div class="col-md-9 col-sm-8 col-xs-12">
+    
+<h1>Browse</h1>
 
 {% for item in databox_fields %}
 <a href="{{ item.html }}">{{ item.title }}</a>
 <br/>
 {% endfor %}
 
-{% endblock content %}
+  </div>
+</div><!-- .row -->
+{% endblock container %}

@@ -5,12 +5,6 @@
 {{ value }}
 {% endblock %}
 
-{% block headline %}
-<a href="{% url "rg-browse" %}">Browse</a>
-&gt; <a href="{% url "rg-browse-field" fieldname %}">{{ field_title }}</a>
-&gt; {{ value }}
-{% endblock %}
-
 
 {% block breadcrumbs %}
 <ul>
@@ -27,11 +21,21 @@
 {% endblock breadcrumbs %}
 
 
-{% block content %}
+{% block container %}
+<div class="row">
+  <div class="col-md-9 col-sm-8 col-xs-12">
+
+<h1>
+<a href="{% url "rg-browse" %}">Browse</a>
+&gt; <a href="{% url "rg-browse-field" fieldname %}">{{ field_title }}</a>
+&gt; {{ value }}
+</h1>
 
 {% for object in query.objects %}
 <a href="{{ object.links.html }}">{{ object.id }}</a>
 <br/>
 {% endfor %}
 
-{% endblock content %}
+  </div>
+</div><!-- .row -->
+{% endblock container %}

@@ -6,12 +6,12 @@
 Articles
 {% endblock %}
 
-{% block headline %}
-Articles
-{% endblock %}
 
-
-{% block content %}
+{% block container %}
+<div class="row">
+  <div class="col-md-9 col-sm-8 col-xs-12">
+    
+<h1>Articles</h1>
 
 <div id="item-count">
   {{ num_articles }} articles<br/>
@@ -23,8 +23,6 @@ Articles
   {% endfor %}
 </div>
 
-
-
 <div class="article-list">
   {% for initial,articles in groups %}
   <a name="{{ initial }}"></a>
@@ -35,4 +33,6 @@ Articles
   {% endfor %}
 </div>
 
-{% endblock content %}
+  </div>
+</div><!-- .row -->
+{% endblock container %}
