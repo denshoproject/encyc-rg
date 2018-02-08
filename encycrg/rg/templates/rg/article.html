@@ -5,76 +5,251 @@
 {{ article.title }}
 {% endblock %}
 
-{% block headline %}
-{{ article.title }}
-{% endblock %}
 
+{% block container %}
+<div class="row">
+  <div class="col-md-9 col-sm-8 col-xs-12 block pull-right">
+      
+    <h1 class="color-1">{{ article.title }}</h1>
 
-{% block content %}
-
-{% if article.authors %}
-<dl>
-  <dt>Authors</dt>
-  {% for author in article.authors %}
-  <dd>
-    <a href="{{ author.html }}">{{ author.title }}</a>
-  </dd>{% endfor %}
-</dl>
-{% endif %}
-
-{% if article.categories %}
-<dl>
-  <dt>Categories</dt>
-  {% for category in article.categories %}
-  <dd>
-    <a href="{{ category.html }}">{{ category.title }}</a>
-  </dd>{% endfor %}
-</dl>
-{% endif %}
-
-{% if article.topics %}
-<dl>
-  <dt>Topics</dt>
-  {% for topic in article.topics %}
-  <dd>
-    <a href="{{ topic.html }}">{{ topic.title }}</a>
-  </dd>{% endfor %}
-</dl>
-{% endif %}
-
-{% if article.sources %}
-<dl>
-  <dt>Sources</dt>
-  {% for source in article.sources %}
-  <dd>
-    <img src="{{ source.img_url }}" width="100" />
-    {{ source.caption }}
-  </dd>{% endfor %}
-</dl>
-{% endif %}
-
-<dl>
-  <dt>Encyclopedia</dt>
-  <dd>
-    <a href="{{ article.encyclopedia_url }}" class="encyc">{{ article.title }}</a>
-  </dd>
-</dl>
-
-<dl>
-  <dt>Databoxes</dt>
-  <dd>
-    {{ article.databoxes }}
-  </dd>
-</dl>
+    {% if article.sources %}
+    <div class="pull-right" style="padding: 15px;max-width: 250px;">
+      {% for source in article.sources %}
+      {{ source }}<br/>
+      {% endfor %}
+      <img src="http://encycstage.densho.org/media/encyc-psms/{{ source.id }}.jpg" alt="image" class="image-responsive">
+    </div>
+    {% endif %}
 
 {{ article.body|safe }}
 
-{{ article.moreinfo|safe }}
-
-{{ article.reviews|safe }}
-
 {{ article.footnotes|safe }}
 
-{{ article.related|safe }}
+    <!-- begin articleExtraInfo-->
+    <div class="accordionCommon hello" id="articleExtraInfo">
+      <div class="panel-group" id="articleAccordian">
+        
+        {% if article.related %}
+        <!-- begin rg_SectionRelatedArticles -->
+        <div class="panel panel-default">
+          <a class="panel-heading accordion-toggle bg-color-5" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-relatedarticles">
+            <span><i class="fa fa-copy"></i> Related Articles</span>
+            <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
+          </a>
+          <div id="collapse-relatedarticles" class="panel-collapse collapse in">
+            <div class="panel-body">
+              {{ article.related|safe }}
+            </div>
+          </div>
+        </div> 
+        <!-- end rg_SectionRelatedArticles -->
+        {% endif %}
+        
+        {% if article.warnings %}
+        <!-- begin rg_warnings -->
+        <div class="panel panel-default">
+          <a class="panel-heading accordion-toggle bg-color-3" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-warnings">
+            <span><i class="fa fa-warning"></i> Ratings and Warnings</span>
+            <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
+          </a>
+          <div id="collapse-warnings" class="panel-collapse collapse in">
+            <div class="panel-body">
+              {{ article.warnings|safe }}
+            </div>
+          </div>
+        </div>
+        <!-- end rg_warnings -->
+        {% endif %}
+        
+        {% if article.moreinfo %}
+        <!-- begin rg_SectionForMoreInformation  -->
+        <div class="panel panel-default">
+          <a class="panel-heading accordion-toggle bg-color-2" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-moreinfo">
+            <span><i class="fa fa-question-circle"></i> For More Information</span>
+            <span class="iconBlock"><i class="fa fa-chevron-up"></i></span>
+          </a>
+          <div id="collapse-moreinfo" class="panel-collapse collapse">
+            <div class="panel-body">
+              {{ article.moreinfo|safe }}
+            </div>
+          </div>
+        </div>
+        <!-- end rg_SectionForMoreInformation -->
+        {% endif %}
+        
+        {% if article.reviews %}
+        <!-- begin rg_SectionReviews -->
+        <div class="panel panel-default">
+          <a class="panel-heading accordion-toggle bg-color-1" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-reviews">
+            <span><i class="fa fa-comments"></i> Reviews</span>
+            <span class="iconBlock"><i class="fa fa-chevron-up"></i></span>
+          </a>
+          <div id="collapse-reviews" class="panel-collapse collapse">
+            <div class="panel-body">
+              {{ article.reviews|safe }}
+            </div>
+          </div>
+        </div>
+        <!-- end rg_SectionReviews -->
+        {% endif %}
+        
+      </div>
+    </div>
+    <!-- end articleExtraInfo -->
 
-{% endblock content %}
+  </div>
+  <div class="col-md-3 col-sm-4 col-xs-12 pull-left">
+    
+    <aside>
+      <div class="rightSidebar">
+
+        <!-- begin facetsSidebar -->
+        <div class="panel panel-default">
+          <div class="panel-heading bg-color-1 border-color-1">
+          </div>
+          <div class="panel-body">
+            <ul class="media-list">
+              
+              {% if article.mediatype %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-2">
+                  <i class="fa {{ article.mediatype_icon }}" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent">
+                  <h4 class="media-heading color-2">Resource Type</h4>
+                  <p>
+                    <a href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.mediatype %}">{{ article.mediatype_label }}</a>
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_interestlevel %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-3">
+                  <i class="fa fa-graduation-cap" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent">
+                  <h4 class="media-heading color-3">Interest Level</h4>
+                  <p>
+                    {% for item in article.rg_interestlevel %}
+                    <a href="{% url "rg-browse-fieldvalue" "rg_interestlevel" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_readinglevel %}
+              <li class="media iconContet">
+                <div class="media-left iconContent bg-color-4">
+                  <i class="fa fa-book" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent">
+                  <h4 class="media-heading color-4">Reading Level</h4>
+                  <p>
+                    {% for item in article.rg_readinglevel %}
+                    <a href="{% url "rg-browse-fieldvalue" "rg_readinglevel" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_genre %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-5">
+                  <i class="fa fa-tags" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent">
+                  <h4 class="media-heading color-5">Genre</h4>
+                  <p>
+                    {% for item in article.rg_genre %}
+                    <a href="{% url "rg-browse-fieldvalue" "rg_genre" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_theme %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-6">
+                  <i class="fa fa-compass" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent">
+                  <h4 class="media-heading color-6">Theme</h4>
+                  <p>
+                    {% for item in article.rg_theme %}
+                    <a href="{% url "rg-browse-fieldvalue" "rg_theme" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+              
+            </ul>
+          </div>
+        </div>
+        <!-- end facetsSidebar -->
+
+        rg_availability {{ article.rg_availability }}<br/>
+        rg_freewebversion {{ article.rg_freewebversion }}<br/>
+        rg_hasteachingaids {{ article.rg_hasteachingaids }}<br/>
+        
+        <!-- begin availabilitySidebar -->
+        <div class="panel panel-default">
+          <div class="panel-heading bg-color-1 border-color-1">
+            <h3 class="panel-title"></h3>
+          </div>
+          <div class="panel-body">
+            <div class="availability-sidebar">
+              <div class="row">
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <h4 class="color-3" style="margin-bottom: 0px;">Availability</h4>
+                </div>
+                <div class="col-md-6 col-sm-6 col-xs-6" style="text-align: right;">
+                  <a href="#" alt="Available" data-toggle="tooltip" data-original-title="Available" data-position="top"><i class="fa fa-circle color-3" style="font-size: 18px;"></i><i class="fa fa-circle color-3" style="font-size: 18px;"></i><i class="fa fa-circle-thin color-3" style="font-size: 18px;"></i></a>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-7 col-sm-7 col-xs-7">
+                  Free On Web
+                </div>
+                <div class="col-md-5 col-sm-5 col-xs-5">
+                  <i class="fa fa-check"></i>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-7 col-sm-7 col-xs-7">
+                  Teacher Guide
+                </div>
+                <div class="col-md-5 col-sm-5 col-xs-5">
+                  <i class="fa fa-times"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- end availabilitySidebar -->
+
+        <!-- begin encyclopediaCrosslink --> 
+        <div class="well">
+          <p>
+            This article also appears in the <strong>Densho Encyclopedia</strong>, a free on-line resource covering the key concepts, people, events, and organizations that played a role in the forced removal and incarceration of Japanese Americans during World War II.
+          </p>
+          <p class="text-center">
+            <a href="{{ article.encyclopedia_url }}" class="btn btn-xs btn-primary"><i class="fa fa-book"></i> View in Densho Encyclopedia</a>
+          </p>
+          <p>
+            Links to other articles in the Encyclopedia are marked with a <i class="fa fa-book color-3"></i> icon.
+          </p>
+        </div>
+        <!-- end encyclopediaCrosslink -->
+
+      </div>
+    </aside>
+    
+  </div>
+</div><!-- .row -->
+{% endblock container %}
