@@ -24,10 +24,11 @@ MEDIATYPE_TEMPLATES = load_templates(DEFAULT_ARTICLE_LIST_TEMPLATE)
 def article(article):
     """Page dict
     """
-    t = MEDIATYPE_TEMPLATES.get(
-        article['rg_rgmediatype'][0],
-        DEFAULT_ARTICLE_LIST_TEMPLATE
-    )
+    mediatype = article.get('rg_rgmediatype', [])
+    if mediatype:
+        t = MEDIATYPE_TEMPLATES.get(mediatype[0], DEFAULT_ARTICLE_LIST_TEMPLATE)
+    else:
+        t = DEFAULT_ARTICLE_LIST_TEMPLATE
     c = {
         'article': article,
     }
