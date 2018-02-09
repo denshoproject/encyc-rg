@@ -6,97 +6,140 @@
 Search
 {% endblock %}
 
-{% block headline %}
-Search
-{% endblock %}
+
+{% block container %}
+<div class="row">
+  
+  <form action="{{ this_url }}" method="get">
+
+    
+    <div class="input-group searchArea">
+      <span class="input-group-addon"><i class="fa fa-search" aria-hidden="true"></i></span>
+      <input id="id_query" name="fulltext" type="text" class="form-control" aria-label="" placeholder="Search..." value="{% if search_form.fulltext.value %}{{ search_form.fulltext.value }}{% endif %}" />
+      <button type="submit" class="input-group-addon button" id="basic-addon21">Search</button>
+    </div>
+    
+    
+    {% if page.object_list %}
+    
+    <div class="resultInfo">
+      <h3>
+        {{ paginator.count }} search results for "{{ search_form.fulltext.value }}"
+      </h3>
+    </div>
+    
+    
+    <div class="accordionCommon hello" id="filtersArea">
+      <div class="panel-group" id="articleAccordian">
+        <!-- begin searchResultsFilters -->
+        <div class="panel panel-default">
+          <a class="panel-heading accordion-toggle bg-color-2" data-toggle="collapse"  href="#collapse-filters">
+            <span><i class="fa fa-filter"></i> Search filters</span>
+            <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
+          </a>
+          <div id="collapse-filters" class="panel-collapse collapse in">
+            <div class="panel-body">
+              <div class="searchResultsFilters form-group">
+                
+                <table>
+                  
+                  <tr>
+                    <td>
+                      <div class="search-filter">
+                        <strong>{{ search_form.rg_rgmediatype.label }}</strong>
+                        <br/>
+                        {{ search_form.rg_rgmediatype }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="search-filter">
+                        <strong>{{ search_form.rg_interestlevel.label }}</strong>
+                        <br/>
+                        {{ search_form.rg_interestlevel }}
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      <div class="search-filter">
+                        <strong>{{ search_form.rg_genre.label }}</strong>
+                        <br/>
+                        {{ search_form.rg_genre }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="search-filter">
+                        <strong>{{ search_form.rg_theme.label }}</strong>
+                        <br/>
+                        {{ search_form.rg_theme }}
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      <div class="search-filter">
+                        <strong>{{ search_form.rg_readinglevel.label }}</strong>
+                        <br/>
+                        {{ search_form.rg_readinglevel }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="search-filter">
+                        <strong>{{ search_form.rg_availability.label }}</strong>
+                        <br/>
+                        {{ search_form.rg_availability }}
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      <div class="search-filter">
+                        <strong>{{ search_form.rg_hasteachingaids.label }}</strong>
+                        <br/>
+                        {{ search_form.rg_hasteachingaids }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="search-filter">
+                        <strong>{{ search_form.rg_freewebversion.label }}</strong>
+                        <br/>
+                        {{ search_form.rg_freewebversion }}
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <tr>
+                    <td>
+                      <div class="search-filter">
+                        <strong>{{ search_form.rg_geography.label }}</strong>
+                        <br/>
+                        {{ search_form.rg_geography }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="search-filter">
+                        <strong>{{ search_form.rg_relatedevents.label }}</strong>
+                        <br/>
+                        {{ search_form.rg_relatedevents }}
+                      </div>
+                    </td>
+                  </tr>
+                  
+                </table>
+                
+              </div><!--  .searchResultsFilters .form-group -->
+            </div><!--  .panel-body -->
+          </div><!--  #collapse-filters .panel-collapse .collapse in -->
+        </div><!--  .panel .panel-default -->
+      </div><!--  .panel-group #articleAccordian -->
+    </div><!--  .accordionCommon .hello #filtersArea -->
 
 
-{% block content %}
-
-<table width="100%">
-<form action="{{ this_url }}" method="get">
-
-  <tr>
-    <td colspan="2">
-
-      {{ search_form.fulltext }}
-      <button class="btn btn-sm btn-primary"><i class="fa fa-filter"></i> Search</button>
-      <br/>
-      <span class="muted small">Use &lt;Ctrl&gt; or (⌘) keys to select multiple terms</span>
-    </td>
-  </tr>
-
-  <tr>
-    <td valign="top">
-
-<div class="search-filter">
-  <strong>{{ search_form.rg_rgmediatype.label }}</strong>
-  <br/>
-  {{ search_form.rg_rgmediatype }}
-</div>
-
-<div class="search-filter">
-  <strong>{{ search_form.rg_interestlevel.label }}</strong>
-  <br/>
-  {{ search_form.rg_interestlevel }}
-</div>
-
-<div class="search-filter">
-  <strong>{{ search_form.rg_readinglevel.label }}</strong>
-  <br/>
-  {{ search_form.rg_readinglevel }}
-</div>
-
-<div class="search-filter">
-  <strong>{{ search_form.rg_theme.label }}</strong>
-  <br/>
-  {{ search_form.rg_theme }}
-</div>
-
-<div class="search-filter">
-  <strong>{{ search_form.rg_genre.label }}</strong>
-  <br/>
-  {{ search_form.rg_genre }}
-</div>
-
-<div class="search-filter">
-  <strong>{{ search_form.rg_relatedevents.label }}</strong>
-  <br/>
-  {{ search_form.rg_relatedevents }}
-</div>
-
-<div class="search-filter">
-  <strong>{{ search_form.rg_availability.label }}</strong>
-  <br/>
-  {{ search_form.rg_availability }}
-</div>
-
-<div class="search-filter">
-  <strong>{{ search_form.rg_freewebversion.label }}</strong>
-  <br/>
-  {{ search_form.rg_freewebversion }}
-</div>
-
-<div class="search-filter">
-  <strong>{{ search_form.rg_geography.label }}</strong>
-  <br/>
-  {{ search_form.rg_geography }}
-</div>
-
-<div class="search-filter">
-  <strong>{{ search_form.rg_hasteachingaids.label }}</strong>
-  <br/>
-  {{ search_form.rg_hasteachingaids }}
-</div>
-
-    </td>
-    <td valign="top">
-
-{% if page.object_list %}
-<div id="item-count">
-  {{ paginator.count }} items<br/>
-</div>
-
+  </form>
+    
 {% if paginator.num_pages > 1 %}
 {% bootstrap_paginate page range=10 show_first_last="true" %}
 {% endif %}
@@ -109,13 +152,7 @@ Search
 {% bootstrap_paginate page range=10 show_first_last="true" %}
 {% endif %}
 
-{% endif %}
-
-    </td>
-  </tr>
-
-</form>
-</table>
+{% endif %}{# page.object_list #}
 
 <!-- --------------------------------------------------------------- -->
 
@@ -135,4 +172,5 @@ Search
 
 {{ query_json|safe }}
 
-{% endblock content %}
+</div><!-- .row -->
+{% endblock container %}
