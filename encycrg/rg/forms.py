@@ -68,6 +68,11 @@ class SearchForm(forms.Form):
                                 fieldname, fieldname),
                             choices=choices,
                             required=False,
+                            widget=forms.SelectMultiple(
+                                attrs={
+                                    'class': 'form-control border-color-2',
+                                }
+                            ),
                         ),
                     ))
         

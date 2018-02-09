@@ -39,96 +39,106 @@ Search
           </a>
           <div id="collapse-filters" class="panel-collapse collapse in">
             <div class="panel-body">
+              
               <div class="searchResultsFilters form-group">
-                
-                <table>
-                  
-                  <tr>
-                    <td>
-                      <div class="search-filter">
-                        <strong>{{ search_form.rg_rgmediatype.label }}</strong>
-                        <br/>
-                        {{ search_form.rg_rgmediatype }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="search-filter">
-                        <strong>{{ search_form.rg_interestlevel.label }}</strong>
-                        <br/>
-                        {{ search_form.rg_interestlevel }}
-                      </div>
-                    </td>
-                  </tr>
-                  
-                  <tr>
-                    <td>
-                      <div class="search-filter">
-                        <strong>{{ search_form.rg_genre.label }}</strong>
-                        <br/>
-                        {{ search_form.rg_genre }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="search-filter">
-                        <strong>{{ search_form.rg_theme.label }}</strong>
-                        <br/>
-                        {{ search_form.rg_theme }}
-                      </div>
-                    </td>
-                  </tr>
-                  
-                  <tr>
-                    <td>
-                      <div class="search-filter">
-                        <strong>{{ search_form.rg_readinglevel.label }}</strong>
-                        <br/>
-                        {{ search_form.rg_readinglevel }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="search-filter">
-                        <strong>{{ search_form.rg_availability.label }}</strong>
-                        <br/>
-                        {{ search_form.rg_availability }}
-                      </div>
-                    </td>
-                  </tr>
-                  
-                  <tr>
-                    <td>
-                      <div class="search-filter">
-                        <strong>{{ search_form.rg_hasteachingaids.label }}</strong>
-                        <br/>
-                        {{ search_form.rg_hasteachingaids }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="search-filter">
-                        <strong>{{ search_form.rg_freewebversion.label }}</strong>
-                        <br/>
-                        {{ search_form.rg_freewebversion }}
-                      </div>
-                    </td>
-                  </tr>
-                  
-                  <tr>
-                    <td>
-                      <div class="search-filter">
-                        <strong>{{ search_form.rg_geography.label }}</strong>
-                        <br/>
-                        {{ search_form.rg_geography }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="search-filter">
-                        <strong>{{ search_form.rg_relatedevents.label }}</strong>
-                        <br/>
-                        {{ search_form.rg_relatedevents }}
-                      </div>
-                    </td>
-                  </tr>
-                  
-                </table>
+                <div class="row">
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa fa-graduation-cap"></i>
+                      {{ search_form.rg_interestlevel.label }}
+                    </strong><br/>
+                    {{ search_form.rg_interestlevel }}
+                    
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa fa-graduation-cap"></i>
+                      {{ search_form.rg_rgmediatype.label }}
+                    </strong><br/>
+                    {{ search_form.rg_rgmediatype }}
+                    
+                  </div>
+                </div><!-- .row -->
+                <div class="row">
+                  <div class="col-sm-6">
+                    
+                    <strong>
+                      <i class="fa fa-graduation-cap"></i>
+                      {{ search_form.rg_genre.label }}
+                    </strong><br/>
+                    {{ search_form.rg_genre }}
+                    
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong>
+                      <i class="fa fa-graduation-cap"></i>
+                      {{ search_form.rg_theme.label }}
+                    </strong><br/>
+                    {{ search_form.rg_theme }}
+                    
+                  </div>
+                </div><!-- .row -->
+                <div class="row">
+                  <div class="col-sm-6">
+                    
+                    <strong>
+                      <i class="fa fa-graduation-cap"></i>
+                      {{ search_form.rg_readinglevel.label }}
+                    </strong><br/>
+                    {{ search_form.rg_readinglevel }}
+                    
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong>
+                      <i class="fa fa-graduation-cap"></i>
+                      {{ search_form.rg_availability.label }}
+                    </strong><br/>
+                    {{ search_form.rg_availability }}
+                    
+                  </div>
+                </div><!-- .row -->
+                <div class="row">
+                  <div class="col-sm-6">
+                    
+                    <strong>
+                      <i class="fa fa-graduation-cap"></i>
+                      {{ search_form.rg_hasteachingaids.label }}
+                    </strong><br/>
+                    {{ search_form.rg_hasteachingaids }}
+                    
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong>
+                      <i class="fa fa-graduation-cap"></i>
+                      {{ search_form.rg_freewebversion.label }}
+                    </strong><br/>
+                    {{ search_form.rg_freewebversion }}
+                    
+                  </div>
+                </div><!-- .row -->
+                <div class="row">
+                  <div class="col-sm-6">
+                    
+                    <strong>
+                      <i class="fa fa-graduation-cap"></i>
+                      {{ search_form.rg_geography.label }}
+                    </strong><br/>
+                    {{ search_form.rg_geography }}
+                    
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong>
+                      <i class="fa fa-graduation-cap"></i>
+                      {{ search_form.rg_relatedevents.label }}
+                    </strong><br/>
+                    {{ search_form.rg_relatedevents }}
+                    
+                  </div>
+                </div><!-- .row -->
                 
               </div><!--  .searchResultsFilters .form-group -->
             </div><!--  .panel-body -->
