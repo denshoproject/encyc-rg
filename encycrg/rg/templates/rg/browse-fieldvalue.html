@@ -27,8 +27,13 @@
 
 <h1>
 <a href="{% url "rg-browse" %}">Browse</a>
-&gt; <a href="{% url "rg-browse-field" fieldname %}">{{ field_title }}</a>
-&gt; {{ value }}
+&gt;
+<a href="{% url "rg-browse-field" fieldname %}">
+  <span class="iconBlock"><i class="fa {{ field_icon }}"></i></span>
+  {{ field_title }}
+</a>
+&gt;
+{{ value }}
 </h1>
 
 {% for object in query.objects %}

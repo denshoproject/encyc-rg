@@ -257,7 +257,9 @@ def browse_field(request, fieldname):
     r = api.browse_field(request, fieldname, format='json')
     return render(request, 'rg/browse-field.html', {
         'fieldname': fieldname,
-        'field_title': models.PAGE_BROWSABLE_FIELDS[fieldname],
+        'field_icon': models.FACET_FIELDS[fieldname]['icon'],
+        'field_title': models.FACET_FIELDS[fieldname]['label'],
+        'field_description': models.FACET_FIELDS[fieldname]['description'],
         'query': r.data,
         'api_url': api_url,
     })
@@ -267,7 +269,9 @@ def browse_field_value(request, fieldname, value):
     r = api.browse_field_value(request, fieldname, value, format='json')
     return render(request, 'rg/browse-fieldvalue.html', {
         'fieldname': fieldname,
-        'field_title': models.PAGE_BROWSABLE_FIELDS[fieldname],
+        'field_icon': models.FACET_FIELDS[fieldname]['icon'],
+        'field_title': models.FACET_FIELDS[fieldname]['label'],
+        'field_description': models.FACET_FIELDS[fieldname]['description'],
         'value': value,
         'query': r.data,
         'api_url': api_url,

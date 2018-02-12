@@ -12,10 +12,22 @@ Browse
     
 <h1>Browse</h1>
 
-{% for item in databox_fields %}
-<a href="{{ item.html }}">{{ item.title }}</a>
-<br/>
-{% endfor %}
+<table class="table table-responsive table-sm table-hover">
+  <caption>Browse articles by various criteria</caption>
+  {% for item in databox_fields %}
+  <tr>
+    <th>
+      <span class="iconBlock"><i class="fa {{ item.icon }}"></i></span>
+    </th>
+    <th>
+      <a href="{{ item.html }}">{{ item.title }}</a>
+    </th>
+    <td>
+      {{ item.description }}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
 
   </div>
 </div><!-- .row -->

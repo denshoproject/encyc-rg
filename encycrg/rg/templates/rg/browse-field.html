@@ -24,14 +24,24 @@
     
 <h1>
 <a href="{% url "rg-browse" %}">Browse</a>
-&gt; {{ field_title }}
+&gt;
+<span class="iconBlock"><i class="fa {{ field_icon }}"></i></span>
+{{ field_title }}
 </h1>
 
-{% for item in query %}
-<a href="{{ item.html }}">{{ item.term }}</a>
-({{ item.count }})
-<br/>
+<table class="table table-responsive table-sm table-hover">
+  <caption>{{ field_description }}</caption>
+  {% for item in query %}
+  <tr>
+    <th>
+      <a href="{{ item.html }}">{{ item.label }}</a>
+      ({{ item.count }})
+    </th>
+    <td>
+    </td>
+  </tr>
 {% endfor %}
+</table>
 
   </div>
 </div><!-- .row -->

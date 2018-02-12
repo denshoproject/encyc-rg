@@ -274,53 +274,53 @@ PAGE_BROWSABLE_FIELDS = {
 PAGE_SEARCH_FIELDS = [x for x in PAGE_BROWSABLE_FIELDS.keys()]
 PAGE_SEARCH_FIELDS.insert(0, 'fulltext')
 
-FACET_FIELDS = {
-    'rg_rgmediatype': {
-        'label':'Media Type',
-        'description':'The general form of the resource.',
-        'icon':'fa-cubes',
-    },
-    'rg_interestlevel': {
-        'label':'Interest Level',
-        'description':'The grades or ages that would most likely be engaged by the resource.',
-        'icon':'fa-graduation-cap',
-    },
-    'rg_genre': {
-        'label':'Genre',
-        'description':'The specific category or class of the resource within its media type.',
-        'icon':'fa-tags',
-    },
-    'rg_theme': {
-        'label':'Theme',
-        'description':'The universal ideas or messages expressed in the resource.',
-        'icon':'fa-compass',
-    },
-    'rg_readinglevel': {
-        'label':'Reading Level',
-        'description':'The general reading level(s) based on grade groupings.',
-        'icon':'fa-bookmark',
-    },
-    'rg_availability': {
-        'label':'Availabilty',
-        'description':'Level of availability, from "Widely available", meaning, "easy to purchase or stream & reasonably priced/free", to "Not available", meaning, "not currently available to purchase or borrow."',
-        'icon':'fa-binoculars',
-    },
-    'rg_pov': {
-        'label':'Point-of-View',
-        'description':'The point-of-view and characteristics of the primary protagonist.',
-        'icon':'fa-eye',
-    },
-    'rg_geography': {
-        'label':'Place',
-        'description':'The main geographic location(s) depicted in the resource.',
-        'icon':'fa-globe',
-    },
-    'rg_chronology': {
-        'label':'Time',
-        'description':'The primary time period the resource describes or in which it is set.',
-        'icon':'fa-clock',
-    },
+FACET_FIELDS = OrderedDict()
+FACET_FIELDS['rg_rgmediatype'] = {
+    'label':'Media Type',
+    'description':'The general form of the resource.',
+    'icon':'fa-cubes',
 }
+FACET_FIELDS['rg_interestlevel'] = {
+    'label':'Interest Level',
+    'description':'The grades or ages that would most likely be engaged by the resource.',
+    'icon':'fa-graduation-cap',
+}
+FACET_FIELDS['rg_genre'] = {
+    'label':'Genre',
+    'description':'The specific category or class of the resource within its media type.',
+    'icon':'fa-tags',
+}
+FACET_FIELDS['rg_theme'] = {
+    'label':'Theme',
+    'description':'The universal ideas or messages expressed in the resource.',
+    'icon':'fa-compass',
+}
+FACET_FIELDS['rg_readinglevel'] = {
+    'label':'Reading Level',
+    'description':'The general reading level(s) based on grade groupings.',
+    'icon':'fa-bookmark',
+}
+FACET_FIELDS['rg_availability'] = {
+    'label':'Availabilty',
+    'description':'Level of availability, from "Widely available", meaning, "easy to purchase or stream & reasonably priced/free", to "Not available", meaning, "not currently available to purchase or borrow."',
+    'icon':'fa-binoculars',
+}
+FACET_FIELDS['rg_pov'] = {
+    'label':'Point-of-View',
+    'description':'The point-of-view and characteristics of the primary protagonist.',
+    'icon':'fa-eye',
+}
+FACET_FIELDS['rg_geography'] = {
+    'label':'Place',
+    'description':'The main geographic location(s) depicted in the resource.',
+    'icon':'fa-globe',
+}
+FACET_FIELDS['rg_chronology'] = {
+    'label':'Time',
+    'description':'The primary time period the resource describes or in which it is set.',
+    'icon':'fa-clock',
+}
+
 
 MEDIATYPE_INFO = {
     'albums': {'label': 'Albums', 'icon': 'fa-music'},

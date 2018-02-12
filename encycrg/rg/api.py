@@ -210,31 +210,17 @@ def _source(request, url_title):
     return models.Source.get(url_title)
 
 def _browse(request):
-    data = [
-        #{
-        #'title': 'categories',
-        #'json': reverse('rg-api-categories', request=request),
-        #'html': reverse('rg-categories', request=request),
-        #},
-        #{
-        #'title': 'topics',
-        #'json': reverse('rg-api-terms', args=(['topics']), request=request),
-        #'html': reverse('rg-terms', args=(['topics']), request=request),
-        #},
-        #{
-        #'title': 'facilities',
-        #'json': reverse('rg-api-terms', args=(['facility']), request=request),
-        #'html': reverse('rg-terms', args=(['facility']), request=request),
-        #},
-    ]
-    for key,val in models.PAGE_BROWSABLE_FIELDS.items():
-        data.append({
-            'id': key,
-            'title': val,
-            'json': reverse('rg-api-browse-field', args=([key]), request=request),
-            'html': reverse('rg-browse-field', args=([key]), request=request),
-        })
-    return data
+    fields = []
+    for key,val in models.FACET_FIELDS.items():
+        item = OrderedDict()
+        item['id'] = key
+        item['json'] = reverse('rg-api-browse-field', args=([key]), request=request)
+        item['html'] = reverse('rg-browse-field', args=([key]), request=request)
+        item['title'] = val['label']
+        item['description'] = val['description']
+        item['icon'] = val['icon']
+        fields.append(item)
+    return fields
 
 def _browse_field(request, fieldname):
     s = models.Page.search().query("match_all")
@@ -247,24 +233,27 @@ def _browse_field(request, fieldname):
     )
     response = s.execute()
     aggs = search.aggs_dict(response.aggregations.to_dict())[fieldname]
-    data = [
-        {
-            'term': term,
-            'count': aggs[term],
-            'json': reverse(
+    data = []
+    for term in sorted(list(aggs.keys())):
+        if term:
+            item = OrderedDict()
+            item['term'] = term
+            item['json'] = reverse(
                 'rg-api-browse-fieldvalue',
                 args=([fieldname, term]),
                 request=request
-            ),
-            'html': reverse(
+            )
+            item['html'] = reverse(
                 'rg-browse-fieldvalue',
                 args=([fieldname, term]),
                 request=request
-            ),
-        }
-        for term in sorted(list(aggs.keys()))
-        if term
-    ]
+            )
+            if models.MEDIATYPE_INFO.get(item['term']):
+                item['label'] = models.MEDIATYPE_INFO[item['term']]['label']
+            else:
+                item['label'] = term
+            item['count'] = aggs[term]
+            data.append(item)
     return data
 
 def _browse_field_value(request, fieldname, value, limit=None, offset=None):
