@@ -244,6 +244,7 @@ PAGE_LIST_FIELDS = [
     'url_title',
     'title',
     'title_sort',
+    'description',
     'published',
     'modified',
     'categories',
@@ -479,6 +480,7 @@ class Page(DocType):
             request=request,
         )
         data['title_sort'] = self.title_sort
+        data['description'] = self.description
         
         def setval(self, data, fieldname, is_list=False):
             data[fieldname] = hitvalue(self, fieldname, is_list)
@@ -510,6 +512,7 @@ class Page(DocType):
         setval(self, data, 'title')
         setval(self, data, 'title_sort')
         #url_title
+        setval(self, data, 'description')
         #prev_page
         #next_page
         setval(self, data, 'categories')
