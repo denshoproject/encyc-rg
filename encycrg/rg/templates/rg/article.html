@@ -172,6 +172,54 @@
               </li>
               {% endif %}
 
+              {% if article.rg_chronology %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-5">
+                  <i class="fa fa-tags" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent">
+                  <h4 class="media-heading color-5">Chronology</h4>
+                  <p>
+                    {% for item in article.rg_chronology %}
+                    <a href="{% url "rg-browse-fieldvalue" "rg_chronology" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_geography %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-5">
+                  <i class="fa fa-tags" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent">
+                  <h4 class="media-heading color-5">Geography</h4>
+                  <p>
+                    {% for item in article.rg_geography %}
+                    <a href="{% url "rg-browse-fieldvalue" "rg_geography" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_pov %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-5">
+                  <i class="fa fa-tags" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent">
+                  <h4 class="media-heading color-5">Point of View</h4>
+                  <p>
+                    {% for item in article.rg_pov %}
+                    <a href="{% url "rg-browse-fieldvalue" "rg_pov" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
               {% if article.rg_theme %}
               <li class="media">
                 <div class="media-left iconContent bg-color-6">

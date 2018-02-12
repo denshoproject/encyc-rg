@@ -260,11 +260,13 @@ PAGE_BROWSABLE_FIELDS = {
     'rg_readinglevel': 'Reading Level',
     'rg_theme': 'Theme',
     'rg_genre': 'Genre',
+    'rg_pov': 'Point of View',
     'rg_relatedevents': 'Related Events',
     'rg_availability': 'Availability',
     'rg_freewebversion': 'Free Web Version',
     #'rg_denshotopic': 'Topic',
     'rg_geography': 'Geography',
+    'rg_chronology': 'Chronology',
     #'rg_facility': 'Facility',
     'rg_hasteachingaids': 'Has Teaching Aids',
 }
@@ -373,7 +375,7 @@ class Page(DocType):
     rg_readinglevel = String(index='not_analyzed', multi=True)
     rg_theme = String(index='not_analyzed', multi=True)
     rg_genre = String(index='not_analyzed', multi=True)
-    rg_pov = String()
+    rg_pov = String(index='not_analyzed', multi=True)
     rg_relatedevents = String()
     rg_availability = String(index='not_analyzed')
     rg_freewebversion = String(index='not_analyzed')
