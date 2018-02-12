@@ -313,6 +313,7 @@ def search_ui(request):
     )
     context = {
         'api_url': api_url,
+        'fields': models.FACET_FIELDS,
     }
 
     if request.GET.get('fulltext'):

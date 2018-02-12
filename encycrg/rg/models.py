@@ -320,6 +320,8 @@ FACET_FIELDS['rg_chronology'] = {
     'description':'The primary time period the resource describes or in which it is set.',
     'icon':'fa-clock',
 }
+#FACET_FIELDS['rg_hasteachingaids'] = {
+#FACET_FIELDS['rg_freewebversion'] = {
 
 
 MEDIATYPE_INFO = {
