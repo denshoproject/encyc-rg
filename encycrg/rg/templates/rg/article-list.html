@@ -16,11 +16,43 @@
       {% if article.rg_interestlevel %}
       <li>
         <i class="fa fa-graduation-cap" aria-hidden="true"></i>
-        {% for level in article.rg_interestlevel %}
-        {{ level }}{% if not forloop.last %},{% endif %}
+        {% for item in article.rg_interestlevel %}
+        {{ item }}{% if not forloop.last %},{% endif %}
         {% endfor %}
       </li>
-      {% endif %}{# article.rg_interestlevel #}
+      {% endif %}
+      {% if article.rg_genre %}
+      <li>
+        <i class="fa fa-tags" aria-hidden="true"></i>
+        {% for item in article.rg_genre %}
+        {{ item }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      </li>
+      {% endif %}
+      {% if article.rg_theme %}
+      <li>
+        <i class="fa fa-compass" aria-hidden="true"></i>
+        {% for item in article.rg_theme %}
+        {{ item }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      </li>
+      {% endif %}
+      {% if article.rg_readinglevel %}
+      <li>
+        <i class="fa fa-bookmark" aria-hidden="true"></i>
+        {% for item in article.rg_readinglevel %}
+        {{ item }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      </li>
+      {% endif %}
+      {% if article.rg_availability %}
+      <li>
+        <i class="fa fa-binoculars" aria-hidden="true"></i>
+        {% for item in article.rg_availability %}
+        {{ item }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      </li>
+      {% endif %}
     </ul>
     <p>
       {{ article.description }}

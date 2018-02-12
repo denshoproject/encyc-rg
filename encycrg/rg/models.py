@@ -250,6 +250,10 @@ PAGE_LIST_FIELDS = [
     'categories',
     'rg_rgmediatype',
     'rg_interestlevel',
+    'rg_genre',
+    'rg_theme',
+    'rg_readinglevel',
+    'rg_availability',
 ]
 
 # fields for browsing
@@ -494,6 +498,10 @@ class Page(DocType):
             data['mediatype_label'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['label']
             data['mediatype_icon'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['icon']
         setval(self, data, 'rg_interestlevel', is_list=1)
+        setval(self, data, 'rg_genre', is_list=1)
+        setval(self, data, 'rg_theme', is_list=1)
+        setval(self, data, 'rg_readinglevel', is_list=1)
+        setval(self, data, 'rg_availability', is_list=1)
         return data
     
     def dict_all(self, request=None):
