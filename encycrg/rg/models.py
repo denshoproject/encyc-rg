@@ -261,7 +261,7 @@ PAGE_BROWSABLE_FIELDS = {
     'rg_theme': 'Theme',
     'rg_genre': 'Genre',
     'rg_pov': 'Point of View',
-    'rg_relatedevents': 'Related Events',
+    #'rg_relatedevents': 'Related Events',
     'rg_availability': 'Availability',
     'rg_freewebversion': 'Free Web Version',
     #'rg_denshotopic': 'Topic',
@@ -376,7 +376,7 @@ class Page(DocType):
     rg_theme = String(index='not_analyzed', multi=True)
     rg_genre = String(index='not_analyzed', multi=True)
     rg_pov = String(index='not_analyzed', multi=True)
-    rg_relatedevents = String()
+    #rg_relatedevents = String()
     rg_availability = String(index='not_analyzed')
     rg_freewebversion = String(index='not_analyzed')
     #rg_denshotopic = String(index='not_analyzed', multi=True)
@@ -537,7 +537,7 @@ class Page(DocType):
         setval(self, data, 'rg_theme', is_list=1)
         setval(self, data, 'rg_genre', is_list=1)
         setval(self, data, 'rg_pov', is_list=1)
-        setval(self, data, 'rg_relatedevents', is_list=1)
+        #setval(self, data, 'rg_relatedevents', is_list=1)
         setval(self, data, 'rg_availability', is_list=1)
         setval(self, data, 'rg_freewebversion', is_list=1)
         #setval(self, data, 'rg_denshotopic')
