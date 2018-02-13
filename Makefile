@@ -297,19 +297,18 @@ branch:
 	cd $(INSTALLDIR)/encycrg; python ./bin/git-checkout-branch.py $(BRANCH)
 
 
-get-static: get-app-assets
-
-install-static: install-app-assets
-
-clean-static:
-
-
-make-static-dirs:
+install-static:
+	@echo ""
+	@echo "installing static files ---------------------------------------------"
 	-mkdir $(MEDIA_BASE)
 	-mkdir $(STATIC_ROOT)
-	-mkdir $(STATIC_ROOT)/js
+	-mkdir $(STATIC_ROOT)/css
 	chown -R $(USER).root $(MEDIA_BASE)
 	chmod -R 755 $(MEDIA_BASE)
+	-cp $(INSTALLDIR)/static/css/style.css $(STATIC_ROOT)/css/
+
+clean-static:
+	-rm -Rf $(INSTALLDIR)/static/
 
 
 install-configs:
