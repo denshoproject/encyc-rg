@@ -257,19 +257,18 @@ def _browse_field(request, fieldname):
     return data
 
 def _browse_field_value(request, fieldname, value, limit=None, offset=None):
-    s = models.Page.search().from_dict({
-        "query": {
-            "match": {
-                fieldname: value,
-            }
-        }
-    }).sort('title_sort')
-    if not limit:
-        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    if not offset:
-        offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    return searcher.execute(limit, offset)
+    if fieldname not in models.PAGE_SEARCH_FIELDS:
+        raise Exception('Bad fieldname "%s".' % fieldname)
+    thispage = 0
+    limit = settings.DEFAULT_LIMIT
+    offset = search.es_offset(limit, thispage)
+    s = models.Page.search()
+    s = s.filter('match', **{fieldname: value})
+    return search.Searcher(
+        mappings=MAPPINGS,
+        fields=FIELDS,
+        search=s,
+    ).execute(limit, offset)
 
 def _categories(request):
     fieldname = 'categories'
