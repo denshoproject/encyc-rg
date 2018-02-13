@@ -322,7 +322,7 @@ FACET_FIELDS['rg_geography'] = {
 FACET_FIELDS['rg_chronology'] = {
     'label':'Time',
     'description':'The primary time period the resource describes or in which it is set.',
-    'icon':'fa-clock',
+    'icon':'fa-clock-o',
 }
 #FACET_FIELDS['rg_hasteachingaids'] = {
 #FACET_FIELDS['rg_freewebversion'] = {
@@ -337,7 +337,7 @@ MEDIATYPE_INFO = {
     'exhibitions': {'label': 'Museum Exhibitions', 'icon': 'fa-university'},
     'films': {'label': 'Films and Video', 'icon': 'fa-film'},
     'plays': {'label': 'Plays', 'icon': 'fa-ticket'},
-    'short': {'label': 'stories, "Short Stories', 'icon': 'fa-file-alt'},
+    'short': {'label': 'stories, "Short Stories', 'icon': 'fa-file-text'},
     'websites': {'label': 'Websites', 'icon': 'fa-laptop'},
 }
 
