@@ -111,6 +111,7 @@ def articles(request):
         'num_articles': results.total,
         'initials': initials,
         'groups': groups,
+        'fields': models.FACET_FIELDS,
         'api_url': _mkurl(request, reverse('rg-api-articles')),
     })
     #api_url = _mkurl(request, reverse('rg-api-articles'))
@@ -145,6 +146,7 @@ def article(request, url_title):
     )
     context = {
         'article': article.dict_all(request=request),
+        'fields': models.FACET_FIELDS,
         'api_url': _mkurl(request, reverse('rg-api-article', args=([url_title]))),
     }
     return HttpResponse(t.render(context, request))

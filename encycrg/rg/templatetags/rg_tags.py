@@ -31,5 +31,6 @@ def article(article):
         t = DEFAULT_ARTICLE_LIST_TEMPLATE
     c = {
         'article': article,
+        'fields': models.FACET_FIELDS,
     }
     return t.render(c)
