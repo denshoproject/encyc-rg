@@ -17,18 +17,21 @@ Articles
   {{ num_articles }} articles<br/>
 </div>
 
-<div id="contents">
+<h2 id="contents"><strong>
   {% for initial in initials %}
-  <a href="#{{ initial }}">{{ initial }}</a>
+  <a href="#{{ initial }}">{{ initial }}</a>&nbsp;
   {% endfor %}
-</div>
+</strong></h2>
 
 <div class="article-list">
   {% for initial,articles in groups %}
   <a name="{{ initial }}"></a>
-  <h2>{{ initial }}</h2>
+  <h2><strong>{{ initial }}</strong></h2>
   {% for article in articles %}
-    <a href="{{ article.links.html }}">{{ article.id }}</a><br/>
+  <a href="{{ article.links.html }}">
+    <i class="fa {{ article.mediatype_icon }}" aria-hidden="true"></i>
+    {{ article.id }}
+  </a><br/>
   {% endfor %}
   {% endfor %}
 </div>
