@@ -66,7 +66,6 @@ MEDIA_ROOT=$(MEDIA_BASE)/media
 STATIC_ROOT=$(MEDIA_BASE)/static
 
 ELASTICSEARCH=elasticsearch-2.4.4.deb
-ASSETS=encyc-rg-assets.tar.gz
 # wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.4.4.deb
 
 SUPERVISOR_GUNICORN_CONF=/etc/supervisor/conf.d/$(APP).conf
@@ -311,14 +310,6 @@ make-static-dirs:
 	-mkdir $(STATIC_ROOT)/js
 	chown -R $(USER).root $(MEDIA_BASE)
 	chmod -R 755 $(MEDIA_BASE)
-
-get-app-assets:
-	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(ASSETS)
-
-install-app-assets: make-static-dirs
-	@echo ""
-	@echo "get assets --------------------------------------------------------------"
-	-tar xzvf $(DOWNLOADS_DIR)/$(APP)-assets.tar.gz -C $(STATIC_ROOT)/
 
 
 install-configs:
