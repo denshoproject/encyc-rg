@@ -37,6 +37,14 @@ MEDIA_BASE=/var/www/$(APP)
 MEDIA_ROOT=$(MEDIA_BASE)/media
 STATIC_ROOT=$(MEDIA_BASE)/static
 
+OPENJDK_PKG=
+ifeq ($(DEBIAN_RELEASE), jessie)
+	OPENJDK_PKG=openjdk-7-jre
+endif
+ifeq ($(DEBIAN_CODENAME), stretch)
+	OPENJDK_PKG=openjdk-8-jre
+endif
+
 ELASTICSEARCH=elasticsearch-2.4.4.deb
 # wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.4.4.deb
 
@@ -183,22 +191,29 @@ install-redis:
 	apt-get --assume-yes install redis-server
 
 get-elasticsearch:
-	apt-get --assume-yes install openjdk-7-jre
 	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(ELASTICSEARCH)
 
-install-elasticsearch: get-elasticsearch
+install-elasticsearch: install-core
 	@echo ""
 	@echo "Elasticsearch ----------------------------------------------------------"
 # Elasticsearch is configured/restarted here so it's online by the time script is done.
-	gdebi --non-interactive $(DOWNLOADS_DIR)/$(ELASTICSEARCH)
-	cp $(INSTALLDIR)/debian/conf/elasticsearch.yml /etc/elasticsearch/
-	chown root.root /etc/elasticsearch/elasticsearch.yml
-	chmod 644 /etc/elasticsearch/elasticsearch.yml
+	apt-get --assume-yes install $(OPENJDK_PKG)
+	-gdebi --non-interactive /tmp/downloads/$(ELASTICSEARCH)
+#cp $(INSTALL_BASE)/ddr-public/conf/elasticsearch.yml /etc/elasticsearch/
+#chown root.root /etc/elasticsearch/elasticsearch.yml
+#chmod 644 /etc/elasticsearch/elasticsearch.yml
 # 	@echo "${bldgrn}search engine (re)start${txtrst}"
-	/etc/init.d/elasticsearch restart
-	-mkdir -p /var/backups/elasticsearch
-	chown -R elasticsearch.elasticsearch /var/backups/elasticsearch
-	chmod -R 755 /var/backups/elasticsearch
+	-service elasticsearch stop
+	-systemctl disable elasticsearch.service
+
+enable-elasticsearch:
+	systemctl enable elasticsearch.service
+
+disable-elasticsearch:
+	systemctl disable elasticsearch.service
+
+remove-elasticsearch:
+	apt-get --assume-yes remove $(OPENJDK_PKG) elasticsearch
 
 
 install-virtualenv:
