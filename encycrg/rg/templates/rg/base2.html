@@ -108,7 +108,7 @@
                       <li class="" ><a href="{% url "rg-browse-field" "rg_rgmediatype" %}books/">Books</a></li>
                       <li class=""><a href="{% url "rg-browse-field" "rg_rgmediatype" %}films/">Film and Video</a></li>
                       <li class=""><a href="{% url "rg-browse-field" "rg_rgmediatype" %}exhibits/">Exhibits</a></li>
-                      <li class=""><a href="rg-browseByMediaType.html">See more...</a>
+                      <li class=""><a href="{% url "rg-browse-field" "rg_rgmediatype" %}">See more...</a>
                     </ul>
                   </li>
                   <li class="dropdown dropdown-submenu
@@ -238,7 +238,7 @@
                   </li>
                 </ul>
                 <p>
-                  <a href="https://densho.org/give" class="btn btn-sm bg-color-1 footer-support-btn"><i class="fa fa-heart" aria-hidden="true"></i> Support our work</a>
+                  <a href="https://densho.org/give" class="btn btn-sm bg-color-1 footer-support-btn"><i class="fa fa-heart" aria-hidden="true" style="padding-left: 5px;padding-right: 3px;"></i> Support our work</a>
                 </p>
               </div>
             </div>
