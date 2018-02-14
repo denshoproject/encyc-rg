@@ -13,13 +13,6 @@ DEBIAN_RELEASE := $(shell lsb_release -sr)
 # Sortable major version tag e.g. deb8
 DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
 
-# current branch name minus dashes or underscores
-PACKAGE_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
-# current commit hash
-PACKAGE_COMMIT := $(shell git log -1 --pretty="%h")
-# current commit date minus dashes
-PACKAGE_TIMESTAMP := $(shell git log -1 --pretty="%ad" --date=short | tr -d -)
-
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
 INSTALL_BASE=/opt
@@ -45,12 +38,6 @@ DEB_VENDOR=Densho.org
 DEB_MAINTAINER=<geoffrey.jost@densho.org>
 DEB_DESCRIPTION=Densho Encyclopedia Resource Guide site
 DEB_BASE=opt/encyc-rg
-
-PACKAGE_BASE=/tmp/encycrg
-PACKAGE_TMP=$(PACKAGE_BASE)/encyc-rg
-PACKAGE_ENV=$(PACKAGE_TMP)/env
-PACKAGE_TGZ=encycrg-$(PACKAGE_BRANCH)-$(PACKAGE_TIMESTAMP)-$(PACKAGE_COMMIT).tgz
-PACKAGE_RSYNC_DEST=takezo@takezo:~/packaging/encyc-rg
 
 CONF_BASE=/etc/encyc
 CONF_PRODUCTION=$(CONF_BASE)/encycrg.cfg
