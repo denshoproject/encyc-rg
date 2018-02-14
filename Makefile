@@ -24,6 +24,27 @@ PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 VIRTUALENV=$(INSTALLDIR)/venv/encycrg
 SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
 
+CONF_BASE=/etc/encyc
+CONF_PRODUCTION=$(CONF_BASE)/encycrg.cfg
+CONF_LOCAL=$(CONF_BASE)/encycrg-local.cfg
+CONF_SECRET=$(CONF_BASE)/encycrg-secret-key.txt
+CONF_DJANGO=$(INSTALLDIR)/encycrg/encycrg/settings.py
+
+SQLITE_BASE=/var/lib/$(PROJECT)
+LOGS_BASE=/var/log/$(PROJECT)
+
+MEDIA_BASE=/var/www/$(APP)
+MEDIA_ROOT=$(MEDIA_BASE)/media
+STATIC_ROOT=$(MEDIA_BASE)/static
+
+ELASTICSEARCH=elasticsearch-2.4.4.deb
+# wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.4.4.deb
+
+SUPERVISOR_GUNICORN_CONF=/etc/supervisor/conf.d/$(APP).conf
+SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
+NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
+NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
+
 DEB_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
 DEB_ARCH=amd64
 DEB_NAME_JESSIE=$(APP)-$(DEB_BRANCH)
@@ -38,27 +59,6 @@ DEB_VENDOR=Densho.org
 DEB_MAINTAINER=<geoffrey.jost@densho.org>
 DEB_DESCRIPTION=Densho Encyclopedia Resource Guide site
 DEB_BASE=opt/encyc-rg
-
-CONF_BASE=/etc/encyc
-CONF_PRODUCTION=$(CONF_BASE)/encycrg.cfg
-CONF_LOCAL=$(CONF_BASE)/encycrg-local.cfg
-CONF_SECRET=$(CONF_BASE)/encycrg-secret-key.txt
-CONF_DJANGO=$(INSTALLDIR)/encycrg/encycrg/settings.py
-
-LOGS_BASE=/var/log/$(PROJECT)
-SQLITE_BASE=/var/lib/$(PROJECT)
-
-MEDIA_BASE=/var/www/$(APP)
-MEDIA_ROOT=$(MEDIA_BASE)/media
-STATIC_ROOT=$(MEDIA_BASE)/static
-
-ELASTICSEARCH=elasticsearch-2.4.4.deb
-# wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.4.4.deb
-
-SUPERVISOR_GUNICORN_CONF=/etc/supervisor/conf.d/$(APP).conf
-SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
-NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
-NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
 
 
 .PHONY: help
