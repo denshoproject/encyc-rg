@@ -13,13 +13,6 @@ DEBIAN_RELEASE := $(shell lsb_release -sr)
 # Sortable major version tag e.g. deb8
 DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
 
-# current branch name minus dashes or underscores
-PACKAGE_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
-# current commit hash
-PACKAGE_COMMIT := $(shell git log -1 --pretty="%h")
-# current commit date minus dashes
-PACKAGE_TIMESTAMP := $(shell git log -1 --pretty="%ad" --date=short | tr -d -)
-
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
 INSTALL_BASE=/opt
@@ -30,6 +23,35 @@ PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 
 VIRTUALENV=$(INSTALLDIR)/venv/encycrg
 SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
+
+CONF_BASE=/etc/encyc
+CONF_PRODUCTION=$(CONF_BASE)/encycrg.cfg
+CONF_LOCAL=$(CONF_BASE)/encycrg-local.cfg
+CONF_SECRET=$(CONF_BASE)/encycrg-secret-key.txt
+CONF_DJANGO=$(INSTALLDIR)/encycrg/encycrg/settings.py
+
+SQLITE_BASE=/var/lib/$(PROJECT)
+LOGS_BASE=/var/log/$(PROJECT)
+
+MEDIA_BASE=/var/www/$(APP)
+MEDIA_ROOT=$(MEDIA_BASE)/media
+STATIC_ROOT=$(MEDIA_BASE)/static
+
+OPENJDK_PKG=
+ifeq ($(DEBIAN_RELEASE), jessie)
+	OPENJDK_PKG=openjdk-7-jre
+endif
+ifeq ($(DEBIAN_CODENAME), stretch)
+	OPENJDK_PKG=openjdk-8-jre
+endif
+
+ELASTICSEARCH=elasticsearch-2.4.4.deb
+# wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.4.4.deb
+
+SUPERVISOR_GUNICORN_CONF=/etc/supervisor/conf.d/$(APP).conf
+SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
+NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
+NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
 
 DEB_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
 DEB_ARCH=amd64
@@ -45,33 +67,6 @@ DEB_VENDOR=Densho.org
 DEB_MAINTAINER=<geoffrey.jost@densho.org>
 DEB_DESCRIPTION=Densho Encyclopedia Resource Guide site
 DEB_BASE=opt/encyc-rg
-
-PACKAGE_BASE=/tmp/encycrg
-PACKAGE_TMP=$(PACKAGE_BASE)/encyc-rg
-PACKAGE_ENV=$(PACKAGE_TMP)/env
-PACKAGE_TGZ=encycrg-$(PACKAGE_BRANCH)-$(PACKAGE_TIMESTAMP)-$(PACKAGE_COMMIT).tgz
-PACKAGE_RSYNC_DEST=takezo@takezo:~/packaging/encyc-rg
-
-CONF_BASE=/etc/encyc
-CONF_PRODUCTION=$(CONF_BASE)/encycrg.cfg
-CONF_LOCAL=$(CONF_BASE)/encycrg-local.cfg
-CONF_SECRET=$(CONF_BASE)/encycrg-secret-key.txt
-CONF_DJANGO=$(INSTALLDIR)/encycrg/encycrg/settings.py
-
-LOGS_BASE=/var/log/$(PROJECT)
-SQLITE_BASE=/var/lib/$(PROJECT)
-
-MEDIA_BASE=/var/www/$(APP)
-MEDIA_ROOT=$(MEDIA_BASE)/media
-STATIC_ROOT=$(MEDIA_BASE)/static
-
-ELASTICSEARCH=elasticsearch-2.4.4.deb
-# wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.4.4.deb
-
-SUPERVISOR_GUNICORN_CONF=/etc/supervisor/conf.d/$(APP).conf
-SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
-NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
-NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
 
 
 .PHONY: help
@@ -143,7 +138,7 @@ howto-install:
 	@echo "- # make restart"
 
 
-get: get-app get-static apt-update
+get: get-app apt-update
 
 install: install-prep install-app install-static install-configs
 
@@ -196,22 +191,29 @@ install-redis:
 	apt-get --assume-yes install redis-server
 
 get-elasticsearch:
-	apt-get --assume-yes install openjdk-7-jre
 	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(ELASTICSEARCH)
 
-install-elasticsearch: get-elasticsearch
+install-elasticsearch: install-core
 	@echo ""
 	@echo "Elasticsearch ----------------------------------------------------------"
 # Elasticsearch is configured/restarted here so it's online by the time script is done.
-	gdebi --non-interactive $(DOWNLOADS_DIR)/$(ELASTICSEARCH)
-	cp $(INSTALLDIR)/debian/conf/elasticsearch.yml /etc/elasticsearch/
-	chown root.root /etc/elasticsearch/elasticsearch.yml
-	chmod 644 /etc/elasticsearch/elasticsearch.yml
+	apt-get --assume-yes install $(OPENJDK_PKG)
+	-gdebi --non-interactive /tmp/downloads/$(ELASTICSEARCH)
+#cp $(INSTALL_BASE)/ddr-public/conf/elasticsearch.yml /etc/elasticsearch/
+#chown root.root /etc/elasticsearch/elasticsearch.yml
+#chmod 644 /etc/elasticsearch/elasticsearch.yml
 # 	@echo "${bldgrn}search engine (re)start${txtrst}"
-	/etc/init.d/elasticsearch restart
-	-mkdir -p /var/backups/elasticsearch
-	chown -R elasticsearch.elasticsearch /var/backups/elasticsearch
-	chmod -R 755 /var/backups/elasticsearch
+	-service elasticsearch stop
+	-systemctl disable elasticsearch.service
+
+enable-elasticsearch:
+	systemctl enable elasticsearch.service
+
+disable-elasticsearch:
+	systemctl disable elasticsearch.service
+
+remove-elasticsearch:
+	apt-get --assume-yes remove $(OPENJDK_PKG) elasticsearch
 
 
 install-virtualenv:
@@ -226,7 +228,7 @@ install-setuptools: install-virtualenv
 	pip3 install -U bpython setuptools
 
 
-get-app: get-encyc-rg get-static
+get-app: get-encyc-rg
 
 install-app: install-encyc-rg
 
