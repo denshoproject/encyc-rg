@@ -130,7 +130,7 @@ howto-install:
 	@echo "- # make restart"
 
 
-get: get-app get-static apt-update
+get: get-app apt-update
 
 install: install-prep install-app install-static install-configs
 
@@ -213,7 +213,7 @@ install-setuptools: install-virtualenv
 	pip3 install -U bpython setuptools
 
 
-get-app: get-encyc-rg get-static
+get-app: get-encyc-rg
 
 install-app: install-encyc-rg
 
