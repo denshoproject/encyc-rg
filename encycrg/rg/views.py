@@ -143,6 +143,11 @@ def article(request, url_title):
         if url_title in article_titles:
             return HttpResponsePermanentRedirect(reverse('rg-author', args=([url_title])))
         raise Http404("No article with that title. (%s)" % err)
+    # choose only the first source
+    if article.source_ids:
+        source = models.Source.get(article.source_ids[0])
+    else:
+        source = None
     # some mediatypes have special templates
     t = MEDIATYPE_TEMPLATES.get(
         article['rg_rgmediatype'][0],
@@ -150,6 +155,7 @@ def article(request, url_title):
     )
     context = {
         'article': article.dict_all(request=request),
+        'source': source,
         'fields': models.FACET_FIELDS,
         'api_url': _mkurl(request, reverse('rg-api-article', args=([url_title]))),
     }
