@@ -338,10 +338,10 @@ install-daemons-configs:
 	@echo ""
 	@echo "daemon configs ------------------------------------------------------"
 # nginx settings
-	cp $(INSTALLDIR)/conf/nginx-app.conf $(NGINX_APP_CONF)
-	chown root.root $(NGINX_APP_CONF)
-	chmod 644 $(NGINX_APP_CONF)
-	-ln -s $(NGINX_APP_CONF) $(NGINX_APP_CONF_LINK)
+	cp $(INSTALLDIR)/conf/nginx-app.conf $(NGINX_CONF)
+	chown root.root $(NGINX_CONF)
+	chmod 644 $(NGINX_CONF)
+	-ln -s $(NGINX_CONF) $(NGINX_CONF_LINK)
 	cp $(INSTALLDIR)/conf/nginx-elastic.conf $(NGINX_ELASTIC_CONF)
 	chown root.root $(NGINX_ELASTIC_CONF)
 	chmod 644 $(NGINX_ELASTIC_CONF)
