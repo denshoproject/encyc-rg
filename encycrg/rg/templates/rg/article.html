@@ -265,7 +265,11 @@
                   Free On Web
                 </div>
                 <div class="col-md-5 col-sm-5 col-xs-5">
+                  {% if article.rg_freewebversion == 'Yes' %}
                   <i class="fa fa-check"></i>
+                  {% else %}
+                  <i class="fa fa-remove"></i>
+                  {% endif %}
                 </div>
               </div>
               <div class="row">
@@ -273,7 +277,11 @@
                   Teacher Guide
                 </div>
                 <div class="col-md-5 col-sm-5 col-xs-5">
-                  <i class="fa fa-times"></i>
+                  {% if article.rg_hasteachingaids == 'Yes' %}
+                  <i class="fa fa-check"></i>
+                  {% else %}
+                  <i class="fa fa-remove"></i>
+                  {% endif %}
                 </div>
               </div>
             </div>
