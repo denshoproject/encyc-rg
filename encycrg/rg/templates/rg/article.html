@@ -1,5 +1,5 @@
 {% extends base_template %}
-
+{% load rg_tags %}
 
 {% block title %}
 {{ article.title }}
@@ -241,10 +241,6 @@
         </div>
         <!-- end facetsSidebar -->
 
-        rg_availability {{ article.rg_availability }}<br/>
-        rg_freewebversion {{ article.rg_freewebversion }}<br/>
-        rg_hasteachingaids {{ article.rg_hasteachingaids }}<br/>
-        
         <!-- begin availabilitySidebar -->
         <div class="panel panel-default">
           <div class="panel-heading bg-color-1 border-color-1">
@@ -257,7 +253,7 @@
                   <h4 class="color-3" style="margin-bottom: 0px;">Availability</h4>
                 </div>
                 <div class="col-md-6 col-sm-6 col-xs-6" style="text-align: right;">
-                  <a href="#" alt="Available" data-toggle="tooltip" data-original-title="Available" data-position="top"><i class="fa fa-circle color-3" style="font-size: 18px;"></i><i class="fa fa-circle color-3" style="font-size: 18px;"></i><i class="fa fa-circle-thin color-3" style="font-size: 18px;"></i></a>
+                  {% availabilitylevel article.rg_availability %}
                 </div>
               </div>
               <div class="row">
