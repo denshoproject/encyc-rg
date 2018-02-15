@@ -8,6 +8,7 @@ import json
 import logging
 logger = logging.getLogger(__name__)
 import os
+from urllib.parse import urlparse, urljoin
 
 from bs4 import BeautifulSoup
 
@@ -439,7 +440,11 @@ class Page(DocType):
             if soup.find(id=sectionid):
                 tag = soup.find(id=sectionid).extract()
                 setattr(self, fieldname, tag.prettify())
-     
+
+        # prepend encycfront domain for notrg links
+        for a in soup.find_all('a', class_='notrg'):
+            a['href'] = urljoin(settings.ENCYCLOPEDIA_URL, a['href'])
+        
         self.body = soup.prettify()
     
     @staticmethod
