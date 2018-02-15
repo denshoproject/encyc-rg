@@ -14,7 +14,13 @@
 
     {% if source %}
     <div class="pull-right" style="padding: 15px;max-width: 250px;">
-      <img class="image-responsive" src="{{ source.img_url }}" alt="image" />
+      <img class="image-responsive" src="{{ source.img_url }}" alt="image" width="235" />
+      <br/>
+      {{ source.caption }}
+      <br/>
+      {{ source.courtesy }}
+      <br/>
+      <a href="{{ source.encyc_url }}">Densho Encyclopedia</a>
     </div>
     {% endif %}
 
