@@ -24,4 +24,5 @@ def sitewide(request):
         'packages': settings.PACKAGES,
         'docstore_hosts': docstore_hosts,
         'docstore_index': settings.DOCSTORE_INDEX,
+        'google_analytics_id': settings.GOOGLE_ANALYTICS_ID,
     }
