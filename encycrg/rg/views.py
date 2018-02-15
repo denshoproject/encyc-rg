@@ -135,7 +135,11 @@ def article(request, url_title):
     except models.NotFoundError as err:
         # Bad title might just be an author link
         if '_' in url_title:
-            url_title = url_title.replace('_',' ')
+            return HttpResponsePermanentRedirect(
+                reverse('rg-article', args=([
+                    url_title.replace('_',' ')
+                ]))
+            )
         if url_title in article_titles:
             return HttpResponsePermanentRedirect(reverse('rg-author', args=([url_title])))
         raise Http404("No article with that title. (%s)" % err)
