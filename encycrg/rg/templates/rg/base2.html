@@ -9,6 +9,15 @@
   
   <title>{% block title %}{% endblock %} - Densho Resource Guide</title>
 
+  {% if google_analytics_id %}<!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ google_analytics_id }}');
+  </script>{% endif %}
+
   <!-- PLUGINS CSS STYLE -->
   <link rel="stylesheet"                                href="{{ static_url }}plugins/jquery-ui/jquery-ui.css">
   <link rel="stylesheet"                                href="{{ static_url }}plugins/bootstrap/css/bootstrap.min.css">

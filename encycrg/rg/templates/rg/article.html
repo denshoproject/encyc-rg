@@ -12,12 +12,15 @@
       
     <h1 class="color-1">{{ article.title }}</h1>
 
-    {% if article.sources %}
+    {% if source %}
     <div class="pull-right" style="padding: 15px;max-width: 250px;">
-      {% for source in article.sources %}
-      {{ source }}<br/>
-      {% endfor %}
-      <img src="http://encycstage.densho.org/media/encyc-psms/{{ source.id }}.jpg" alt="image" class="image-responsive">
+      <img class="image-responsive" src="{{ source.img_url }}" alt="image" width="235" />
+      <br/>
+      {{ source.caption }}
+      <br/>
+      {{ source.courtesy }}
+      <br/>
+      <a href="{{ source.encyc_url }}">Densho Encyclopedia</a>
     </div>
     {% endif %}
 

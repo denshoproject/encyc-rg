@@ -89,6 +89,7 @@ THUMBNAIL_OPTIONS=''
 
 ENCYCLOPEDIA_URL = config.get('encycrg', 'encyclopedia_url')
 
+GOOGLE_ANALYTICS_ID = config.get('encycrg', 'google_analytics_id')
 
 # ----------------------------------------------------------------------
 
