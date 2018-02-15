@@ -331,7 +331,7 @@ FACET_FIELDS['rg_chronology'] = {
 
 MEDIATYPE_INFO = {
     'albums': {'label': 'Albums', 'icon': 'fa-music'},
-    'articles': {'label': 'Articles', 'icon': 'fa-newspaper'},
+    'articles': {'label': 'Articles', 'icon': 'fa-newspaper-o'},
     'books': {'label': 'Books', 'icon': 'fa-book'},
     'curriculum': {'label': 'Curriculum', 'icon': 'fa-tasks'},
     'essays': {'label': 'Essays', 'icon': 'fa-edit'},
