@@ -832,6 +832,9 @@ class Source(DocType):
     def img_url_local(self):
         return os.path.join(settings.MEDIA_URL_LOCAL, self.img_path)
     
+    def encyc_url(self):
+        return '/'.join([settings.ENCYCLOPEDIA_URL, 'sources', self.encyclopedia_id])
+    
     #def streaming_url(self):
     #    return os.path.join(settings.SOURCES_MEDIA_URL, self.streaming_path)
     
@@ -871,7 +874,7 @@ class Source(DocType):
         data = OrderedDict()
         data['id'] = self.encyclopedia_id
         data['doctype'] = u'sources'
-        data['links'] = {}
+        data['links'] = OrderedDict()
         data['links']['html'] = api_reverse(
             'rg-source',
             args=([self.encyclopedia_id]),
@@ -882,6 +885,8 @@ class Source(DocType):
             args=([self.encyclopedia_id]),
             request=request,
         )
+        data['links']['img'] = self.img_url()
+        data['links']['encyc'] = self.encyc_url()
         return data
 
     def dict_all(self, request=None):
