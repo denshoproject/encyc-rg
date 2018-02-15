@@ -430,6 +430,14 @@ class Page(DocType):
         #   <div class="toplink">...
         for tag in soup.find_all(class_="toplink"):
             tag.decompose()
+
+        # prepend encycfront domain for notrg links
+        for a in soup.find_all('a', class_='notrg'):
+            a['href'] = urljoin(settings.ENCYCLOPEDIA_URL, a['href'])
+        
+        # rm underscores from internal links
+        for a in soup.find_all('a', class_='rg'):
+            a['href'] = a['href'].replace('_', ' ')
         
         # rm sections from soup, to separate blocks of HTML
         #   <div class="section" id="For_More_Information">
@@ -440,14 +448,6 @@ class Page(DocType):
             if soup.find(id=sectionid):
                 tag = soup.find(id=sectionid).extract()
                 setattr(self, fieldname, tag.prettify())
-        
-        # prepend encycfront domain for notrg links
-        for a in soup.find_all('a', class_='notrg'):
-            a['href'] = urljoin(settings.ENCYCLOPEDIA_URL, a['href'])
-        
-        # rm underscores from internal links
-        for a in soup.find_all('a', class_='rg'):
-            a['href'] = a['href'].replace('_', ' ')
         
         self.body = soup.prettify()
     
