@@ -212,33 +212,36 @@
             <div class="row">
                 <div class="col-xs-12">
                     <div class="media featuresContent">
+                        <a href="{% url "rg-browse" %}">
                         <span class="media-left bg-color-1">
                             <i class="fa fa-th-list bg-color-1" aria-hidden="true"></i>
-                        </span>
+                        </span></a>
                         <div class="media-body">
-                            <h3 class="media-heading color-1">Browse</h3>
-                            <p>Explore articles by title, media type, grade level and more...</p>
+                            <a href="{% url "rg-browse" %}" class="homeTitleLink color-1"><h3 class="media-heading color-1">Browse</h3></a>
+                            <p>Explore articles by title, media type, grade level and more</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-xs-12">
                     <div class="media featuresContent">
+                        <a href="{% url "rg-search" %}">
                         <span class="media-left bg-color-2">
                             <i class="fa fa-search bg-color-2" aria-hidden="true"></i>
-                        </span>
+                        </span></a>
                         <div class="media-body">
-                            <h3 class="media-heading color-2">Search</h3>
+                            <a href="{% url "rg-search" %}" class="homeTitleLink color-2"><h3 class="media-heading color-2">Search</h3></a>
                             <p>Search all of the articles by keyword, then filter by category</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-xs-12">
                     <div class="media featuresContent">
+                        <a href="{% url "rg-about" %}">
                         <span class="media-left bg-color-3">
                             <i class="fa fa-question bg-color-3" aria-hidden="true"></i>
-                        </span>
+                        </span></a>
                         <div class="media-body">
-                            <h3 class="media-heading color-3">About</h3>
+                            <a href="{% url "rg-about" %}" class="homeTitleLink color-3"><h3 class="media-heading color-3">About</h3></a>
                             <p>Learn more about the Resource Guide project</p>
                         </div>
                     </div>
