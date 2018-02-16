@@ -29,7 +29,9 @@
 
 {{ article.body|safe }}
 
-{{ article.footnotes|safe }}
+{% if article.footnotes %}
+    {{ article.footnotes|safe }}
+{% endif %}
 
     <!-- begin articleExtraInfo-->
     <div class="accordionCommon hello" id="articleExtraInfo">
