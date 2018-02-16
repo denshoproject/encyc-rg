@@ -550,7 +550,7 @@ class Page(DocType):
             data['mediatype_label'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['label']
             data['mediatype_icon'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['icon']
         setval(self, data, 'rg_title')
-        setval(self, data, 'rg_creators')
+        setval(self, data, 'rg_creators', is_list=1)
         setval(self, data, 'rg_interestlevel', is_list=1)
         setval(self, data, 'rg_readinglevel', is_list=1)
         setval(self, data, 'rg_theme', is_list=1)

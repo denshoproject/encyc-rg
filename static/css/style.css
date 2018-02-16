@@ -8077,6 +8077,11 @@ a.homeTitleLink:hover {
 }
 
 /* article */
+h3.articleCreatorsTitle {
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .articleSection blockquote {
     font-style: italic !important;
     font-size: 14px !important;
