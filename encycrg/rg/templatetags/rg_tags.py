@@ -42,16 +42,17 @@ def availabilitylevel(rawlevel):
     full = ""
     empty = "123"
     leveltext = "No availability (cannot currently be purchased or borrowed)"
-    if rawlevel[0].startswith('Limited'):
-        full = "1"
-        empty = "12"
-        leveltext = 'Limited availability (limited for purchase or expensive)'
-    if rawlevel[0].startswith('Available'):
-        full = "12"
-        empty = "1"
-        leveltext = 'Available (moderately easy to obtain)'
-    if rawlevel[0].startswith('Widely'):
-        full = "123"
-        empty = ""
-        leveltext = 'Widely available (easy to purchase or stream and reasonably priced/free)'
+    if rawlevel:
+        if rawlevel[0].startswith('Limited'):
+            full = "1"
+            empty = "12"
+            leveltext = 'Limited availability (limited for purchase or expensive)'
+        elif rawlevel[0].startswith('Available'):
+            full = "12"
+            empty = "1"
+            leveltext = 'Available (moderately easy to obtain)'
+        elif rawlevel[0].startswith('Widely'):
+            full = "123"
+            empty = ""
+            leveltext = 'Widely available (easy to purchase or stream and reasonably priced/free)'
     return {'leveltext':leveltext, 'full':full, 'empty':empty}
