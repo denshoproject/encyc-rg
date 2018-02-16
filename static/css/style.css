@@ -8072,6 +8072,10 @@ footer .color-bar {
     font-size: 16px;
 }
 
+a.homeTitleLink:hover {
+    text-decoration: underline !important;
+}
+
 /* article */
 .articleSection blockquote {
     font-style: italic !important;
