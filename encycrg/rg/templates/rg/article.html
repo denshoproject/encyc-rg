@@ -13,7 +13,7 @@
     <h1 class="articleTitle color-1">{{ article.title }}</h1>
     
     {% if article.rg_creators %}
-    <h3 class="articleCreatorsTitle color-1">Creators: {% for c in article.rg_creators %}{{c}}, {% endfor %}</h3>
+    <h3 class="articleCreatorsTitle color-1">Creators: {% for c in article.rg_creators %}{{c}}{% if not forloop.last %},{% endif %} {% endfor %}</h3>
     {% endif %}
     {% if source %}
     <div class="pull-right" style="padding: 15px;max-width: 250px;">
