@@ -117,20 +117,17 @@
           </div>
           <div class="panel-body">
             <ul class="media-list">
-              
-              {% if article.mediatype %}
-              <li class="media">
+               <li class="media">
                 <div class="media-left iconContent bg-color-2">
                   <i class="fa {{ fields.rg_rgmediatype.icon }}" aria-hidden="true"></i>
                 </div>
                 <div class="media-body iconContent">
                   <h4 class="media-heading color-2">Resource Type</h4>
                   <p>
-                    <a href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.mediatype %}">{{ article.mediatype_label }}</a>
+                    <a href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype %}">{{ article.mediatype_label }}</a>
                   </p>
                 </div>
               </li>
-              {% endif %}
 
               {% if article.rg_interestlevel %}
               <li class="media">
