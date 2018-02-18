@@ -9,103 +9,116 @@
 {% block container %}
 <div class="row">
   <div class="col-md-9 col-sm-8 col-xs-12 block pull-right">
-      
+
     <h1 class="articleTitle color-1">{{ article.title }}</h1>
     
     {% if article.rg_creators %}
     <h3 class="articleCreatorsTitle color-1">Creators: {% for c in article.rg_creators %}{{c}}{% if not forloop.last %},{% endif %} {% endfor %}</h3>
     {% endif %}
-    {% if source %}
-    <div class="pull-right" style="padding: 15px;max-width: 250px;">
-      <img class="image-responsive" src="{{ source.img_url }}" alt="image" width="235" />
-      <br/>
-      {{ source.caption }}
-      <br/>
-      {{ source.courtesy }}
-      <br/>
-      <a href="{{ source.encyc_url }}">Densho Encyclopedia</a>
-    </div>
-    {% endif %}
+    
+    <div class="row"><!--  begin main content row wrapper -->
+       <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"><!-- begin main content col wrapper -->
+           <div class="row"><!-- begin articleText row wrapper -->
+               <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"><!-- begin articleText col wrapper -->
+           {% if source %}
+           <div class="pull-right block" style="padding: 15px;max-width: 250px;">
+               <img class="image-responsive" src="{{ source.img_url }}" alt="image" width="235" />
+               {% if source.caption or source.courtesy %}
+               <br/>
+               <span class="articleSourceCaption">{{ source.caption }} {{ source.courtesy }}</span>
+               {% endif %}
+               <br/>
+               <span class="articleSourceCaption"><a href="{{ source.encyc_url }}">View in the Densho Encyclopedia <i class="fa fa-book"></i></a></span>
+           </div>
+           {% endif %}
 
-{{ article.body|safe }}
+           {{ article.body|safe }}
 
-{% if article.footnotes %}
-    {{ article.footnotes|safe }}
-{% endif %}
+           {% if article.footnotes %}
+           {{ article.footnotes|safe }}
+           {% endif %}
+           
+           </div><!-- end articleText col wrapper -->
+           </div><!-- end articleText row wrapper -->
 
-    <!-- begin articleExtraInfo-->
-    <div class="accordionCommon hello" id="articleExtraInfo">
-      <div class="panel-group" id="articleAccordian">
+           <div class="row"><!-- begin articleText row wrapper -->
+               <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"><!-- begin articleText col wrapper -->
+           <!-- begin articleExtraInfo-->
+           <div class="accordionCommon hello" id="articleExtraInfo">
+               <div class="panel-group" id="articleAccordian">
         
-        {% if article.related %}
-        <!-- begin rg_SectionRelatedArticles -->
-        <div class="panel panel-default">
-          <a class="panel-heading accordion-toggle bg-color-5" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-relatedarticles">
-            <span><i class="fa fa-copy"></i> Related Articles</span>
-            <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
-          </a>
-          <div id="collapse-relatedarticles" class="panel-collapse collapse in">
-            <div class="panel-body">
-              {{ article.related|safe }}
-            </div>
-          </div>
-        </div> 
-        <!-- end rg_SectionRelatedArticles -->
-        {% endif %}
+                   {% if article.related %}
+                   <!-- begin rg_SectionRelatedArticles -->
+                   <div class="panel panel-default">
+                       <a class="panel-heading accordion-toggle bg-color-5" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-relatedarticles">
+                           <span><i class="fa fa-copy"></i> Related Articles</span>
+                           <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
+                       </a>
+                       <div id="collapse-relatedarticles" class="panel-collapse collapse in">
+                           <div class="panel-body">
+                               {{ article.related|safe }}
+                           </div>
+                       </div>
+                   </div> 
+                   <!-- end rg_SectionRelatedArticles -->
+                   {% endif %}
         
-        {% if article.warnings %}
-        <!-- begin rg_warnings -->
-        <div class="panel panel-default">
-          <a class="panel-heading accordion-toggle bg-color-3" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-warnings">
-            <span><i class="fa fa-warning"></i> Ratings and Warnings</span>
-            <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
-          </a>
-          <div id="collapse-warnings" class="panel-collapse collapse in">
-            <div class="panel-body">
-              {{ article.warnings|safe }}
-            </div>
-          </div>
-        </div>
-        <!-- end rg_warnings -->
-        {% endif %}
+                   {% if article.warnings %}
+                   <!-- begin rg_warnings -->
+                   <div class="panel panel-default">
+                       <a class="panel-heading accordion-toggle bg-color-3" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-warnings">
+                           <span><i class="fa fa-warning"></i> Ratings and Warnings</span>
+                           <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
+                       </a>
+                       <div id="collapse-warnings" class="panel-collapse collapse in">
+                           <div class="panel-body">
+                               {{ article.warnings|safe }}
+                           </div>
+                       </div>
+                   </div>
+                   <!-- end rg_warnings -->
+                   {% endif %}
         
-        {% if article.moreinfo %}
-        <!-- begin rg_SectionForMoreInformation  -->
-        <div class="panel panel-default">
-          <a class="panel-heading accordion-toggle bg-color-2" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-moreinfo">
-            <span><i class="fa fa-question-circle"></i> For More Information</span>
-            <span class="iconBlock"><i class="fa fa-chevron-up"></i></span>
-          </a>
-          <div id="collapse-moreinfo" class="panel-collapse collapse">
-            <div class="panel-body">
-              {{ article.moreinfo|safe }}
-            </div>
-          </div>
-        </div>
-        <!-- end rg_SectionForMoreInformation -->
-        {% endif %}
+                   {% if article.moreinfo %}
+                   <!-- begin rg_SectionForMoreInformation  -->
+                   <div class="panel panel-default">
+                       <a class="panel-heading accordion-toggle bg-color-2" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-moreinfo">
+                           <span><i class="fa fa-question-circle"></i> For More Information</span>
+                           <span class="iconBlock"><i class="fa fa-chevron-up"></i></span>
+                       </a>
+                       <div id="collapse-moreinfo" class="panel-collapse collapse">
+                           <div class="panel-body">
+                               {{ article.moreinfo|safe }}
+                           </div>
+                       </div>
+                   </div>
+                   <!-- end rg_SectionForMoreInformation -->
+                   {% endif %}
         
-        {% if article.reviews %}
-        <!-- begin rg_SectionReviews -->
-        <div class="panel panel-default">
-          <a class="panel-heading accordion-toggle bg-color-1" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-reviews">
-            <span><i class="fa fa-comments"></i> Reviews</span>
-            <span class="iconBlock"><i class="fa fa-chevron-up"></i></span>
-          </a>
-          <div id="collapse-reviews" class="panel-collapse collapse">
-            <div class="panel-body">
-              {{ article.reviews|safe }}
-            </div>
-          </div>
-        </div>
-        <!-- end rg_SectionReviews -->
-        {% endif %}
-        
-      </div>
-    </div>
-    <!-- end articleExtraInfo -->
+                   {% if article.reviews %}
+                   <!-- begin rg_SectionReviews -->
+                   <div class="panel panel-default">
+                       <a class="panel-heading accordion-toggle bg-color-1" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-reviews">
+                           <span><i class="fa fa-comments"></i> Reviews</span>
+                           <span class="iconBlock"><i class="fa fa-chevron-up"></i></span>
+                       </a>
+                       <div id="collapse-reviews" class="panel-collapse collapse">
+                           <div class="panel-body">
+                               {{ article.reviews|safe }}
+                           </div>
+                       </div>
+                   </div>
+                   <!-- end rg_SectionReviews -->
+                   {% endif %}
 
-  </div>
+               </div>
+           </div><!-- end articleExtraInfo -->
+           </div><!-- end extraInfo col wrapper -->
+           </div><!-- end extraInfo row wrapper -->
+       </div><!--  end main content col wrapper -->
+    </div><!--  end content row wrapper -->
+    
+  </div><!-- end right col -->
   <div class="col-md-3 col-sm-4 col-xs-12 pull-left">
     
     <aside>
