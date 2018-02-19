@@ -39,14 +39,17 @@
             {% if article.rg_geography %}
             <span style="text-nowrap"><i class="fa {{ fields.rg_geography.icon }}" aria-hidden="true"></i> Place: {% for item in article.rg_geography %}<a href="{% url "rg-browse-fieldvalue" "rg_geography" item %}">{{ item }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</span>
             {% endif %}
+            {% if article.rg_availability or article.rg_freewebversion or article.rg_hasteachingaids %}
+             <br />
             {% if article.rg_availability %}
-            <br /><i class="fa {{ fields.rg_availability.icon }}" aria-hidden="true"></i> Availability: <a href="{% url "rg-browse-fieldvalue" "rg_availability" article.rg_availability %}">{{ article.rg_availability.0 }}</a>   <span style="padding-left: 5px;"> </span>
+            <span class="small"><i class="fa {{ fields.rg_availability.icon }}" aria-hidden="true"></i> Availability: {{ article.rg_availability.0 }}  <span style="padding-left: 5px;"> </span></span>
             {% endif %}
             {% if article.rg_freewebversion %}
-            <i class="fa {{ fields.rg_freewebversion.icon }}" aria-hidden="true"></i> Free Web Version: <a href="{% url "rg-browse-fieldvalue" "rg_freewebversion" article.rg_freewebversion %}">{{ article.rg_freewebversion.0 }}</a>   <span style="padding-left: 5px;"> </span>
+            <span class="small"><i class="fa fa-laptop" aria-hidden="true"></i> Free Web Version: {{ article.rg_freewebversion.0 }}  <span style="padding-left: 5px;"> </span></span>
             {% endif %}
             {% if article.rg_hasteachingaids %}
-            <i class="fa {{ fields.rg_hasteachingaids.icon }}" aria-hidden="true"></i> Has Teaching Aids: <a href="{% url "rg-browse-fieldvalue" "rg_hasteachingaids" article.rg_hasteachingaids %}">{{ article.rg_hasteachingaids.0 }}</a>   <span style="padding-left: 5px;"> </span>
+            <span class="small"><i class="fa fa-users" aria-hidden="true"></i> Has Teaching Aids: {{ article.rg_hasteachingaids.0 }} <span style="padding-left: 5px;"> </span></span>
+            {% endif %}
             {% endif %}
         </div>
     </div>
