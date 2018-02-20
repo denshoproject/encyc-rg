@@ -325,9 +325,16 @@ FACET_FIELDS['rg_chronology'] = {
     'description':'The primary time period the resource describes or in which it is set.',
     'icon':'fa-clock-o',
 }
-#FACET_FIELDS['rg_hasteachingaids'] = {
-#FACET_FIELDS['rg_freewebversion'] = {
-
+FACET_FIELDS['rg_hasteachingaids'] = {
+    'label':'Teaching Aids',
+    'description':'The resource includes classroom teaching aids.',
+    'icon':'fa-users',
+}
+FACET_FIELDS['rg_freewebversion'] = {
+    'label':'Free Web Version',
+    'description':'There is a free version available on the web.',
+    'icon':'fa-laptop',
+}
 
 MEDIATYPE_INFO = {
     'albums': {'label': 'Albums', 'icon': 'fa-music'},
