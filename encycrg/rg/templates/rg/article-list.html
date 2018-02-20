@@ -21,6 +21,14 @@
         {% endfor %}
       </li>
       {% endif %}
+      {% if article.rg_readinglevel %}
+      <li>
+        <i class="fa {{ fields.rg_readinglevel.icon }}" aria-hidden="true"></i>
+        {% for item in article.rg_readinglevel %}
+        {{ item }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      </li>
+      {% endif %}
       {% if article.rg_genre %}
       <li>
         <i class="fa {{ fields.rg_genre.icon }}" aria-hidden="true"></i>
@@ -37,14 +45,6 @@
         {% endfor %}
       </li>
       {% endif %}
-      {% if article.rg_readinglevel %}
-      <li>
-        <i class="fa {{ fields.rg_readinglevel.icon }}" aria-hidden="true"></i>
-        {% for item in article.rg_readinglevel %}
-        {{ item }}{% if not forloop.last %},{% endif %}
-        {% endfor %}
-      </li>
-      {% endif %}
       {% if article.rg_availability %}
       <li>
         <i class="fa {{ fields.rg_availability.icon }}" aria-hidden="true"></i>
@@ -55,7 +55,7 @@
       {% endif %}
     </ul>
     <p>
-      {{ article.description }}
+      {{ article.description|truncatewords:200 }}
     </p>
     <p>
       <a href="{{ article.links.html }}" class="btn btn-link btn-xs">
