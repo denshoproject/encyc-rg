@@ -20,7 +20,6 @@ Search
       <button type="submit" class="input-group-addon button" id="basic-addon21">Search</button>
     </div>
     
-    
     {% if page.object_list %}
     
     <div class="resultInfo">
@@ -28,7 +27,6 @@ Search
         {{ paginator.count }} search results for "{{ search_form.fulltext.value }}"
       </h3>
     </div>
-    
     
     <div class="accordionCommon hello" id="filtersArea">
       <div class="panel-group" id="articleAccordian">
@@ -113,6 +111,7 @@ Search
                     
                   </div>
                 </div><!-- .row -->
+<!--
                 <div class="row">
                   <div class="col-sm-6">
                     
@@ -130,8 +129,8 @@ Search
                     {{ search_form.rg_freewebversion }}
                     
                   </div>
-                </div><!-- .row -->
-                
+                </div>
+-->
               </div><!--  .searchResultsFilters .form-group -->
             </div><!--  .panel-body -->
           </div><!--  #collapse-filters .panel-collapse .collapse in -->
