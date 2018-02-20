@@ -10,6 +10,7 @@ Search
 {% block container %}
 <div class="row">
   
+  <div class="col-xs-12">
   <form action="{{ this_url }}" method="get">
 
     
@@ -44,36 +45,18 @@ Search
                 <div class="row">
                   <div class="col-sm-6">
                     
-                    <strong><i class="fa {{ fields.rg_interestlevel.icon }}"></i>
-                      {{ search_form.rg_interestlevel.label }}
-                    </strong><br/>
-                    {{ search_form.rg_interestlevel }}
-                    
-                  </div>
-                  <div class="col-sm-6">
-                    
                     <strong><i class="fa {{ fields.rg_rgmediatype.icon }}"></i>
                       {{ search_form.rg_rgmediatype.label }}
                     </strong><br/>
                     {{ search_form.rg_rgmediatype }}
                     
                   </div>
-                </div><!-- .row -->
-                <div class="row">
                   <div class="col-sm-6">
-                    
-                    <strong><i class="fa {{ fields.rg_genre.icon }}"></i>
-                      {{ search_form.rg_genre.label }}
+
+                    <strong><i class="fa {{ fields.rg_interestlevel.icon }}"></i>
+                      {{ search_form.rg_interestlevel.label }}
                     </strong><br/>
-                    {{ search_form.rg_genre }}
-                    
-                  </div>
-                  <div class="col-sm-6">
-                    
-                    <strong><i class="fa {{ fields.rg_theme.icon }}"></i>
-                      {{ search_form.rg_theme.label }}
-                    </strong><br/>
-                    {{ search_form.rg_theme }}
+                    {{ search_form.rg_interestlevel }}
                     
                   </div>
                 </div><!-- .row -->
@@ -84,6 +67,41 @@ Search
                       {{ search_form.rg_readinglevel.label }}
                     </strong><br/>
                     {{ search_form.rg_readinglevel }}
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_genre.icon }}"></i>
+                      {{ search_form.rg_genre.label }}
+                    </strong><br/>
+                    {{ search_form.rg_genre }}
+                    
+                  </div>
+                </div><!-- .row -->
+                <div class="row">
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_theme.icon }}"></i>
+                      {{ search_form.rg_theme.label }}
+                    </strong><br/>
+                    {{ search_form.rg_theme }}
+                    
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_chronology.icon }}"></i>
+                      {{ search_form.rg_chronology.label }}
+                    </strong><br/>
+                    {{ search_form.rg_chronology }}
+                    
+                  </div>
+                  </div><!-- .row -->
+                 <div class="row"> 
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_geography.icon }}"></i>
+                      {{ search_form.rg_geography.label }}
+                    </strong><br/>
+                    {{ search_form.rg_geography }}
                     
                   </div>
                   <div class="col-sm-6">
@@ -111,18 +129,6 @@ Search
                     </strong><br/>
                     {{ search_form.rg_freewebversion }}
                     
-                  </div>
-                </div><!-- .row -->
-                <div class="row">
-                  <div class="col-sm-6">
-                    
-                    <strong><i class="fa {{ fields.rg_geography.icon }}"></i>
-                      {{ search_form.rg_geography.label }}
-                    </strong><br/>
-                    {{ search_form.rg_geography }}
-                    
-                  </div>
-                  <div class="col-sm-6">
                   </div>
                 </div><!-- .row -->
                 
@@ -168,5 +174,6 @@ Search
 
 {{ query_json|safe }}
 
+</div><!-- .col -->
 </div><!-- .row -->
 {% endblock container %}
