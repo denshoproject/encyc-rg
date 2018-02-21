@@ -91,7 +91,7 @@ def _group_articles_by_initial(articles):
     initials = []
     groups = {}
     for article in articles:
-        initial = _initial_char(article['id'])
+        initial = _initial_char(article['title_sort'])
         initials.append(initial)
         if not groups.get(initial):
             groups[initial] = []
