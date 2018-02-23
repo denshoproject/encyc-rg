@@ -4,6 +4,8 @@ import logging
 logger = logging.getLogger(__name__)
 from urllib.parse import urlparse, urlunparse
 
+from elasticsearch.exceptions import NotFoundError, TransportError
+
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
@@ -144,10 +146,12 @@ def article(request, url_title):
             return HttpResponsePermanentRedirect(reverse('rg-author', args=([url_title])))
         raise Http404("No article with that title. (%s)" % err)
     # choose only the first source
+    source = None
     if article.source_ids:
-        source = models.Source.get(article.source_ids[0])
-    else:
-        source = None
+        try:
+            source = models.Source.get(article.source_ids[0])
+        except NotFoundError:
+            pass
     # some mediatypes have special templates
     t = MEDIATYPE_TEMPLATES.get(
         article['rg_rgmediatype'][0],
