@@ -17,7 +17,7 @@
     
     <div class="hidden-sm hidden-md hidden-lg">
         <div class="well">
-            <i class="fa {{ fields.rg_rgmediatype.icon }}" aria-hidden="true"></i> Media Type: <a href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype %}">{{ article.mediatype_label }}</a>  <span style="padding-left: 5px;"> </span>
+            <i class="fa {{ fields.rg_rgmediatype.icon }}" aria-hidden="true"></i> Media Type: <a href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype.0 %}">{{ article.mediatype_label }}</a>  <span style="padding-left: 5px;"> </span>
             {% if article.rg_interestlevel %}
             <i class="fa {{ fields.rg_interestlevel.icon }}" aria-hidden="true"></i> Interest Level: {% for item in article.rg_interestlevel %}<a href="{% url "rg-browse-fieldvalue" "rg_interestlevel" item %}">{{ item }}</a>{% if not forloop.last %}, {% endif %}{% endfor %} <span style="padding-left: 5px;"> </span>
             {% endif %}
@@ -175,7 +175,7 @@
                 <div class="media-body iconContent">
                   <h4 class="media-heading color-2">Media Type</h4>
                   <p>
-                    <a href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype %}">{{ article.mediatype_label }}</a>
+                    <a href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype.0 %}">{{ article.mediatype_label }}</a>
                   </p>
                 </div>
               </li>
