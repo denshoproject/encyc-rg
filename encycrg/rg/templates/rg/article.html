@@ -15,7 +15,7 @@
     <h3 class="articleCreatorsTitle color-1">Creators: {% for c in article.rg_creators %}{{c}}{% if not forloop.last %},{% endif %} {% endfor %}</h3>
     {% endif %}
     
-    <div class="hidden-sm">
+    <div class="hidden-sm hidden-md hidden-lg">
         <div class="well">
             <i class="fa {{ fields.rg_rgmediatype.icon }}" aria-hidden="true"></i> Media Type: <a href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype %}">{{ article.mediatype_label }}</a>  <span style="padding-left: 5px;"> </span>
             {% if article.rg_interestlevel %}
