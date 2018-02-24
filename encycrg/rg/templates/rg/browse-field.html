@@ -34,7 +34,7 @@ Browse by {{ field_title }}
   {% for item in query %}
   <tr>
     <th>
-      <a href="{{ item.html }}">{{ item.label }}</a>
+      <a class="browse" href="{{ item.html }}">{{ item.label }}</a>
       ({{ item.count }})
     </th>
     <td>

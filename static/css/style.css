@@ -8226,6 +8226,11 @@ a.encyc:hover {
     text-decoration: none;
 }
 
+a.browse:hover {
+    color: #555555;
+    text-decoration: none;
+}
+
 span.mw-cite-backlink a:hover {
     color: #555555;
     text-decoration: none;

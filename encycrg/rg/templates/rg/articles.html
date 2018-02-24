@@ -31,7 +31,7 @@ Title
   <a name="{{ initial }}"></a>
   <h2>{{ initial }}</h2>
   {% for article in articles %}
-  <a href="{{ article.links.html }}">
+  <a class="browse" href="{{ article.links.html }}">
     <i class="fa {{ article.mediatype_icon }}" aria-hidden="true"></i>
     {{ article.id }}
   </a><br/>
