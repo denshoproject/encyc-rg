@@ -175,7 +175,7 @@
                 <div class="media-body iconContent">
                   <h4 class="media-heading color-2">Media Type</h4>
                   <p>
-                    <a href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype.0 %}">{{ article.mediatype_label }}</a>
+                    <a class="color-2 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype.0 %}">{{ article.mediatype_label }}</a>
                   </p>
                 </div>
               </li>
@@ -189,7 +189,7 @@
                   <h4 class="media-heading color-3">Interest Level</h4>
                   <p>
                     {% for item in article.rg_interestlevel %}
-                    <a href="{% url "rg-browse-fieldvalue" "rg_interestlevel" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    <a class="color-3 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_interestlevel" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
                     {% endfor %}
                   </p>
                 </div>
@@ -197,7 +197,7 @@
               {% endif %}
 
               {% if article.rg_readinglevel %}
-              <li class="media iconContet">
+              <li class="media">
                 <div class="media-left iconContent bg-color-4">
                   <i class="fa {{ fields.rg_readinglevel.icon }}" aria-hidden="true"></i>
                 </div>
@@ -205,7 +205,7 @@
                   <h4 class="media-heading color-4">Reading Level</h4>
                   <p>
                     {% for item in article.rg_readinglevel %}
-                    <a href="{% url "rg-browse-fieldvalue" "rg_readinglevel" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    <a class="color-4 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_readinglevel" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
                     {% endfor %}
                   </p>
                 </div>
@@ -221,7 +221,7 @@
                   <h4 class="media-heading color-5">Genre</h4>
                   <p>
                     {% for item in article.rg_genre %}
-                    <a href="{% url "rg-browse-fieldvalue" "rg_genre" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    <a class="color-5 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_genre" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
                     {% endfor %}
                   </p>
                 </div>
@@ -230,14 +230,14 @@
 
               {% if article.rg_chronology %}
               <li class="media">
-                <div class="media-left iconContent bg-color-5">
+                <div class="media-left iconContent bg-color-6">
                   <i class="fa {{ fields.rg_chronology.icon }}" aria-hidden="true"></i>
                 </div>
                 <div class="media-body iconContent">
-                  <h4 class="media-heading color-5">Chronology</h4>
+                  <h4 class="media-heading color-6">Chronology</h4>
                   <p>
                     {% for item in article.rg_chronology %}
-                    <a href="{% url "rg-browse-fieldvalue" "rg_chronology" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    <a class="color-6 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_chronology" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
                     {% endfor %}
                   </p>
                 </div>
@@ -246,14 +246,14 @@
 
               {% if article.rg_geography %}
               <li class="media">
-                <div class="media-left iconContent bg-color-5">
+                <div class="media-left iconContent bg-color-1">
                   <i class="fa {{ fields.rg_geography.icon }}" aria-hidden="true"></i>
                 </div>
                 <div class="media-body iconContent">
-                  <h4 class="media-heading color-5">Geography</h4>
+                  <h4 class="media-heading color-1">Geography</h4>
                   <p>
                     {% for item in article.rg_geography %}
-                    <a href="{% url "rg-browse-fieldvalue" "rg_geography" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    <a class="color-1 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_geography" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
                     {% endfor %}
                   </p>
                 </div>
@@ -262,14 +262,14 @@
 
               {% if article.rg_pov %}
               <li class="media">
-                <div class="media-left iconContent bg-color-5">
+                <div class="media-left iconContent bg-color-2">
                   <i class="fa {{ fields.rg_pov.icon }}" aria-hidden="true"></i>
                 </div>
                 <div class="media-body iconContent">
-                  <h4 class="media-heading color-5">Point of View</h4>
+                  <h4 class="media-heading color-2">Point of View</h4>
                   <p>
                     {% for item in article.rg_pov %}
-                    <a href="{% url "rg-browse-fieldvalue" "rg_pov" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    <a class="color-2 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_pov" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
                     {% endfor %}
                   </p>
                 </div>
@@ -278,14 +278,14 @@
 
               {% if article.rg_theme %}
               <li class="media">
-                <div class="media-left iconContent bg-color-6">
+                <div class="media-left iconContent bg-color-3">
                   <i class="fa {{ fields.rg_theme.icon }}" aria-hidden="true"></i>
                 </div>
                 <div class="media-body iconContent">
-                  <h4 class="media-heading color-6">Theme</h4>
+                  <h4 class="media-heading color-3">Theme</h4>
                   <p>
                     {% for item in article.rg_theme %}
-                    <a href="{% url "rg-browse-fieldvalue" "rg_theme" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    <a class="color-3 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_theme" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
                     {% endfor %}
                   </p>
                 </div>
