@@ -1117,14 +1117,14 @@ aside {
 .searchArea {
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
   background-color: #f8f8f8;
-  margin-bottom: 70px;
+  margin-bottom: 24px;
   border-radius: 7px;
   height: 55px;
 }
 
 @media (min-width: 768px) {
   .searchArea {
-    height: 70px;
+    height: 60px;
   }
 }
 
@@ -1155,7 +1155,7 @@ aside {
 
 @media (min-width: 768px) {
   .searchArea > .input-group-addon.button {
-    height: 70px;
+    height: 60px;
     font-size: 18px;
     line-height: 45px;
     width: 20%;
@@ -1171,15 +1171,15 @@ aside {
   background-color: transparent;
   border: none;
   box-shadow: none;
-  height: 55px;
-  font-size: 13px;
+  height: 45px;
+  font-size: 18px;
   color: #222222;
 }
 
 @media (min-width: 768px) {
   .searchArea > .form-control {
-    height: 70px;
-    font-size: 15px;
+    height: 60px;
+    font-size: 18px;
   }
 }
 
@@ -1188,7 +1188,7 @@ aside {
   color: #666666;
   font-size: 28px;
   text-transform: capitalize;
-  margin-bottom: 40px;
+  margin-bottom:    28px;
 }
 
 .formPanel.panel {
