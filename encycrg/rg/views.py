@@ -283,6 +283,8 @@ def browse_field(request, fieldname):
 def browse_field_value(request, fieldname, value):
     api_url = _mkurl(request, reverse('rg-api-browse-fieldvalue', args=([fieldname, value])))
     r = api.browse_field_value(request, fieldname, value, format='json')
+    if fieldname == 'rg_rgmediatype':
+        value = models.MEDIATYPE_INFO[value]['label']
     return render(request, 'rg/browse-fieldvalue.html', {
         'fieldname': fieldname,
         'field_icon': models.FACET_FIELDS[fieldname]['icon'],
