@@ -3,30 +3,33 @@
 
 
 {% block title %}
-Articles
+Browse by Title
 {% endblock %}
-
 
 {% block container %}
 <div class="row">
   <div class="col-md-9 col-sm-8 col-xs-12">
+
+<h1>
+<a href="{% url "rg-browse" %}">Browse</a>
+&gt;
+<span class="iconBlock"><i class="fa fa-sort-alpha-asc" style="padding-right: 5px;"></i></span>
+Title
+</h1>
+
+
+<h3>{{ num_articles }} articles</h3>
     
-<h1>Articles</h1>
-
-<div id="item-count">
-  {{ num_articles }} articles<br/>
-</div>
-
 <h2 id="contents"><strong>
   {% for initial in initials %}
   <a href="#{{ initial }}">{{ initial }}</a>&nbsp;
   {% endfor %}
 </strong></h2>
 
-<div class="article-list">
+<div class="articlesList">
   {% for initial,articles in groups %}
   <a name="{{ initial }}"></a>
-  <h2><strong>{{ initial }}</strong></h2>
+  <h2>{{ initial }}</h2>
   {% for article in articles %}
   <a href="{{ article.links.html }}">
     <i class="fa {{ article.mediatype_icon }}" aria-hidden="true"></i>
