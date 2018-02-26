@@ -282,18 +282,27 @@ def browse_field(request, fieldname):
 
 def browse_field_value(request, fieldname, value):
     api_url = _mkurl(request, reverse('rg-api-browse-fieldvalue', args=([fieldname, value])))
-    r = api.browse_field_value(request, fieldname, value, format='json')
-    if fieldname == 'rg_rgmediatype':
-        value = models.MEDIATYPE_INFO[value]['label']
-    return render(request, 'rg/browse-fieldvalue.html', {
+    context = {
+        'api_url': api_url,
         'fieldname': fieldname,
+        'value': value,
         'field_icon': models.FACET_FIELDS[fieldname]['icon'],
         'field_title': models.FACET_FIELDS[fieldname]['label'],
         'field_description': models.FACET_FIELDS[fieldname]['description'],
-        'value': value,
-        'query': r.data,
-        'api_url': api_url,
-    })
+    }
+    if fieldname == 'rg_rgmediatype':
+        context['value'] = models.MEDIATYPE_INFO[value]['label']
+
+    results = api._browse_field_value(request, fieldname, value)
+    if results.objects:
+        paginator = Paginator(
+            results.ordered_dict(request=request, pad=True)['objects'],
+            results.page_size,
+        )
+        context['paginator'] = paginator
+        context['page'] = paginator.page(results.this_page)
+    
+    return render(request, 'rg/browse-fieldvalue.html', context)
 
 
 def facets(request):
@@ -321,7 +330,6 @@ def term(request, term_id):
         'term': r.data,
         'api_url': api_url,
     })
-
 
 
 def search_ui(request):
@@ -354,6 +362,5 @@ def search_ui(request):
 
     else:
         context['search_form'] = forms.SearchForm()
-        
     
     return render(request, 'rg/search.html', context)

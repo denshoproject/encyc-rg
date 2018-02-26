@@ -40,9 +40,27 @@ Browse by {{ field_title }} - {{ value }}
 {{ value }}
 </h1>
 
-{% for object in query.objects %}
+{% if page.object_list %}
+    
+    <div class="resultInfo">
+      <h3>
+        {{ paginator.count }} results
+      </h3>
+    </div>
+
+{% if paginator.num_pages > 1 %}
+{% bootstrap_paginate page range=10 show_first_last="true" %}
+{% endif %}
+
+{% for object in page.object_list %}
 {% article object %}
 {% endfor %}
+
+{% if paginator.num_pages > 1 %}
+{% bootstrap_paginate page range=10 show_first_last="true" %}
+{% endif %}
+
+{% endif %}{# page.object_list #}
 
   </div>
 </div><!-- .row -->

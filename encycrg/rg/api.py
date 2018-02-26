@@ -259,11 +259,27 @@ def _browse_field(request, fieldname):
 def _browse_field_value(request, fieldname, value, limit=None, offset=None):
     if fieldname not in models.PAGE_SEARCH_FIELDS:
         raise Exception('Bad fieldname "%s".' % fieldname)
-    thispage = 0
+    
+    if hasattr(request, 'query_params'):
+        # api (rest_framework)
+        params = dict(request.query_params)
+    elif hasattr(request, 'GET'):
+        # web ui (regular Django)
+        params = dict(request.GET)
+    else:
+        params = {}
+    
+    if params.get('page'):
+        thispage = int(params.pop('page')[-1])
+    else:
+        thispage = 0
     limit = settings.DEFAULT_LIMIT
     offset = search.es_offset(limit, thispage)
+    
     s = models.Page.search()
+    
     s = s.filter('match', **{fieldname: value})
+    
     return search.Searcher(
         mappings=MAPPINGS,
         fields=FIELDS,
