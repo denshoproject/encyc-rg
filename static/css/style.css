@@ -2373,6 +2373,7 @@ aside {
     width: auto;
     padding: 0 15px;
     display: block;
+    color: #ffffff;
   }
 }
 
@@ -2863,7 +2864,7 @@ aside {
 }
 
 .navbar-default.lightHeader .navbar-nav > li > a {
-  color: #ffffff;
+  color: #555555;
 }
 
 .navbar-default.lightHeader .navbar-nav > li.active.color-1 > a {
@@ -7878,6 +7879,11 @@ footer .color-bar {
 }
 
 /** Densho **/
+/* menu */
+@media (max-width: 768px) {
+    
+}
+
 /* home */
 #home-logo-float {
     position: absolute;
@@ -8008,6 +8014,10 @@ span.articleSourceCaption {
     font-size: 14px !important;
 }
 
+div.articleFacetText {
+    padding-right: 10px;
+}
+
 .articleFacetLink a:hover {
     text-decoration: underline !important;
 }
@@ -8124,6 +8134,47 @@ a.notrg:after {
     padding-top: 10px;
     padding-bottom: 10px;
 }
+
+.searchPaginator > ul.pagination > li > span {
+    font-family: Dosis;
+    font-size: 24px;
+    font-weight: 700;
+    padding-right: 25px;
+    padding-left: 25px;
+    border: 3px solid #ddd;
+}
+
+.searchPaginator > ul.pagination > li > a {
+    font-family: Dosis;
+    font-size: 24px;
+    font-weight: 700;
+    color: #b5d56a; /* color-2 */
+    padding-right: 25px;
+    padding-left: 25px;
+    border: 3px solid #ddd;
+}
+
+.searchPaginator > ul > li.active > span {
+    color: #ffffff;
+    background-color: #b5d56a; /* color-2 */;
+    border-color: #b5d56a; /* color-2 */;
+}
+
+.searchPaginator > ul > li.active > span:hover {
+    color: #ffffff;
+    background-color: #b5d56a; /* color-2 */;
+    border-color: #b5d56a; /* color-2 */;
+}
+
+
+.searchPaginator > ul > li > a:hover {
+    color: #b5d56a; /* color-2 */
+}
+
+.searchPaginator > ul > li > a:active {
+    color: #ffffff; /* color-2 */
+}
+
 
 a.footer-support-btn {
     padding-right: 15px !important;
