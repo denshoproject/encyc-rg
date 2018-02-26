@@ -27,6 +27,7 @@ Browse
     </td>
   </tr>
   {% for item in databox_fields %}
+  {% if item.title != 'Teaching Aids' and item.title != 'Free Web Version' %}
   <tr>
     <th>
       <span class="iconBlock"><i class="fa {{ item.icon }}"></i></span>
@@ -38,6 +39,7 @@ Browse
       {{ item.description }}
     </td>
   </tr>
+  {% endif %}
   {% endfor %}
 </table>
 
