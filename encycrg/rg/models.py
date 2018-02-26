@@ -266,14 +266,14 @@ PAGE_BROWSABLE_FIELDS = {
     'rg_theme': 'Theme',
     'rg_genre': 'Genre',
     'rg_pov': 'Point of View',
-    #'rg_relatedevents': 'Related Events',
     'rg_availability': 'Availability',
-    'rg_freewebversion': 'Free Web Version',
-    #'rg_denshotopic': 'Topic',
     'rg_geography': 'Geography',
     'rg_chronology': 'Chronology',
-    #'rg_facility': 'Facility',
     'rg_hasteachingaids': 'Has Teaching Aids',
+    'rg_freewebversion': 'Free Web Version',
+    #'rg_relatedevents': 'Related Events',
+    #'rg_denshotopic': 'Topic',
+    #'rg_facility': 'Facility',
 }
 
 PAGE_SEARCH_FIELDS = [x for x in PAGE_BROWSABLE_FIELDS.keys()]
@@ -290,6 +290,11 @@ FACET_FIELDS['rg_interestlevel'] = {
     'description':'The grades or ages that would most likely be engaged by the resource.',
     'icon':'fa-graduation-cap',
 }
+FACET_FIELDS['rg_readinglevel'] = {
+    'label':'Reading Level',
+    'description':'The general reading level(s) based on grade groupings.',
+    'icon':'fa-bookmark',
+}
 FACET_FIELDS['rg_genre'] = {
     'label':'Genre',
     'description':'The specific category or class of the resource within its media type.',
@@ -299,16 +304,6 @@ FACET_FIELDS['rg_theme'] = {
     'label':'Theme',
     'description':'The universal ideas or messages expressed in the resource.',
     'icon':'fa-compass',
-}
-FACET_FIELDS['rg_readinglevel'] = {
-    'label':'Reading Level',
-    'description':'The general reading level(s) based on grade groupings.',
-    'icon':'fa-bookmark',
-}
-FACET_FIELDS['rg_availability'] = {
-    'label':'Availabilty',
-    'description':'Level of availability, from "Widely available", meaning, "easy to purchase or stream & reasonably priced/free", to "Not available", meaning, "not currently available to purchase or borrow."',
-    'icon':'fa-binoculars',
 }
 FACET_FIELDS['rg_pov'] = {
     'label':'Point-of-View',
@@ -324,6 +319,11 @@ FACET_FIELDS['rg_chronology'] = {
     'label':'Time',
     'description':'The primary time period the resource describes or in which it is set.',
     'icon':'fa-clock-o',
+}
+FACET_FIELDS['rg_availability'] = {
+    'label':'Availabilty',
+    'description':'Level of availability, from "Widely available", meaning, "easy to purchase or stream & reasonably priced/free", to "Not available", meaning, "not currently available to purchase or borrow."',
+    'icon':'fa-binoculars',
 }
 FACET_FIELDS['rg_hasteachingaids'] = {
     'label':'Teaching Aids',
