@@ -305,33 +305,6 @@ def browse_field_value(request, fieldname, value):
     return render(request, 'rg/browse-fieldvalue.html', context)
 
 
-def facets(request):
-    api_url = _mkurl(request, reverse('rg-api-facets'))
-    r = api.facets(request, format='json')
-    return render(request, 'rg/facets.html', {
-        'facets': r.data,
-        'api_url': api_url,
-    })
-
-def facet(request, facet_id):
-    api_url = _mkurl(request, reverse('rg-api-terms', args=([facet_id])))
-    r = api.facets(request, facet_id, format='json')
-    return render(request, 'rg/facet.html', {
-        'facet_id': facet_id,
-        'query': r.data,
-        'api_url': api_url,
-    })
-
-def term(request, term_id):
-    api_url = _mkurl(request, reverse('rg-api-term', args=([term_id])))
-    r = api.term(request, term_id, format='json')
-    template = 'rg/term-%s.html' % r.data['facet_id']
-    return render(request, template, {
-        'term': r.data,
-        'api_url': api_url,
-    })
-
-
 def search_ui(request):
     api_url = '%s?%s' % (
         _mkurl(request, reverse('rg-api-search')),
@@ -364,3 +337,30 @@ def search_ui(request):
         context['search_form'] = forms.SearchForm()
     
     return render(request, 'rg/search.html', context)
+
+
+def facets(request):
+    api_url = _mkurl(request, reverse('rg-api-facets'))
+    r = api.facets(request, format='json')
+    return render(request, 'rg/facets.html', {
+        'facets': r.data,
+        'api_url': api_url,
+    })
+
+def facet(request, facet_id):
+    api_url = _mkurl(request, reverse('rg-api-terms', args=([facet_id])))
+    r = api.facets(request, facet_id, format='json')
+    return render(request, 'rg/facet.html', {
+        'facet_id': facet_id,
+        'query': r.data,
+        'api_url': api_url,
+    })
+
+def term(request, term_id):
+    api_url = _mkurl(request, reverse('rg-api-term', args=([term_id])))
+    r = api.term(request, term_id, format='json')
+    template = 'rg/term-%s.html' % r.data['facet_id']
+    return render(request, template, {
+        'term': r.data,
+        'api_url': api_url,
+    })
