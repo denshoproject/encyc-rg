@@ -22,7 +22,13 @@ Search
     </div>
     
     {% if page.object_list %}
-    
+
+    <div id="filters">
+      {% for key,vals in filters %}
+      <strong>{{ key }}</strong>: {{ vals }}{% if not forloop.last %};{% endif %}
+      {% endfor %}
+    </div><!-- #params -->
+
     <div class="resultInfo">
       <h3>
         {{ paginator.count }} search results for "{{ search_form.fulltext.value }}"

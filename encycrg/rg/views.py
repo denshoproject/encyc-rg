@@ -335,6 +335,17 @@ def search_ui(request):
 
     else:
         context['search_form'] = forms.SearchForm()
+
+    # list filters below fulltext field
+    filters = [
+        (
+            models.PAGE_BROWSABLE_FIELDS[key],  # pretty label
+            ', '.join(values)
+        )
+        for key,values in request.GET.lists()
+        if key != 'fulltext'
+    ]
+    context['filters'] = filters
     
     return render(request, 'rg/search.html', context)
 
