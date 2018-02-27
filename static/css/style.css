@@ -8201,6 +8201,22 @@ span.a-zInitial {
     border: 3px solid #ddd;
 }
 
+@media (max-width:768px) {
+    .searchPaginator > ul.pagination > li > span {
+        font-size: 20px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+}
+
+@media (max-width:768px) {
+    .searchPaginator > ul.pagination > li > a {
+        font-size: 20px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+}
+
 .searchPaginator > ul > li.active > span {
     color: #ffffff;
     background-color: #b5d56a; /* color-2 */;
