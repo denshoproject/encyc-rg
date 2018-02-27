@@ -343,7 +343,7 @@ def search_ui(request):
             ', '.join(values)
         )
         for key,values in request.GET.lists()
-        if key != 'fulltext'
+        if (key != 'fulltext') and (key in models.PAGE_BROWSABLE_FIELDS.keys())
     ]
     context['filters'] = filters
     
