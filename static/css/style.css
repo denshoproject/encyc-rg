@@ -8002,6 +8002,14 @@ div.basePage {
     color: #5b57a6;
 }
 
+.articleTitle > a {
+    color: #5b57a6;
+}
+
+.articleTitle > a:hover {
+    text-decoration: underline;
+}
+
 /* article */
 h3.articleCreatorsTitle {
     font-size: 14px;
@@ -8070,6 +8078,34 @@ h2.browseFacetTitle, a.browseFacetTitle {
     text-decoration: underline !important;
 }
 
+span.a-zContents {
+    margin-left: -2px;
+    margin-right: -2px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border: solid 2px #ddd;
+    line-height: 40px;
+}
+
+.a-zContents > a {
+    color: #b5d56a;
+}
+
+.a-zContents > a:hover {
+    text-decoration: none;
+}
+
+span.a-zContents:hover {
+    background-color: #eee;
+}
+
+span.a-zInitial {
+    font-family: 'Dosis', sans-serif; 
+    font-size: 20px; 
+    font-weight: 700;
+}
 
 .searchResultsList > .media-body {
     width: auto;
@@ -8165,6 +8201,22 @@ h2.browseFacetTitle, a.browseFacetTitle {
     border: 3px solid #ddd;
 }
 
+@media (max-width:768px) {
+    .searchPaginator > ul.pagination > li > span {
+        font-size: 20px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+}
+
+@media (max-width:768px) {
+    .searchPaginator > ul.pagination > li > a {
+        font-size: 20px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+}
+
 .searchPaginator > ul > li.active > span {
     color: #ffffff;
     background-color: #b5d56a; /* color-2 */;
@@ -8224,6 +8276,7 @@ span.mw-cite-backlink a:hover {
 }
 /* temp hacks to remove extraneous content */
 div[id$="Display"],
+div[class="alert alert-success published"],
 div[class="toplink"],
 div[id="toc"] {
     display: none !important;

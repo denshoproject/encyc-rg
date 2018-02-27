@@ -11,33 +11,40 @@ Browse by Title
 <div class="row">
   <div class="col-md-12 col-sm-12 col-xs-12">
 
-<h1>
+<h1 class="articleTitle">
 <a href="{% url "rg-browse" %}">Browse</a>
 &gt;
 <span class="iconBlock"><i class="fa fa-sort-alpha-asc" style="padding-right: 5px;"></i></span>
 Title
 </h1>
 
-
+<div class="resultInfo">
 <h3>{{ num_articles }} articles</h3>
+</div>    
     
-<h2 id="contents"><strong>
+<h2 class="color-2"><strong>
   {% for initial in initials %}
-  <a href="#{{ initial }}">{{ initial }}</a>&nbsp;
+  <span class="a-zContents"><a href="#{{ initial }}">{{ initial }}</a></span>
   {% endfor %}
 </strong></h2>
 
-<div class="articlesList">
+<div class="articlesList" style="padding-top: 15px;">
   {% for initial,articles in groups %}
   <a name="{{ initial }}"></a>
-  <h2>{{ initial }}</h2>
+  <table class="table table-responsive table-sm table-hover">
+  <caption><span class="color-2 a-zInitial">{{ initial }}</span></caption>
   {% for article in articles %}
-  <a class="browse" href="{{ article.links.html }}">
-    <i class="fa {{ article.mediatype_icon }}" aria-hidden="true"></i>
-    {{ article.id }}
-  </a><br/>
+  <tr>
+    <th style="padding-right: 0px; margin-right: 0px; width: 20px;">
+      <strong class="color-2"><i class="fa {{ article.mediatype_icon }}" aria-hidden="true"></i></strong>
+    </th>
+    <td>
+        <strong><a class="browse color-2" href="{{ article.links.html }}">{{ article.id }}</a></strong>
+    </td>
+  </tr>
   {% endfor %}
-  {% endfor %}
+</table>
+{% endfor %}
 </div>
 
   </div>

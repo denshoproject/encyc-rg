@@ -29,7 +29,7 @@ Browse by {{ field_title }} - {{ value }}
 <div class="row">
   <div class="col-md-12 col-sm-12 col-xs-12">
 
-<h1>
+<h1 class="articleTitle color-1">
 <a href="{% url "rg-browse" %}">Browse</a>
 &gt;
 <a href="{% url "rg-browse-field" fieldname %}">
@@ -44,7 +44,7 @@ Browse by {{ field_title }} - {{ value }}
     
     <div class="resultInfo">
       <h3>
-        {{ paginator.count }} results
+        {{ paginator.count }} articles
       </h3>
     </div>
 

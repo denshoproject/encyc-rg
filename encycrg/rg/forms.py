@@ -75,6 +75,23 @@ class SearchForm(forms.Form):
                             ),
                         ),
                     ))
+                else:
+                    fields.append((
+                        fieldname,
+                        forms.MultipleChoiceField(
+                            label=models.PAGE_BROWSABLE_FIELDS.get(
+                                fieldname, fieldname),
+                            choices=[('none','(none)')],
+                            required=False,
+                            widget=forms.SelectMultiple(
+                                attrs={
+                                    'class': 'form-control border-color-2 disabled',
+                                    'disabled': 'disabled',
+                                    'placeholder': '(none)',
+                                }
+                            ),
+                        ),
+                    ))
         
         # Django Form object takes an OrderedDict rather than list
         fields = OrderedDict(fields)
