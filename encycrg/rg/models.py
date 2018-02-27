@@ -113,6 +113,14 @@ class Author(DocType):
 
     def absolute_url(self):
         return reverse('rg-author', args=([self.title,]))
+
+    @staticmethod
+    def search():
+        """AuthorSearch
+        
+        @returns: elasticsearch_dsl.Search
+        """
+        return search.Search().doc_type(Author)
     
     @staticmethod
     def dict_list(hit, request):
@@ -851,6 +859,14 @@ class Source(DocType):
     def transcript_url(self):
         if self.transcript_path():
             return os.path.join(settings.SOURCES_MEDIA_URL, self.transcript_path())
+
+    @staticmethod
+    def search():
+        """Source Search
+        
+        @returns: elasticsearch_dsl.Search
+        """
+        return search.Search().doc_type(Source)
 
     @staticmethod
     def dict_list(hit, request):

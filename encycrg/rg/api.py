@@ -178,7 +178,7 @@ def _article_titles(request, limit=None, offset=None):
     ]
 
 def _authors(request, limit=None, offset=None):
-    s = search.Search().doc_type(models.Author).query("match_all")
+    s = models.Author.search().query("match_all")
     s = s.sort('title_sort')
     if not limit:
         limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
@@ -188,7 +188,7 @@ def _authors(request, limit=None, offset=None):
     return searcher.execute(limit, offset)
 
 def _sources(request, limit=None, offset=None):
-    s = search.Search().doc_type(models.Source).query("match_all")
+    s = models.Source.search().query("match_all")
     s = s.sort('encyclopedia_id')
     if not limit:
         limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
