@@ -23,7 +23,7 @@ Browse by {{ field_title }}
 <div class="row">
   <div class="col-md-12 col-sm-12 col-xs-12">
     
-<h1>
+<h1 class="articleTitle">
 <a href="{% url "rg-browse" %}">Browse</a>
 &gt;
 <span class="iconBlock"><i class="fa {{ field_icon }}"></i></span>
@@ -31,12 +31,12 @@ Browse by {{ field_title }}
 </h1>
 
 <table class="table table-responsive table-sm table-hover">
-  <caption>{{ field_description }}</caption>
+  <caption><h4 style="color: #999;">{{ field_description }}</h4></caption>
   {% for item in query %}
   <tr>
     <th>
-      <a class="browse" href="{{ item.html }}">{{ item.label }}</a>
-      ({{ item.count }})
+      <h4 class="browseFacetTitle color-2"><a class="browse browseFacetTitle color-2" href="{{ item.html }}">{{ item.label }}</a>
+      ({{ item.count }})</h4>
     </th>
     <td>
     </td>

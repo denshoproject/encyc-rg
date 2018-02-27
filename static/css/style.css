@@ -8002,6 +8002,14 @@ div.basePage {
     color: #5b57a6;
 }
 
+.articleTitle > a {
+    color: #5b57a6;
+}
+
+.articleTitle > a:hover {
+    text-decoration: underline;
+}
+
 /* article */
 h3.articleCreatorsTitle {
     font-size: 14px;
@@ -8070,6 +8078,34 @@ h2.browseFacetTitle, a.browseFacetTitle {
     text-decoration: underline !important;
 }
 
+span.a-zContents {
+    margin-left: -2px;
+    margin-right: -2px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border: solid 2px #ddd;
+    line-height: 40px;
+}
+
+.a-zContents > a {
+    color: #b5d56a;
+}
+
+.a-zContents > a:hover {
+    text-decoration: none;
+}
+
+span.a-zContents:hover {
+    background-color: #eee;
+}
+
+span.a-zInitial {
+    font-family: 'Dosis', sans-serif; 
+    font-size: 20px; 
+    font-weight: 700;
+}
 
 .searchResultsList > .media-body {
     width: auto;
