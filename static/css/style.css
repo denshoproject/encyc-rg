@@ -8260,6 +8260,7 @@ span.mw-cite-backlink a:hover {
 }
 /* temp hacks to remove extraneous content */
 div[id$="Display"],
+div[class="alert alert-success published"],
 div[class="toplink"],
 div[id="toc"] {
     display: none !important;
