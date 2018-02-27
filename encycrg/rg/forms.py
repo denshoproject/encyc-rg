@@ -81,7 +81,7 @@ class SearchForm(forms.Form):
                         forms.MultipleChoiceField(
                             label=models.PAGE_BROWSABLE_FIELDS.get(
                                 fieldname, fieldname),
-                            choices=[],
+                            choices=[('none','(none)')],
                             required=False,
                             widget=forms.SelectMultiple(
                                 attrs={

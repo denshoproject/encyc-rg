@@ -346,13 +346,6 @@ def search_ui(request):
         if (key != 'fulltext') and (key in models.PAGE_BROWSABLE_FIELDS.keys())
     ]
     context['filters'] = filters
-
-    # filter fields with choices
-    context['filters_active'] = [
-        fieldname
-        for fieldname in models.PAGE_BROWSABLE_FIELDS.keys()
-        if form.fields.get(fieldname) and form.fields[fieldname].choices
-    ]
     
     return render(request, 'rg/search.html', context)
 
