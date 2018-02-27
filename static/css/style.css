@@ -7998,6 +7998,10 @@ div.basePage {
     padding-right: 15px;
 }
 
+.articleTitle {
+    color: #5b57a6;
+}
+
 /* article */
 h3.articleCreatorsTitle {
     font-size: 14px;
@@ -8055,10 +8059,17 @@ a.notrg:after {
     margin-bottom: 24px;
 }
 
-/* search results */
-.searchResultsList {
-    margin-bottom: 40px;
+/* search/browse */
+h2.browseFacetTitle, a.browseFacetTitle {
+    font-family: 'Dosis', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
 }
+
+.browseFacetTitle a:hover {
+    text-decoration: underline !important;
+}
+
 
 .searchResultsList > .media-body {
     width: auto;

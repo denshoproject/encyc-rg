@@ -9,34 +9,42 @@ Browse
 {% block container %}
 <div class="basePage">
 <div class="row">
-  <div class="col-md-9 col-sm-8 col-xs-12">
+  <div class="col-md-12 col-sm-12 col-xs-12">
     
-<h1>Browse</h1>
+<h1 class="articleTitle">Browse</h1>
 
 <table class="table table-responsive table-sm table-hover">
-  <caption>Browse articles by various criteria</caption>
+  <caption><h4 style="color: #999;">Explore articles in the guide through a variety of different facets.</h4></caption>
   <tr>
       <th>
-          <span class="iconBlock"><i class="fa fa-sort-alpha-asc"></i></span>
+          <div class="media searchResultsList">
+            <span class="media-left bg-color-2">
+                <i class="fa fa-sort-alpha-asc" aria-hidden="true"></i>
+            </span>
+          </div>
     </th>
     <th>
-      <a href="{% url 'rg-articles' %}">Title</a>
+      <h2 class="browseFacetTitle color-2"><a class="browse browseFacetTitle color-2" href="{% url 'rg-articles' %}">Title</a></h2>
     </th>
     <td>
-      Full article list sorted by title.
+      <div style="font-weight: 600;">Full article list sorted by title.</div>
     </td>
   </tr>
   {% for item in databox_fields %}
   {% if item.title != 'Teaching Aids' and item.title != 'Free Web Version' %}
   <tr>
     <th>
-      <span class="iconBlock"><i class="fa {{ item.icon }}"></i></span>
+          <div class="media searchResultsList">
+            <span class="media-left bg-color-2">
+                <i class="fa {{ item.icon }}" aria-hidden="true"></i>
+            </span>
+          </div>
     </th>
     <th>
-      <a class="browse" href="{{ item.html }}">{{ item.title }}</a>
+      <h2 class="browseFacetTitle color-2"><a class="browse browseFacetTitle color-2" href="{{ item.html }}">{{ item.title }}</a></h2>
     </th>
     <td>
-      {{ item.description }}
+      <div style="font-weight: 600;">{{ item.description }}</div>
     </td>
   </tr>
   {% endif %}
