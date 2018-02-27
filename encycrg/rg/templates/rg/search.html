@@ -49,64 +49,79 @@ Search
               
               <div class="searchResultsFilters form-group">
 
+                {% if "rg_rgmediatype" in filters_active %}
                 <div class="col-sm-6">
                   <strong><i class="fa {{ fields.rg_rgmediatype.icon }}"></i>
                     {{ search_form.rg_rgmediatype.label }}
                   </strong><br/>
                   {{ search_form.rg_rgmediatype }}
                 </div>
+                {% endif %}
 
+                {% if "rg_interestlevel" in filters_active %}
                 <div class="col-sm-6">
                   <strong><i class="fa {{ fields.rg_interestlevel.icon }}"></i>
                     {{ search_form.rg_interestlevel.label }}
                   </strong><br/>
                   {{ search_form.rg_interestlevel }}
                 </div>
+                {% endif %}
 
+                {% if "rg_readinglevel" in filters_active %}
                 <div class="col-sm-6">
                   <strong><i class="fa {{ fields.rg_readinglevel.icon }}"></i>
                     {{ search_form.rg_readinglevel.label }}
                   </strong><br/>
                   {{ search_form.rg_readinglevel }}
                 </div>
+                {% endif %}
 
+                {% if "rg_genre" in filters_active %}
                 <div class="col-sm-6">
                   <strong><i class="fa {{ fields.rg_genre.icon }}"></i>
                     {{ search_form.rg_genre.label }}
                   </strong><br/>
                   {{ search_form.rg_genre }}
                 </div>
+                {% endif %}
 
+                {% if "rg_theme" in filters_active %}
                 <div class="col-sm-6">
                   <strong><i class="fa {{ fields.rg_theme.icon }}"></i>
                     {{ search_form.rg_theme.label }}
                   </strong><br/>
                   {{ search_form.rg_theme }}
                 </div>
+                {% endif %}
 
+                {% if "rg_chronology" in filters_active %}
                 <div class="col-sm-6">
                   <strong><i class="fa {{ fields.rg_chronology.icon }}"></i>
                     {{ search_form.rg_chronology.label }}
                   </strong><br/>
                   {{ search_form.rg_chronology }}
                 </div>
+                {% endif %}
 
+                {% if "rg_geography" in filters_active %}
                 <div class="col-sm-6">
                   <strong><i class="fa {{ fields.rg_geography.icon }}"></i>
                     {{ search_form.rg_geography.label }}
                   </strong><br/>
                   {{ search_form.rg_geography }}
                 </div>
+                {% endif %}
 
+                {% if "rg_availability" in filters_active %}
                 <div class="col-sm-6">
                   <strong><i class="fa {{ fields.rg_availability.icon }}"></i>
                     {{ search_form.rg_availability.label }}
                   </strong><br/>
                   {{ search_form.rg_availability }}
                 </div>
+                {% endif %}
 
 <!--
-
                 <div class="col-sm-6">
                   <strong><i class="fa {{ fields.rg_hasteachingaids.icon }}"></i>
                     {{ search_form.rg_hasteachingaids.label }}
@@ -120,7 +135,6 @@ Search
                   </strong><br/>
                   {{ search_form.rg_freewebversion }}
                 </div>
-
 -->
               </div><!--  .searchResultsFilters .form-group -->
             </div><!--  .panel-body -->
