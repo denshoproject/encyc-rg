@@ -364,6 +364,8 @@ class Page(DocType):
     url_title = String(index='not_analyzed')  # Elasticsearch id
     public = Boolean()
     published = Boolean()
+    published_encyc = Boolean()
+    published_rg = Boolean()
     modified = Date()
     mw_api_url = String(index='not_analyzed')
     title_sort = String(index='not_analyzed')
@@ -547,6 +549,8 @@ class Page(DocType):
         setval(self, data, 'source_ids')
         #public
         #published
+        setval(self, data, 'published_encyc')
+        setval(self, data, 'published_rg')
         setval(self, data, 'modified')
         #mw_api_url
         setval(self, data, 'coordinates')
@@ -632,7 +636,7 @@ class Page(DocType):
         @returns: elasticsearch_dsl.Search
         """
         s = search.Search().doc_type(Page)
-        s = s.filter('exists', field='rg_rgmediatype')
+        s = s.filter('term', published_rg=True)
         return s
     
     @staticmethod
@@ -644,8 +648,7 @@ class Page(DocType):
         """
         s = Page.search()
         if only_rg:
-            # require rg_rgmediatype
-            s = s.filter(Q('exists', field=['rg_rgmediatype']))
+            s = s.filter('term', published_rg=True)
         s = s.sort('title_sort')
         s = s.fields(PAGE_LIST_FIELDS)
         query = s.to_dict()
