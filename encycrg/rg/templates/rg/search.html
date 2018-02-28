@@ -12,6 +12,9 @@ Search
 <div class="row">
   
   <div class="col-xs-12">
+      
+      <h1 class="articleTitle">Search</h1>
+      <p>Find articles by keyword text. The returned results list can be filtered by Media Type, Interest Level, Reading Level, Genre and more!</p>
   <form action="{{ this_url }}" method="get">
 
     
@@ -21,18 +24,27 @@ Search
       <button type="submit" class="input-group-addon button" id="basic-addon21">Search</button>
     </div>
     
-    {% if page.object_list %}
+    {% if search_performed and not page.object_list %}
 
-    <div id="filters">
-      {% for key,vals in filters %}
-      <strong>{{ key }}</strong>: {{ vals }}{% if not forloop.last %};{% endif %}
-      {% endfor %}
-    </div><!-- #params -->
+    <div class="resultInfo">
+        <h3>
+          No results for "{{ search_form.fulltext.value }}"
+        </h3>
+    </div>
+       <div id="no_results" style="margin-top: -25px;margin-bottom: 20px;">We're sorry - your keywords were not found. Please enter another query or try browsing by category instead. </div>
 
+    {% elif page.object_list %}
     <div class="resultInfo">
       <h3>
         {{ paginator.count }} search results for "{{ search_form.fulltext.value }}"
       </h3>
+      {% if filters %}
+      <div id="filters" style="margin-top: -25px;margin-bottom: 20px;"><span style="padding-right: .5em;"><strong>Filters active -</strong></span> 
+        {% for key,vals in filters %}
+        <span style="color: #555;">{{ key }}: {{ vals }}{% if not forloop.last %};{% endif %}</span>
+        {% endfor %}
+      </div><!-- #params -->
+      {% endif %}
     </div>
     
     <div class="accordionCommon hello" id="filtersArea">

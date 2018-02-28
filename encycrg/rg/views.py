@@ -324,6 +324,7 @@ def search_ui(request):
         )
         context['results'] = results
         context['search_form'] = form
+        context['search_performed'] = True
         
         if results.objects:
             paginator = Paginator(
