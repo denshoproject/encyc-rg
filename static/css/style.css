@@ -7941,7 +7941,10 @@ footer .color-bar {
     text-align: center;
     transition: all 0.3s ease-in-out;
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
-    padding: 35px;
+    padding-right: 35px;
+    padding-left: 35px;
+    padding-top: 50px;
+    padding-bottom: 35px;
     margin-bottom: 40px;
 }
 
@@ -7978,17 +7981,23 @@ footer .color-bar {
     line-height: 36px;
     color: #ffffff;
     letter-spacing: 1px;
+    padding-top: 10px;
 }
 
 .homeOverlayContent p {
     color: #ffffff;
     padding-top: 35px;
     margin: 25px 0;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 a.homeTitleLink:hover {
     text-decoration: underline !important;
+}
+
+a.homeIconLink:hover {
+    text-decoration: none !important;
+    font-weight: 900 !important;
 }
 
 /* basePage */
@@ -8276,6 +8285,7 @@ span.mw-cite-backlink a:hover {
 }
 /* temp hacks to remove extraneous content */
 div[id$="Display"],
+span[id="For_More_Information"],
 div[class="alert alert-success published"],
 div[class="toplink"],
 div[id="toc"] {
