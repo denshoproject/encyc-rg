@@ -13,7 +13,8 @@ Browse by {{ field_title }} - {{ value }}
     <a href="{% url "rg-browse" %}">Browse</a>
   </li>
   <li>
-    <a href="{% url "rg-browse-field" fieldname %}">{{ field_title }}</a>
+    {{ stub }}
+    <a href="{% url "rg-browse-field" stub %}">{{ field_title }}</a>
   </li>
   <li>
 {{ value }}
@@ -32,7 +33,7 @@ Browse by {{ field_title }} - {{ value }}
 <h1 class="articleTitle color-1">
 <a href="{% url "rg-browse" %}">Browse</a>
 &gt;
-<a href="{% url "rg-browse-field" fieldname %}">
+<a href="{% url "rg-browse-field" stub %}">
   <span class="iconBlock"><i class="fa {{ field_icon }}"></i></span>
   {{ field_title }}
 </a>
