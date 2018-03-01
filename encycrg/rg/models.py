@@ -665,26 +665,29 @@ class Page(DocType):
         @param only_rg: boolean Only return RG pages (rg_rgmediatype present)
         @returns: list
         """
-        s = Page.search()
-        if only_rg:
-            s = s.filter('term', published_rg=True)
-        s = s.sort('title_sort')
-        s = s.fields(PAGE_LIST_FIELDS)
-        query = s.to_dict()
-        count = s.count()
-        if (start != 0) or (stop != settings.MAX_SIZE):
-            s = s[start:stop]
-        results = s.execute()
-        
-        return search.SearchResults(
-            mappings=DOCTYPE_CLASS,
-            query=query,
-            count=count,
-            results=results,
-            #limit=limit,
-            #offset=offset,
-        ).objects
-    
+        KEY = 'encyc-rg:pages'
+        data = cache.get(KEY)
+        if not data:
+            s = Page.search()
+            if only_rg:
+                s = s.filter('term', published_rg=True)
+            s = s.sort('title_sort')
+            s = s.fields(PAGE_LIST_FIELDS)
+            query = s.to_dict()
+            count = s.count()
+            if (start != 0) or (stop != settings.MAX_SIZE):
+                s = s[start:stop]
+            data = search.SearchResults(
+                mappings=DOCTYPE_CLASS,
+                query=query,
+                count=count,
+                results=s.execute(),
+                #limit=limit,
+                #offset=offset,
+            ).objects
+            cache.set(KEY, data, settings.CACHE_TIMEOUT)
+        return data
+
     @staticmethod
     def pages_by_category():
         """Returns list of (category, Pages) tuples, alphabetical by category
