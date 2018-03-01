@@ -213,8 +213,7 @@ class Author(DocType):
         
         @returns: list
         """
-        KEY = 'encyc-front:authors'
-        TIMEOUT = 60*5
+        KEY = 'encyc-rg:authors'
         data = cache.get(KEY)
         if not data:
             s = Search(doc_type='authors')[0:settings.MAX_SIZE]
@@ -232,7 +231,7 @@ class Author(DocType):
                 for hit in response
                 if hitvalue(hit, 'published')
             ]
-            cache.set(KEY, data, TIMEOUT)
+            cache.set(KEY, data, settings.CACHE_TIMEOUT)
         if num_columns:
             return _columnizer(data, num_columns)
         return data
@@ -692,8 +691,7 @@ class Page(DocType):
         
         @returns: list
         """
-        KEY = u'encyc-front:pages_by_category'
-        TIMEOUT = 60*5
+        KEY = u'encyc-rg:pages_by_category'
         data = cache.get(KEY)
         if not data:
             categories = {}
@@ -710,13 +708,12 @@ class Page(DocType):
                 (key,categories[key])
                 for key in sorted(categories.keys())
             ]
-            cache.set(KEY, data, TIMEOUT)
+            cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
 
     @staticmethod
     def mediatypes(pages=None):
         KEY = u'encyc-rg:rgmediatypes'
-        TIMEOUT = 60*5
         data = cache.get(KEY)
         if not data:
             if not pages:
@@ -725,7 +722,7 @@ class Page(DocType):
             for page in pages:
                 mediatypes += page.rg_rgmediatype
             data = set(mediatypes)
-            cache.set(KEY, data, TIMEOUT)
+            cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
 
     def scrub(self):
@@ -1005,8 +1002,7 @@ class Source(DocType):
         
         @returns: list
         """
-        KEY = u'encyc-front:sources'
-        TIMEOUT = 60*5
+        KEY = u'encyc-rg:sources'
         data = cache.get(KEY)
         if not data:
             s = Search(doc_type='sources')[0:settings.MAX_SIZE]
@@ -1025,7 +1021,7 @@ class Source(DocType):
                 for hit in response
                 if hitvalue(hit, 'published')
             ]
-            cache.set(KEY, data, TIMEOUT)
+            cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
 
 

@@ -145,10 +145,10 @@ CACHES = {
 
 # whole-site caching
 CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_SECONDS = 60 * 15
+CACHE_MIDDLEWARE_SECONDS = config.get('encycrg', 'cache_timeout')
 CACHE_MIDDLEWARE_KEY_PREFIX = 'encycrg'
 # low-level caching
-CACHE_TIMEOUT = 60 * 5
+CACHE_TIMEOUT = config.get('encycrg', 'cache_timeout')
 
 # ElasticSearch
 ELASTICSEARCH_MAX_SIZE = 10000
