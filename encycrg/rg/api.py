@@ -88,19 +88,19 @@ def browse(request, format=None):
     )
 
 @api_view(['GET'])
-def browse_field(request, fieldname, format=None):
+def browse_field(request, stub, format=None):
     """List databox terms and counts
     """
     return Response(
-        _browse_field(request, fieldname)
+        _browse_field(request, stub)
     )
 
 @api_view(['GET'])
-def browse_field_value(request, fieldname, value, format=None):
+def browse_field_value(request, stub, value, format=None):
     """List of articles tagged with databox term.
     """
     return Response(
-        _browse_field_value(request, fieldname, value).ordered_dict(request)
+        _browse_field_value(request, stub, value).ordered_dict(request)
     )
 
 @api_view(['GET'])
@@ -212,17 +212,20 @@ def _source(request, url_title):
 def _browse(request):
     fields = []
     for key,val in models.FACET_FIELDS.items():
+        stub = val['stub']
         item = OrderedDict()
         item['id'] = key
-        item['json'] = reverse('rg-api-browse-field', args=([key]), request=request)
-        item['html'] = reverse('rg-browse-field', args=([key]), request=request)
+        item['json'] = reverse('rg-api-browse-field', args=([stub]), request=request)
+        item['html'] = reverse('rg-browse-field', args=([stub]), request=request)
         item['title'] = val['label']
         item['description'] = val['description']
         item['icon'] = val['icon']
+        item['stub'] = val['stub']
         fields.append(item)
     return fields
 
-def _browse_field(request, fieldname):
+def _browse_field(request, stub):
+    fieldname = models.MEDIATYPE_URLSTUBS[stub]
     s = models.Page.search().query("match_all")
     s.aggs.bucket(
         fieldname,
@@ -240,12 +243,12 @@ def _browse_field(request, fieldname):
             item['term'] = term
             item['json'] = reverse(
                 'rg-api-browse-fieldvalue',
-                args=([fieldname, term]),
+                args=([stub, term]),
                 request=request
             )
             item['html'] = reverse(
                 'rg-browse-fieldvalue',
-                args=([fieldname, term]),
+                args=([stub, term]),
                 request=request
             )
             if models.MEDIATYPE_INFO.get(item['term']):
@@ -256,7 +259,8 @@ def _browse_field(request, fieldname):
             data.append(item)
     return data
 
-def _browse_field_value(request, fieldname, value, limit=None, offset=None):
+def _browse_field_value(request, stub, value, limit=None, offset=None):
+    fieldname = models.MEDIATYPE_URLSTUBS[stub]
     if fieldname not in models.PAGE_SEARCH_FIELDS:
         raise Exception('Bad fieldname "%s".' % fieldname)
     

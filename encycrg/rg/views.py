@@ -266,12 +266,17 @@ def browse(request):
         'api_url': api_url,
     })
 
-def browse_field(request, fieldname):
+def browse_field(request, stub):
+    if stub not in models.MEDIATYPE_URLSTUBS:
+        raise Http404
+    # trade the pretty urlstub for the actual mediatype fieldname
+    fieldname = models.MEDIATYPE_URLSTUBS[stub]
     if 'rg_' not in fieldname:
         fieldname = 'rg_%s' % fieldname
-    api_url = _mkurl(request, reverse('rg-api-browse-field', args=([fieldname])))
-    r = api.browse_field(request, fieldname, format='json')
+    api_url = _mkurl(request, reverse('rg-api-browse-field', args=([stub])))
+    r = api.browse_field(request, stub, format='json')
     return render(request, 'rg/browse-field.html', {
+        'stub': stub,
         'fieldname': fieldname,
         'field_icon': models.FACET_FIELDS[fieldname]['icon'],
         'field_title': models.FACET_FIELDS[fieldname]['label'],
@@ -280,10 +285,15 @@ def browse_field(request, fieldname):
         'api_url': api_url,
     })
 
-def browse_field_value(request, fieldname, value):
-    api_url = _mkurl(request, reverse('rg-api-browse-fieldvalue', args=([fieldname, value])))
+def browse_field_value(request, stub, value):
+    if stub not in models.MEDIATYPE_URLSTUBS:
+        raise Http404
+    # trade the pretty urlstub for the actual mediatype fieldname
+    fieldname = models.MEDIATYPE_URLSTUBS[stub]
+    api_url = _mkurl(request, reverse('rg-api-browse-fieldvalue', args=([stub, value])))
     context = {
         'api_url': api_url,
+        'stub': stub,
         'fieldname': fieldname,
         'value': value,
         'field_icon': models.FACET_FIELDS[fieldname]['icon'],
@@ -293,7 +303,7 @@ def browse_field_value(request, fieldname, value):
     if fieldname == 'rg_rgmediatype':
         context['value'] = models.MEDIATYPE_INFO[value]['label']
 
-    results = api._browse_field_value(request, fieldname, value)
+    results = api._browse_field_value(request, stub, value)
     if results.objects:
         paginator = Paginator(
             results.ordered_dict(request=request, pad=True)['objects'],

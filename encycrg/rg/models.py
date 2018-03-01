@@ -292,57 +292,69 @@ FACET_FIELDS['rg_rgmediatype'] = {
     'label':'Media Type',
     'description':'The general form of the resource.',
     'icon':'fa-cubes',
+    'stub':'media-type',
 }
 FACET_FIELDS['rg_interestlevel'] = {
     'label':'Interest Level',
     'description':'The grades or ages that would most likely be engaged by the resource.',
     'icon':'fa-graduation-cap',
+    'stub':'interest-level',
 }
 FACET_FIELDS['rg_readinglevel'] = {
     'label':'Reading Level',
     'description':'The general reading level(s) based on grade groupings.',
     'icon':'fa-bookmark',
+    'stub':'reading-level',
 }
 FACET_FIELDS['rg_genre'] = {
     'label':'Genre',
     'description':'The specific category or class of the resource within its media type.',
     'icon':'fa-tags',
+    'stub':'genre',
 }
 FACET_FIELDS['rg_theme'] = {
     'label':'Theme',
     'description':'The universal ideas or messages expressed in the resource.',
     'icon':'fa-compass',
+    'stub':'theme',
 }
 FACET_FIELDS['rg_pov'] = {
     'label':'Point-of-View',
     'description':'The point-of-view and characteristics of the primary protagonist.',
     'icon':'fa-eye',
+    'stub':'pov',
 }
 FACET_FIELDS['rg_geography'] = {
     'label':'Place',
     'description':'The main geographic location(s) depicted in the resource.',
     'icon':'fa-globe',
+    'stub':'place',
 }
 FACET_FIELDS['rg_chronology'] = {
     'label':'Time',
     'description':'The primary time period the resource describes or in which it is set.',
     'icon':'fa-clock-o',
+    'stub':'time',
 }
 FACET_FIELDS['rg_availability'] = {
     'label':'Availabilty',
     'description':'Level of availability, from "Widely available", meaning, "easy to purchase or stream & reasonably priced/free", to "Not available", meaning, "not currently available to purchase or borrow."',
     'icon':'fa-binoculars',
+    'stub':'availability',
 }
 FACET_FIELDS['rg_hasteachingaids'] = {
     'label':'Teaching Aids',
     'description':'The resource includes classroom teaching aids.',
     'icon':'fa-users',
+    'stub':'teaching-aids',
 }
 FACET_FIELDS['rg_freewebversion'] = {
     'label':'Free Web Version',
     'description':'There is a free version available on the web.',
     'icon':'fa-laptop',
+    'stub':'free-web-version',
 }
+MEDIATYPE_URLSTUBS = {val['stub']: key for key,val in FACET_FIELDS.items()}
 
 MEDIATYPE_INFO = {
     'albums': {'label': 'Albums', 'icon': 'fa-music'},
