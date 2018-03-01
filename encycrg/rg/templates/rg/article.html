@@ -10,9 +10,9 @@
 <div class="row">
   <div class="col-md-9 col-sm-8 col-xs-12 block pull-right">
 
-    <h1 class="articleTitle color-1">{{ article.title }}</h1>
+    <h1 class="articleTitle">{{ article.title }}</h1>
     {% if article.rg_creators %}
-    <h3 class="articleCreatorsTitle color-1">Creators: {% for c in article.rg_creators %}{{c}}{% if not forloop.last %},{% endif %} {% endfor %}</h3>
+    <h3 class="articleCreatorsTitle">Creators: {% for c in article.rg_creators %}{{c}}{% if not forloop.last %},{% endif %} {% endfor %}</h3>
     {% endif %}
     
     <div class="hidden-sm hidden-md hidden-lg">
@@ -59,6 +59,7 @@
            <div class="row"><!-- begin articleText row wrapper -->
                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"><!-- begin articleText col wrapper -->
            {% if source %}
+           <!-- source section -->
            <div class="pull-right block" style="padding: 15px;max-width: 250px;">
                <img class="image-responsive" src="{{ source.img_url }}" alt="image" width="235" />
                {% if source.caption or source.courtesy %}
@@ -68,18 +69,20 @@
                <br/>
                <span class="articleSourceCaption"><a href="{{ source.encyc_url }}">View in the Densho Encyclopedia <i class="fa fa-book"></i></a></span>
            </div>
+           <!-- end source section -->
            {% endif %}
-
+           <div class="articleDetailBody">
            {{ article.body|safe }}
 
            {% if article.footnotes %}
            {{ article.footnotes|safe }}
            {% endif %}
+           </div>
            
            </div><!-- end articleText col wrapper -->
            </div><!-- end articleText row wrapper -->
 
-           <div class="row"><!-- begin articleText row wrapper -->
+           <div style="padding-top: 15px;" class="row"><!-- begin articleText row wrapper -->
                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"><!-- begin articleText col wrapper -->
            <!-- begin articleExtraInfo-->
            <div class="accordionCommon hello" id="articleExtraInfo">
@@ -89,7 +92,7 @@
                    <!-- begin rg_SectionRelatedArticles -->
                    <div class="panel panel-default">
                        <a class="panel-heading accordion-toggle bg-color-5" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-relatedarticles">
-                           <span><i class="fa fa-copy"></i> Related Articles</span>
+                           <span><i class="fa fa-copy" style="padding-right: 5px;"></i> Related Articles</span>
                            <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
                        </a>
                        <div id="collapse-relatedarticles" class="panel-collapse collapse in">
@@ -105,7 +108,7 @@
                    <!-- begin rg_warnings -->
                    <div class="panel panel-default">
                        <a class="panel-heading accordion-toggle bg-color-3" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-warnings">
-                           <span><i class="fa fa-warning"></i> Ratings and Warnings</span>
+                           <span><i class="fa fa-warning" style="padding-right: 5px;"></i> Ratings and Warnings</span>
                            <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
                        </a>
                        <div id="collapse-warnings" class="panel-collapse collapse in">
@@ -121,7 +124,7 @@
                    <!-- begin rg_SectionForMoreInformation  -->
                    <div class="panel panel-default">
                        <a class="panel-heading accordion-toggle bg-color-2" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-moreinfo">
-                           <span><i class="fa fa-question-circle"></i> For More Information</span>
+                           <span><i class="fa fa-question-circle" style="padding-right: 5px;"></i> For More Information</span>
                            <span class="iconBlock"><i class="fa fa-chevron-up"></i></span>
                        </a>
                        <div id="collapse-moreinfo" class="panel-collapse collapse">
@@ -137,7 +140,7 @@
                    <!-- begin rg_SectionReviews -->
                    <div class="panel panel-default">
                        <a class="panel-heading accordion-toggle bg-color-1" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-reviews">
-                           <span><i class="fa fa-comments"></i> Reviews</span>
+                           <span><i class="fa fa-comments" style="padding-right: 5px;"></i> Reviews</span>
                            <span class="iconBlock"><i class="fa fa-chevron-up"></i></span>
                        </a>
                        <div id="collapse-reviews" class="panel-collapse collapse">
@@ -172,7 +175,7 @@
                 <div class="media-left iconContent bg-color-2">
                   <i class="fa {{ fields.rg_rgmediatype.icon }}" aria-hidden="true"></i>
                 </div>
-                <div class="media-body iconContent">
+                <div class="media-body iconContent articleFacetText">
                   <h4 class="media-heading color-2">Media Type</h4>
                   <p>
                     <a class="color-2 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype.0 %}">{{ article.mediatype_label }}</a>
@@ -185,7 +188,7 @@
                 <div class="media-left iconContent bg-color-3">
                   <i class="fa {{ fields.rg_interestlevel.icon }}" aria-hidden="true"></i>
                 </div>
-                <div class="media-body iconContent">
+                <div class="media-body iconContent articleFacetText">
                   <h4 class="media-heading color-3">Interest Level</h4>
                   <p>
                     {% for item in article.rg_interestlevel %}
@@ -201,7 +204,7 @@
                 <div class="media-left iconContent bg-color-4">
                   <i class="fa {{ fields.rg_readinglevel.icon }}" aria-hidden="true"></i>
                 </div>
-                <div class="media-body iconContent">
+                <div class="media-body iconContent articleFacetText">
                   <h4 class="media-heading color-4">Reading Level</h4>
                   <p>
                     {% for item in article.rg_readinglevel %}
@@ -217,7 +220,7 @@
                 <div class="media-left iconContent bg-color-5">
                   <i class="fa {{ fields.rg_genre.icon }}" aria-hidden="true"></i>
                 </div>
-                <div class="media-body iconContent">
+                <div class="media-body iconContent articleFacetText">
                   <h4 class="media-heading color-5">Genre</h4>
                   <p>
                     {% for item in article.rg_genre %}
@@ -233,7 +236,7 @@
                 <div class="media-left iconContent bg-color-6">
                   <i class="fa {{ fields.rg_chronology.icon }}" aria-hidden="true"></i>
                 </div>
-                <div class="media-body iconContent">
+                <div class="media-body iconContent articleFacetText">
                   <h4 class="media-heading color-6">Chronology</h4>
                   <p>
                     {% for item in article.rg_chronology %}
@@ -249,7 +252,7 @@
                 <div class="media-left iconContent bg-color-1">
                   <i class="fa {{ fields.rg_geography.icon }}" aria-hidden="true"></i>
                 </div>
-                <div class="media-body iconContent">
+                <div class="media-body iconContent articleFacetText">
                   <h4 class="media-heading color-1">Geography</h4>
                   <p>
                     {% for item in article.rg_geography %}
@@ -265,7 +268,7 @@
                 <div class="media-left iconContent bg-color-2">
                   <i class="fa {{ fields.rg_pov.icon }}" aria-hidden="true"></i>
                 </div>
-                <div class="media-body iconContent">
+                <div class="media-body iconContent articleFacetText">
                   <h4 class="media-heading color-2">Point of View</h4>
                   <p>
                     {% for item in article.rg_pov %}
@@ -281,7 +284,7 @@
                 <div class="media-left iconContent bg-color-3">
                   <i class="fa {{ fields.rg_theme.icon }}" aria-hidden="true"></i>
                 </div>
-                <div class="media-body iconContent">
+                <div class="media-body iconContent articleFacetText">
                   <h4 class="media-heading color-3">Theme</h4>
                   <p>
                     {% for item in article.rg_theme %}
