@@ -50,6 +50,7 @@ urlpatterns = [
     url(r"^categories/(?P<url_title>[\w\W]+)/$", views.category, name='rg-category'),
     url(r"^categories/$", views.categories, name='rg-categories'),
     
+    url(r"^browse/title/$", views.articles, name='rg-articles'),
     url(r"^browse/(?P<fieldname>[\w\W]+)/(?P<value>[\w\W]+)/$", views.browse_field_value, name='rg-browse-fieldvalue'),
     url(r"^browse/(?P<fieldname>[\w\W]+)/$", views.browse_field, name='rg-browse-field'),
     url(r"^browse/$", views.browse, name='rg-browse'),
@@ -61,7 +62,6 @@ urlpatterns = [
     url(r"^authors/(?P<url_title>[\w\W]+)/$", views.author, name='rg-author'),
     url(r"^sources/(?P<url_title>[\w\W]+)/$", views.source, name='rg-source'),
     
-    url(r"^wiki/$", views.articles, name='rg-articles'),
     url(r"^authors/$", views.authors, name='rg-authors'),
     url(r"^sources/$", views.sources, name='rg-sources'),
     
