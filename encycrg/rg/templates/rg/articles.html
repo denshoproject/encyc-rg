@@ -32,14 +32,14 @@ Title
   {% for initial,articles in groups %}
   <a name="{{ initial }}"></a>
   <table class="table table-responsive table-sm table-hover">
-  <caption><span class="color-2 a-zInitial">{{ initial }}</span></caption>
+  <caption><span class="a-zInitial">{{ initial }}</span></caption>
   {% for article in articles %}
   <tr>
     <th style="padding-right: 0px; margin-right: 0px; width: 20px;">
-      <strong class="color-2"><i class="fa {{ article.mediatype_icon }}" aria-hidden="true"></i></strong>
+      
     </th>
     <td>
-        <strong><a class="browse color-2" href="{{ article.links.html }}">{{ article.id }}</a></strong>
+        <span class="a-zLink"><a class="browse" href="{{ article.links.html }}"><i class="fa {{ article.mediatype_icon }}" style="padding-right: 10px;" aria-hidden="true"></i> {{ article.id }}</a></span>
     </td>
   </tr>
   {% endfor %}

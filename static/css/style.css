@@ -1,3 +1,12 @@
+/*
+ * color-1: #5b57a6
+ * color-2: #b5d56a
+ * color-3: #ea7066
+ * color-4: #a597e7
+ * color-5: #80ced7
+ * color-6: #ea77ad
+ */
+
 
 * {
   outline: 0;
@@ -5070,7 +5079,7 @@ footer .color-bar {
   background-size: cover;
   background-position: center center !important;
   background-attachment: fixed;
-  color: #ffffff;
+  color: #ea77ad; /* color-6 */
   padding: 80px 0;
 }
 
@@ -5080,7 +5089,7 @@ footer .color-bar {
   line-height: 145px;
   display: inline-block;
   border-radius: 100%;
-  border: 4px solid #ffffff;
+  border: 4px solid #ea77ad; /* color-6 */
 }
 
 @media (min-width: 320px) {
@@ -5104,7 +5113,7 @@ footer .color-bar {
   height: 40px;
   border: none;
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
-  background-color: #ea7066;
+  background-color: #ea77ad; /* color-6 */
   border-radius: 6px;
   font-size: 16px;
   text-transform: uppercase;
@@ -8096,14 +8105,18 @@ span.a-zContents {
     padding-bottom: 5px;
     border: solid 2px #ddd;
     line-height: 40px;
+    background-color: #b5d56a;
 }
 
 .a-zContents > a {
-    color: #b5d56a;
+    color: #ffffff;
+    text-transform: capitalize;
 }
 
 .a-zContents > a:hover {
     text-decoration: none;
+    background-color: #eee;
+    color: #555;
 }
 
 span.a-zContents:hover {
@@ -8114,6 +8127,33 @@ span.a-zInitial {
     font-family: 'Dosis', sans-serif; 
     font-size: 20px; 
     font-weight: 700;
+    text-transform: capitalize;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border: solid 2px #ddd;
+    line-height: 40px;
+    background-color: #b5d56a;
+    color: #ffffff;
+}
+
+span.a-zIcon {
+    color: #777;
+    font-weight: 700;
+}
+
+span.a-zIcon:hover {
+    color: #ddd;
+}
+
+.a-zLink > a {
+    color: #777;
+    font-weight: 700;
+}
+
+.a-zLink > a:hover {
+    color: #ddd;
 }
 
 .searchResultsList > .media-body {
@@ -8283,6 +8323,7 @@ span.mw-cite-backlink a:hover {
     color: #555555;
     text-decoration: none;
 }
+
 /* temp hacks to remove extraneous content */
 div[id$="Display"],
 span[id="For_More_Information"],
