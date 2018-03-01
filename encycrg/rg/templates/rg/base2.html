@@ -140,14 +140,10 @@
 
               <!-- About -->
               <li class="dropdown singleDrop color-4">
-                <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                <a href="{% url "rg-about" %}" class="dropdown-toggle" role="button" aria-haspopup="true" aria-expanded="false">
                   <i class="fa fa-question bg-color-4" aria-hidden="true"></i>
-                  <span>About</span>
+                  <span class="active">About</span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-right">
-                  <li class=""><a href="{% url "rg-about" %}">About the Guide</a></li>
-                  <li class=""><a href="{% url "rg-about" %}">FAQs</a></li>
-                </ul>
               </li>
 
               <!-- Search -->
@@ -211,7 +207,7 @@
                   The text of this page is licensed under a
                   <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
                   Where indicated, images and other primary source materials may be subject to use restrictions by their respective rights holders.
-                  <a href="">More information</a>
+                  <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">More information <i class="fa fa-arrow-right"></i></a>
                 </p>
                 <p>
                   This material is based upon work assisted by a grant from the U.S. Department of the Interior, National Park Service. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the U.S. Department of the Interior.
