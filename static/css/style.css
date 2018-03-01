@@ -2483,6 +2483,8 @@ aside {
   }
 }
 
+/* navbar color bar separators */
+
 .navbar-nav > li.color-3.dropdown.singleDrop .dropdown-menu .dropdown-menu:after {
   border-right: 7px solid #ea7066;
 }
@@ -8032,6 +8034,7 @@ div.basePage {
 h3.articleCreatorsTitle {
     font-size: 14px;
     font-weight: 600;
+    color: #5b57a6;
 }
 
 span.articleSourceCaption {
@@ -8042,6 +8045,24 @@ span.articleSourceCaption {
 .articleSection blockquote {
     font-style: italic !important;
     font-size: 14px !important;
+}
+
+.articleDetailBody h2 {
+    font-size: 20px !important;
+    font-weight: bold !important;
+    color: #555 !important;
+}
+
+.articleDetailBody h3 {
+    font-size: 18px !important;
+    font-weight: bold;
+    color: #555 !important;
+}
+
+.articleDetailBody h4 {
+    font-size: 16px !important;
+    font-weight: bold;
+    color: #555 !important;
 }
 
 div.articleFacetText {
