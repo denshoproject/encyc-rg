@@ -1,0 +1,18 @@
+{% extends base_template %}
+
+{% block content %}
+
+<h1>
+Facets
+</h1>
+
+{% for facet in facets.objects %}
+<h3>
+  <a href="{{ facet.links.html }}">{{ facet.title }}</a>
+</h3>
+<p>
+  {{ facet.description }}
+</p>
+{% endfor %}
+
+{% endblock content %}

@@ -12,28 +12,40 @@ Most of the commands you will type will be entered as `root`.  To become `root`,
 As per convention, variables in this documentation are written in upper case with underscores, starting with a "$" sign.
 
 
+Install From Package Repository
+===============================
 
-DDR Applications and Dependencies - Automated Installation
-==========================================================
+::
+    $ sudo apt-get update && sudo apt-get install curl apt-transport-https gnupg
+    $ sudo curl -s http://packages.densho.org/debian/keys/archive.asc | sudo apt-key add -
+    $ echo "deb http://packages.densho.org/debian/ jessie main" | sudo tee /etc/apt/sources.list.d/packages_densho_org_debian.list
+    $ sudo apt-get update && sudo apt-get install encycrg-master
 
-In this section we will use a script to automatically install the DDR code and its supporting applications.
 
-Log in to your VM and become `root`.  Then add a `encyc` user, install the prerequisites, and install the `encyc-rg` app itself.::
+Install From Source
+===================
 
-    # adduser encyc
-    [enter info]
+::
+    $ sudo su -
     # apt-get install git-core
-    # git clone git@github.com:densho/encyc-rg.git /usr/local/src/encyc-rg
-    # cd /usr/local/src/encyc-rg/encycrg
-
+    # git clone git@github.com:densho/encyc-rg.git /opt/encyc-rg
+    # cd /opt/encyc-rg/encycrg
     # If you are testing a branch, switch to that branch.
     # git checkout -b BRANCHNAME origin/BRANCHNAME
-    
-    # make get
     # make install
+    
+By default the app will run under `supervisor`::
 
-Wait as Make installs Debian packages and Python code and builds up your system.  On a basic VM this takes between 5-10 minutes.
+    # supervisor restart encycrg
+    # supervisor stop encycrg
+    # supervisor status
+    
+To use the Django dev server, stop `supervisor` and open a new tab::
 
+    # su encyc
+    $ cd /opt/encyc-rg
+    $ source /opt/encyc-rg/venv/encycrg/bin/activate
+    $ python encycrg/manage.py runserver 0.0.0.0:8081
 
 
 Configuration
@@ -51,7 +63,7 @@ Edit `/etc/encyc/rglocal.cfg` to include the following text.::
     static_root=/var/www/encycrg/static
     media_root=/var/www/encycrg/media
 
-To get the nice Django error messages edit `/usr/local/src/encyc-rg/encycrg/encycrg/settings.py`.  **WARNING: setting `DEBUG = True` in a production environment is a security risk!**::
+To get the nice Django error messages edit `/opt/encyc-rg/encycrg/encycrg/settings.py`.  **WARNING: setting `DEBUG = True` in a production environment is a security risk!**::
 
     DEBUG = True
     THUMBNAIL_DEBUG = False

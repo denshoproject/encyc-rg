@@ -1,0 +1,18 @@
+{% extends base_template %}
+
+{% block title %}
+{{ facet_id }}
+{% endblock %}
+
+{% block content %}
+
+<h1>
+{{ facet_id }}
+</h1>
+
+{% for term in query.objects %}
+<a href="{{ term.links.html }}">{{ term.path }}</a>
+<br/>
+{% endfor %}
+
+{% endblock content %}

@@ -1,0 +1,37 @@
+{% extends base_template %}
+
+
+{% block title %}
+{{ url_title }}
+{% endblock %}
+
+{% block headline %}
+{{ url_title }}
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<ul>
+  <li>
+    <a href="{% url "rg-categories" %}">Categories</a>
+  </li>
+  <li>
+    {{ url_title }}
+  </li>
+</ul>
+{% endblock breadcrumbs %}
+
+
+{% block content %}
+
+<div id="item-count">
+  {{ results.total }} articles<br/>
+</div>
+
+{% for article in results.ordered_dict.objects %}
+<div class="article-list">
+  <a href="{{ article.links.html }}">{{ article.id }}</a>
+</div>
+{% endfor %}
+
+{% endblock content %}

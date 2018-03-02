@@ -37,7 +37,10 @@ def es_offset(pagesize, thispage):
     @param thispage: int The current page (1-indexed)
     @returns: int offset
     """
-    return pagesize * (thispage - 1)
+    page = thispage - 1
+    if page < 0:
+        page = 0
+    return pagesize * page
 
 def start_stop(limit, offset):
     """Convert Elasticsearch limit/offset to Python slicing start,stop
@@ -50,7 +53,7 @@ def start_stop(limit, offset):
     20,29
     """
     start = offset
-    stop = (start + limit) - 1
+    stop = (start + limit)  #- 1
     return start,stop
     
 def django_page(limit, offset):
@@ -177,11 +180,9 @@ class Searcher(object):
         start,stop = start_stop(limit, offset)
         response = self.s[start:stop].execute()
         return SearchResults(
-            query=self.query,
             mappings=self.mappings,
-            count=response.hits.total,
+            query=self.query,
             results=response,
-            objects=[],
             limit=limit,
             offset=offset,
         )
@@ -204,47 +205,54 @@ class SearchResults(object):
     query = {}
     aggregations = None
     objects = []
-    total = -1
-    limit = -1
-    offset = -1
-    start = -1
-    stop = -1
-    prev_offset = -1
-    next_offset = -1
+    total = 0
+    limit = settings.MAX_SIZE
+    offset = 0
+    start = 0
+    stop = 0
+    prev_offset = 0
+    next_offset = 0
     prev_api = u''
     next_api = u''
-    page_size = -1
-    this_page = -1
-    prev_page = -1
-    next_page = -1
+    page_size = 0
+    this_page = 0
+    prev_page = 0
+    next_page = 0
     prev_html = u''
     next_html = u''
 
-    def __init__(self, mappings, query={}, count=-1, results=None, objects=[], limit=settings.DEFAULT_LIMIT, offset=0):
+    def __init__(self, mappings, query={}, count=0, results=None, objects=[], limit=settings.DEFAULT_LIMIT, offset=0):
         self.mappings = mappings
-        if not (results or objects):
-            return
         self.query = query
         self.limit = int(limit)
         self.offset = int(offset)
-
-        if count != -1:
-            self.total = count
-        elif results and results.hits.total:
-            self.total = int(results.hits.total)
-        elif objects:
-            self.total = len(objects)
         
         if results:
-            #self.objects = [
-            #    self.mappings[hit.meta.doc_type].dict_list(hit, self.request)
-            #    for hit in results
-            #]
+            # objects
             self.objects = [hit for hit in results]
-            self.aggregations = getattr(results, 'aggregations', {})
+            if results.hits.total:
+                self.total = int(results.hits.total)
+
+            # aggregations
+            self.aggregations = {}
+            if hasattr(results, 'aggregations'):
+                for field in results.aggregations.to_dict().keys():
+                    self.aggregations[field] = [
+                        {
+                            'key': bucket['key'],
+                            'doc_count': str(bucket['doc_count']),
+                        }
+                        for bucket in results.aggregations[field].buckets
+                        if bucket['key'] and bucket['doc_count']
+                    ]
 
         elif objects:
+            # objects
             self.objects = objects
+            self.total = len(objects)
+
+        else:
+            self.total = count
 
         # elasticsearch
         self.prev_offset = self.offset - self.limit
@@ -259,9 +267,16 @@ class SearchResults(object):
         self.this_page = django_page(self.limit, self.offset)
         self.prev_page = u''
         self.next_page = u''
-        
-        
-        # Django pagination
+        # django pagination
+        self.page_start = (self.this_page - 1) * self.page_size
+        self.page_next = self.this_page * self.page_size
+        self.pad_before = range(0, self.page_start)
+        self.pad_after = range(self.page_next, self.total)
+    
+    def __repr__(self):
+        return u"<SearchResults '%s' [%s]>" % (
+            self.query, self.total
+        )
 
     def _make_prevnext_url(self, query, request=None):
         if request:
@@ -280,13 +295,13 @@ class SearchResults(object):
         """
         return self._dict({}, request=request)
     
-    def ordered_dict(self, request=None):
+    def ordered_dict(self, request=None, pad=False):
         """Express search results in API and Redis-friendly structure
         returns: OrderedDict
         """
-        return self._dict(OrderedDict(), request=request)
+        return self._dict(OrderedDict(), request=request, pad=pad)
     
-    def _dict(self, data, request=None):
+    def _dict(self, data, request=None, pad=False):
         data['total'] = self.total
         data['limit'] = self.limit
         data['offset'] = self.offset
@@ -302,15 +317,26 @@ class SearchResults(object):
             u'limit=%s&offset=%s' % (self.limit, self.next_offset),
             request
         )
+        
         data['objects'] = []
+        if pad:
+            data['objects'] += [{'n':n} for n in range(0, self.page_start)]
         for o in self.objects:
             if isinstance(o, dict) or isinstance(o, OrderedDict):
                 data['objects'].append(o)
             elif isinstance(o, Result):
-                data['objects'].append(self.mappings[o.meta.doc_type].dict_list(o, request))
+                data['objects'].append(
+                    self.mappings[o.meta.doc_type].dict_list(o, request)
+                )
             else:
-                data['objects'].append(o.to_dict_list(request=request))
+                data['objects'].append(
+                    o.to_dict_list(request=request)
+                )
+        if pad:
+            data['objects'] += [{'n':n} for n in range(self.page_next, self.total)]
+        
         data['query'] = self.query
+        data['aggregations'] = self.aggregations
         return data
 
 
@@ -399,7 +425,7 @@ def aggs_dict(aggregations):
     """
     return {
         fieldname: {
-            bucket['key']: bucket['doc_count']
+            bucket['key']: str(bucket['doc_count'])
             for bucket in data['buckets']
         }
         for fieldname,data in list(aggregations.items())

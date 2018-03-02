@@ -1,0 +1,23 @@
+{% extends base_template %}
+
+
+{% block title %}
+Facilities
+{% endblock %}
+
+{% block headline %}
+Facilities
+{% endblock %}
+
+
+{% block content %}
+
+{% for ftype in facility_types.values %}
+<a href="{% url "rg-facility-type" ftype.type %}">
+  {{ ftype.type }}
+  ({{ ftype.count }})
+</a>
+<br/>
+{% endfor %}
+
+{% endblock content %}

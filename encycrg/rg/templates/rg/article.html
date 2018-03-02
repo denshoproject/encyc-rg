@@ -1,0 +1,366 @@
+{% extends base_template %}
+{% load rg_tags %}
+
+{% block title %}
+{{ article.title }}
+{% endblock %}
+
+
+{% block container %}
+<div class="row">
+  <div class="col-md-9 col-sm-8 col-xs-12 block pull-right">
+
+    <h1 class="articleTitle">{{ article.title }}</h1>
+    {% if article.rg_creators %}
+    <h3 class="articleCreatorsTitle">Creators: {% for c in article.rg_creators %}{{c}}{% if not forloop.last %},{% endif %} {% endfor %}</h3>
+    {% endif %}
+    
+    <div class="hidden-sm hidden-md hidden-lg">
+        <div class="well">
+            <i class="fa {{ fields.rg_rgmediatype.icon }}" aria-hidden="true"></i> Media Type: <a href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype.0 %}">{{ article.mediatype_label }}</a>  <span style="padding-left: 5px;"> </span>
+            {% if article.rg_interestlevel %}
+            <i class="fa {{ fields.rg_interestlevel.icon }}" aria-hidden="true"></i> Interest Level: {% for item in article.rg_interestlevel %}<a href="{% url "rg-browse-fieldvalue" "rg_interestlevel" item %}">{{ item }}</a>{% if not forloop.last %}, {% endif %}{% endfor %} <span style="padding-left: 5px;"> </span>
+            {% endif %}
+            {% if article.rg_readinglevel %}
+            <i class="fa {{ fields.rg_readinglevel.icon }}" aria-hidden="true"></i> Reading Level: {% for item in article.rg_readinglevel %}<a href="{% url "rg-browse-fieldvalue" "rg_readinglevel" item %}">{{ item }}</a>{% if not forloop.last %}, {% endif %}{% endfor %} 
+            {% endif %}
+            {% if article.rg_genre %}
+            <i class="fa {{ fields.rg_genre.icon }}" aria-hidden="true"></i> Genre: {% for item in article.rg_genre %}<a href="{% url "rg-browse-fieldvalue" "rg_genre" item %}">{{ item }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}  <span style="padding-left: 5px;"> </span>
+            {% endif %}
+            {% if article.rg_theme %}
+            <i class="fa {{ fields.rg_theme.icon }}" aria-hidden="true"></i> Theme: {% for item in article.rg_theme %}<a href="{% url "rg-browse-fieldvalue" "rg_theme" item %}">{{ item }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}  <span style="padding-left: 5px;"> </span>
+            {% endif %}
+            {% if article.rg_pov %}
+            <i class="fa {{ fields.rg_pov.icon }}" aria-hidden="true"></i> Point-of-View: {% for item in article.rg_pov %}<a href="{% url "rg-browse-fieldvalue" "rg_pov" item %}">{{ item }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}  <span style="padding-left: 5px;"> </span>
+            {% endif %}
+            {% if article.rg_chronology %}
+            <i class="fa {{ fields.rg_chronology.icon }}" aria-hidden="true"></i> Time: {% for item in article.rg_chronology %}<a href="{% url "rg-browse-fieldvalue" "rg_chronology" item %}">{{ item }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}  <span style="padding-left: 5px;"> </span>
+            {% endif %}
+            {% if article.rg_geography %}
+            <span style="text-nowrap"><i class="fa {{ fields.rg_geography.icon }}" aria-hidden="true"></i> Place: {% for item in article.rg_geography %}<a href="{% url "rg-browse-fieldvalue" "rg_geography" item %}">{{ item }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+            {% endif %}
+            {% if article.rg_availability or article.rg_freewebversion or article.rg_hasteachingaids %}
+             <br />
+            {% if article.rg_availability %}
+            <span class="small"><i class="fa {{ fields.rg_availability.icon }}" aria-hidden="true"></i> Availability: {{ article.rg_availability.0 }}  <span style="padding-left: 5px;"> </span></span>
+            {% endif %}
+            {% if article.rg_freewebversion %}
+            <span class="small"><i class="fa fa-laptop" aria-hidden="true"></i> Free Web Version: {{ article.rg_freewebversion.0 }}  <span style="padding-left: 5px;"> </span></span>
+            {% endif %}
+            {% if article.rg_hasteachingaids %}
+            <span class="small"><i class="fa fa-users" aria-hidden="true"></i> Has Teaching Aids: {{ article.rg_hasteachingaids.0 }} <span style="padding-left: 5px;"> </span></span>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row"><!--  begin main content row wrapper -->
+       <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"><!-- begin main content col wrapper -->
+           <div class="row"><!-- begin articleText row wrapper -->
+               <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"><!-- begin articleText col wrapper -->
+           {% if source %}
+           <!-- source section -->
+           <div class="pull-right block" style="padding: 15px;max-width: 250px;">
+               <img class="image-responsive" src="{{ source.img_url }}" alt="image" width="235" />
+               {% if source.caption or source.courtesy %}
+               <br/>
+               <span class="articleSourceCaption">{{ source.caption }} {{ source.courtesy }}</span>
+               {% endif %}
+               <br/>
+               <span class="articleSourceCaption"><a href="{{ source.encyc_url }}">View in the Densho Encyclopedia <i class="fa fa-book"></i></a></span>
+           </div>
+           <!-- end source section -->
+           {% endif %}
+           <div class="articleDetailBody">
+           {{ article.body|safe }}
+
+           {% if article.footnotes %}
+           {{ article.footnotes|safe }}
+           {% endif %}
+           </div>
+           
+           </div><!-- end articleText col wrapper -->
+           </div><!-- end articleText row wrapper -->
+
+           <div style="padding-top: 15px;" class="row"><!-- begin articleText row wrapper -->
+               <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"><!-- begin articleText col wrapper -->
+           <!-- begin articleExtraInfo-->
+           <div class="accordionCommon hello" id="articleExtraInfo">
+               <div class="panel-group" id="articleAccordian">
+        
+                   {% if article.related %}
+                   <!-- begin rg_SectionRelatedArticles -->
+                   <div class="panel panel-default">
+                       <a class="panel-heading accordion-toggle bg-color-5" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-relatedarticles">
+                           <span><i class="fa fa-copy" style="padding-right: 5px;"></i> Related Articles</span>
+                           <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
+                       </a>
+                       <div id="collapse-relatedarticles" class="panel-collapse collapse in">
+                           <div class="panel-body">
+                               {{ article.related|safe }}
+                           </div>
+                       </div>
+                   </div> 
+                   <!-- end rg_SectionRelatedArticles -->
+                   {% endif %}
+        
+                   {% if article.warnings %}
+                   <!-- begin rg_warnings -->
+                   <div class="panel panel-default">
+                       <a class="panel-heading accordion-toggle bg-color-3" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-warnings">
+                           <span><i class="fa fa-warning" style="padding-right: 5px;"></i> Ratings and Warnings</span>
+                           <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
+                       </a>
+                       <div id="collapse-warnings" class="panel-collapse collapse in">
+                           <div class="panel-body">
+                               {{ article.warnings|safe }}
+                           </div>
+                       </div>
+                   </div>
+                   <!-- end rg_warnings -->
+                   {% endif %}
+        
+                   {% if article.moreinfo %}
+                   <!-- begin rg_SectionForMoreInformation  -->
+                   <div class="panel panel-default">
+                       <a class="panel-heading accordion-toggle bg-color-2" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-moreinfo">
+                           <span><i class="fa fa-question-circle" style="padding-right: 5px;"></i> For More Information</span>
+                           <span class="iconBlock"><i class="fa fa-chevron-up"></i></span>
+                       </a>
+                       <div id="collapse-moreinfo" class="panel-collapse collapse">
+                           <div class="panel-body">
+                               {{ article.moreinfo|safe }}
+                           </div>
+                       </div>
+                   </div>
+                   <!-- end rg_SectionForMoreInformation -->
+                   {% endif %}
+        
+                   {% if article.reviews %}
+                   <!-- begin rg_SectionReviews -->
+                   <div class="panel panel-default">
+                       <a class="panel-heading accordion-toggle bg-color-1" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-reviews">
+                           <span><i class="fa fa-comments" style="padding-right: 5px;"></i> Reviews</span>
+                           <span class="iconBlock"><i class="fa fa-chevron-up"></i></span>
+                       </a>
+                       <div id="collapse-reviews" class="panel-collapse collapse">
+                           <div class="panel-body">
+                               {{ article.reviews|safe }}
+                           </div>
+                       </div>
+                   </div>
+                   <!-- end rg_SectionReviews -->
+                   {% endif %}
+
+               </div>
+           </div><!-- end articleExtraInfo -->
+           </div><!-- end extraInfo col wrapper -->
+           </div><!-- end extraInfo row wrapper -->
+       </div><!--  end main content col wrapper -->
+    </div><!--  end content row wrapper -->
+    
+  </div><!-- end right col -->
+  <div class="col-md-3 col-sm-4 hidden-xs pull-left">
+    
+    <aside>
+      <div class="rightSidebar">
+
+        <!-- begin facetsSidebar -->
+        <div class="panel panel-default">
+          <div class="panel-heading bg-color-1 border-color-1">
+          </div>
+          <div class="panel-body">
+            <ul class="media-list">
+               <li class="media">
+                <div class="media-left iconContent bg-color-2">
+                  <i class="fa {{ fields.rg_rgmediatype.icon }}" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent articleFacetText">
+                  <h4 class="media-heading color-2">Media Type</h4>
+                  <p>
+                    <a class="color-2 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_rgmediatype" article.rg_rgmediatype.0 %}">{{ article.mediatype_label }}</a>
+                  </p>
+                </div>
+              </li>
+
+              {% if article.rg_interestlevel %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-3">
+                  <i class="fa {{ fields.rg_interestlevel.icon }}" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent articleFacetText">
+                  <h4 class="media-heading color-3">Interest Level</h4>
+                  <p>
+                    {% for item in article.rg_interestlevel %}
+                    <a class="color-3 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_interestlevel" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_readinglevel %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-4">
+                  <i class="fa {{ fields.rg_readinglevel.icon }}" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent articleFacetText">
+                  <h4 class="media-heading color-4">Reading Level</h4>
+                  <p>
+                    {% for item in article.rg_readinglevel %}
+                    <a class="color-4 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_readinglevel" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_genre %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-5">
+                  <i class="fa {{ fields.rg_genre.icon }}" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent articleFacetText">
+                  <h4 class="media-heading color-5">Genre</h4>
+                  <p>
+                    {% for item in article.rg_genre %}
+                    <a class="color-5 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_genre" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_chronology %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-6">
+                  <i class="fa {{ fields.rg_chronology.icon }}" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent articleFacetText">
+                  <h4 class="media-heading color-6">Chronology</h4>
+                  <p>
+                    {% for item in article.rg_chronology %}
+                    <a class="color-6 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_chronology" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_geography %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-1">
+                  <i class="fa {{ fields.rg_geography.icon }}" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent articleFacetText">
+                  <h4 class="media-heading color-1">Geography</h4>
+                  <p>
+                    {% for item in article.rg_geography %}
+                    <a class="color-1 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_geography" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_pov %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-2">
+                  <i class="fa {{ fields.rg_pov.icon }}" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent articleFacetText">
+                  <h4 class="media-heading color-2">Point of View</h4>
+                  <p>
+                    {% for item in article.rg_pov %}
+                    <a class="color-2 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_pov" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+
+              {% if article.rg_theme %}
+              <li class="media">
+                <div class="media-left iconContent bg-color-3">
+                  <i class="fa {{ fields.rg_theme.icon }}" aria-hidden="true"></i>
+                </div>
+                <div class="media-body iconContent articleFacetText">
+                  <h4 class="media-heading color-3">Theme</h4>
+                  <p>
+                    {% for item in article.rg_theme %}
+                    <a class="color-3 articleFacetLink" href="{% url "rg-browse-fieldvalue" "rg_theme" item %}">{{ item }}</a>{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              </li>
+              {% endif %}
+              
+            </ul>
+          </div>
+        </div>
+        <!-- end facetsSidebar -->
+
+        <!-- begin availabilitySidebar -->
+        <div class="panel panel-default">
+          <div class="panel-heading bg-color-1 border-color-1">
+            <h3 class="panel-title"></h3>
+          </div>
+          <div class="panel-body">
+            <div class="availability-sidebar">
+              <div class="row">
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <h4 class="color-3" style="margin-bottom: 0px;">Availability</h4>
+                </div>
+                <div class="col-md-6 col-sm-6 col-xs-6" style="text-align: right;">
+                  {% availabilitylevel article.rg_availability %}
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-7 col-sm-7 col-xs-7">
+                  Free On Web
+                </div>
+                <div class="col-md-5 col-sm-5 col-xs-5">
+                  {% if article.rg_freewebversion == 'Yes' %}
+                  <i class="fa fa-check"></i>
+                  {% else %}
+                  <i class="fa fa-remove"></i>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-7 col-sm-7 col-xs-7">
+                  Teacher Guide
+                </div>
+                <div class="col-md-5 col-sm-5 col-xs-5">
+                  {% if article.rg_hasteachingaids == 'Yes' %}
+                  <i class="fa fa-check"></i>
+                  {% else %}
+                  <i class="fa fa-remove"></i>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- end availabilitySidebar -->
+
+        <!-- begin encyclopediaCrosslink --> 
+        <div class="well">
+          <p>
+            This article also appears in the <strong>Densho Encyclopedia</strong>, a free on-line resource covering the key concepts, people, events, and organizations that played a role in the forced removal and incarceration of Japanese Americans during World War II.
+          </p>
+          <p class="text-center">
+            <a href="{{ article.encyclopedia_url }}" class="btn btn-xs btn-primary"><i class="fa fa-book"></i> View in Encyclopedia</a>
+          </p>
+          <p>
+            Links to other articles in the Encyclopedia are marked with a <i class="fa fa-book color-3"></i> icon.
+          </p>
+        </div>
+        <!-- end encyclopediaCrosslink -->
+
+      </div>
+    </aside>
+    
+  </div>
+</div><!-- .row -->
+{% endblock container %}

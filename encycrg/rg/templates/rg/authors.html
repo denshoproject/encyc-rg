@@ -1,0 +1,25 @@
+{% extends base_template %}
+
+
+{% block title %}
+Authors
+{% endblock %}
+
+{% block headline %}
+Authors
+{% endblock %}
+
+
+{% block content %}
+
+<div id="item-count">
+  {{ results.total }} authors<br/>
+</div>
+
+{% for author in results.ordered_dict.objects %}
+<div class="author-list">
+  <a href="{{ author.links.html }}">{{ author.id }}</a>
+</div>
+{% endfor %}
+
+{% endblock content %}

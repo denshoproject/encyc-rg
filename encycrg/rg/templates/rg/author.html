@@ -1,0 +1,28 @@
+{% extends base_template %}
+
+
+{% block title %}
+{{ author.title }}
+{% endblock %}
+
+{% block headline %}
+{{ author.title }}
+{% endblock %}
+
+
+{% block content %}
+
+{{ author.body|safe }}
+
+{% if author.articles %}
+<dl>
+  <dt>Articles</dt>
+  {% for article in author.articles %}
+  {{ article }}
+  <dd>
+    <a href="{{ article.html }}">{{ article.title }}</a>
+  </dd>{% endfor %}
+</dl>
+{% endif %}
+
+{% endblock content %}

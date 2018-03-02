@@ -1,0 +1,53 @@
+{% extends base_template %}
+{% load bootstrap_pagination %}
+
+
+{% block title %}
+Browse by Title
+{% endblock %}
+
+{% block container %}
+<div class="basePage">
+<div class="row">
+  <div class="col-md-12 col-sm-12 col-xs-12">
+
+<h1 class="articleTitle">
+<a href="{% url "rg-browse" %}">Browse</a>
+&gt;
+<span class="iconBlock"><i class="fa fa-sort-alpha-asc" style="padding-right: 5px;"></i></span>
+Title
+</h1>
+
+<div class="resultInfo">
+<h3>{{ num_articles }} articles</h3>
+</div>    
+    
+<h2 class="color-2"><strong>
+  {% for initial in initials %}
+  <span class="a-zContents"><a href="#{{ initial }}">{{ initial }}</a></span>
+  {% endfor %}
+</strong></h2>
+
+<div class="articlesList" style="padding-top: 15px;">
+  {% for initial,articles in groups %}
+  <a name="{{ initial }}"></a>
+  <table class="table table-responsive table-sm table-hover">
+  <caption><span class="a-zInitial">{{ initial }}</span></caption>
+  {% for article in articles %}
+  <tr>
+    <th style="padding-right: 0px; margin-right: 0px; width: 20px;">
+      
+    </th>
+    <td>
+        <span class="a-zLink"><a class="browse" href="{{ article.links.html }}"><i class="fa {{ article.mediatype_icon }}" style="padding-right: 10px;" aria-hidden="true"></i> {{ article.id }}</a></span>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endfor %}
+</div>
+
+  </div>
+</div><!-- .row -->
+</div>
+{% endblock container %}

@@ -16,10 +16,14 @@ standard_library.install_aliases()
 import configparser
 import logging
 import os
+import subprocess
 import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+with open(os.path.join(BASE_DIR, '..', 'VERSION'), 'r') as f:
+    VERSION = f.read()
 
 CONFIG_FILES = [
     '/etc/encyc/encycrg.cfg',
@@ -32,11 +36,13 @@ if not configs_read:
     raise Exception('No config file!')
 
 # SECURITY WARNING: keep the secret key used in production secret!
-with open('/etc/encyc/encycrg-secret-key.txt') as f:
-    SECRET_KEY = f.read().strip()
+SECRET_KEY = config.get('security', 'secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config.getboolean('debug', 'debug')
+GITPKG_DEBUG = config.getboolean('debug', 'gitpkg_debug')
+
+LOG_LEVEL = config.get('debug', 'log_level')
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -54,6 +60,8 @@ DOCSTORE_INDEX = config.get('elasticsearch', 'docstore_index')
 
 DEFAULT_LIMIT = 25
 MAX_SIZE = 10000
+
+BASE_TEMPLATE = 'rg/base2.html'
 
 # Filesystem path and URL for static media (mostly used for interfaces).
 STATIC_ROOT = config.get('media', 'static_root')
@@ -79,6 +87,10 @@ THUMBNAIL_GEOMETRY='512x512>'
 THUMBNAIL_COLORSPACE='sRGB'
 THUMBNAIL_OPTIONS=''
 
+ENCYCLOPEDIA_URL = config.get('encycrg', 'encyclopedia_url')
+
+GOOGLE_ANALYTICS_ID = config.get('encycrg', 'google_analytics_id')
+
 # ----------------------------------------------------------------------
 
 ADMINS = (
@@ -89,13 +101,14 @@ ADMINS = (
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    #'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     #
+    'bootstrap_pagination',
     'rest_framework',
     #
     'encycrg',
@@ -108,6 +121,8 @@ REST_FRAMEWORK = {
     ],
     'PAGE_SIZE': 20
 }
+UNAUTHENTICATED_USER = None
+UNAUTHENTICATED_TOKEN = None
 
 DATABASES = {
     'default': {
@@ -130,10 +145,10 @@ CACHES = {
 
 # whole-site caching
 CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_SECONDS = 60 * 15
+CACHE_MIDDLEWARE_SECONDS = config.get('encycrg', 'cache_timeout')
 CACHE_MIDDLEWARE_KEY_PREFIX = 'encycrg'
 # low-level caching
-CACHE_TIMEOUT = 60 * 5
+CACHE_TIMEOUT = config.get('encycrg', 'cache_timeout')
 
 # ElasticSearch
 ELASTICSEARCH_MAX_SIZE = 10000
@@ -160,8 +175,8 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -177,8 +192,9 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
+                #'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'rg.context_processors.sitewide',
             ],
         },
     },
@@ -235,3 +251,80 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+
+if GITPKG_DEBUG:
+    # report Git branch and commit
+    # This branch is the one with the leading '* '.
+    #try:
+    GIT_BRANCH = [
+        b.decode().replace('*','').strip()
+        for b in subprocess.check_output(['git', 'branch']).splitlines()
+        if '*' in b.decode()
+       ][0]
+    #except:
+    #    GIT_BRANCH = 'unknown'
+    #try:
+        # $ git log --pretty=oneline
+        # a21740293f... COMMIT MESSAGE
+    
+    GIT_COMMIT = subprocess.check_output([
+        'git','log','--pretty=oneline','-1'
+       ]).decode().strip().split(' ')[0]
+    #except:
+    #    GIT_COMMIT = 'unknown'
+     
+    def package_debs(package, apt_cache_dir='/var/cache/apt/archives'):
+        """
+        @param package: str Package name
+        @param apt_cache_dir: str Absolute path
+        @returns: list of .deb files matching package and version
+        """
+        cmd = 'dpkg --status %s' % package
+        try:
+            dpkg_raw = subprocess.check_output(cmd.split(' ')).decode()
+        except subprocess.CalledProcessError:
+            return ''
+        data = {}
+        for line in dpkg_raw.splitlines():
+            if line and isinstance(line, basestring) and (':' in line):
+                key,val = line.split(':', 1)
+                data[key.strip().lower()] = val.strip()
+        pkg_paths = [
+            path for path in os.listdir(apt_cache_dir)
+            if (package in path) and data.get('version') and (data['version'] in path)
+        ]
+        return pkg_paths
+    
+    PACKAGES = package_debs('encycrg-%s' % GIT_BRANCH)
+
+else:
+    GIT_BRANCH = []
+    GIT_COMMIT = ''
+    PACKAGES = []
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/var/log/encyc/rg.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+    ## This is the only way I found to write log entries from the whole DDR stack.
+    #'root': {
+    #    'level': LOG_LEVEL,
+    #    'handlers': ['file'],
+    #},
+}

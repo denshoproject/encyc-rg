@@ -4,10 +4,15 @@ from future.utils import python_2_unicode_compatible
 from builtins import str
 from builtins import object
 from collections import OrderedDict
+import json
 import logging
 logger = logging.getLogger(__name__)
+import os
+from urllib.parse import urlparse, urljoin
 
-from elasticsearch.exceptions import NotFoundError
+from bs4 import BeautifulSoup
+
+from elasticsearch.exceptions import NotFoundError, TransportError
 from elasticsearch_dsl import Index
 from elasticsearch_dsl import DocType, InnerObjectWrapper, analysis
 from elasticsearch_dsl import String, Date, Nested, Boolean
@@ -17,7 +22,7 @@ from elasticsearch_dsl.utils import AttrList
 
 from django.conf import settings
 from django.core.cache import cache
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from rest_framework.reverse import reverse as api_reverse
 
 from . import search
@@ -56,15 +61,19 @@ response = s.execute()
 
 """
 
-def hitvalue(hit, field):
+def hitvalue(hit, field, is_list=False):
     """
     For some reason, Search hit objects wrap values in lists.
     returns the value inside the list.
     """
     if not hasattr(hit, field):
+        if is_list:
+            return []
         return None
     value = getattr(hit, field)
-    if value and (isinstance(value, AttrList) or isinstance(value, list)):
+    if isinstance(value, AttrList):
+        value = list(value)
+    if value and isinstance(value, list) and not is_list:
         value = value[0]
     return value
 
@@ -104,6 +113,14 @@ class Author(DocType):
 
     def absolute_url(self):
         return reverse('rg-author', args=([self.title,]))
+
+    @staticmethod
+    def search():
+        """AuthorSearch
+        
+        @returns: elasticsearch_dsl.Search
+        """
+        return search.Search().doc_type(Author)
     
     @staticmethod
     def dict_list(hit, request):
@@ -170,7 +187,11 @@ class Author(DocType):
         setval(self, data, 'body')
         # overwrite
         data['articles'] = [
-            api_reverse('rg-api-article', args=([url_title]), request=request)
+            {
+                'json': api_reverse('rg-api-article', args=([url_title]), request=request),
+                'html': api_reverse('rg-article', args=([url_title]), request=request),
+                'title': url_title,
+            }
             for url_title in self.article_titles
         ]
         return data
@@ -192,8 +213,7 @@ class Author(DocType):
         
         @returns: list
         """
-        KEY = 'encyc-front:authors'
-        TIMEOUT = 60*5
+        KEY = 'encyc-rg:authors'
         data = cache.get(KEY)
         if not data:
             s = Search(doc_type='authors')[0:settings.MAX_SIZE]
@@ -211,7 +231,7 @@ class Author(DocType):
                 for hit in response
                 if hitvalue(hit, 'published')
             ]
-            cache.set(KEY, data, TIMEOUT)
+            cache.set(KEY, data, settings.CACHE_TIMEOUT)
         if num_columns:
             return _columnizer(data, num_columns)
         return data
@@ -232,24 +252,127 @@ PAGE_LIST_FIELDS = [
     'url_title',
     'title',
     'title_sort',
+    'description',
     'published',
     'modified',
     'categories',
-]
-
-PAGE_BROWSABLE_FIELDS = [
     'rg_rgmediatype',
     'rg_interestlevel',
-    'rg_readinglevel',
-    'rg_theme',
     'rg_genre',
-    'rg_relatedevents',
+    'rg_theme',
+    'rg_readinglevel',
     'rg_availability',
-    'rg_freewebversion',
-    'rg_denshotopic',
-    'rg_geography',
-    'rg_facility',
-    'rg_hasteachingaids',
+]
+
+# fields for browsing
+# fields for search aggregations
+PAGE_BROWSABLE_FIELDS = {
+    'rg_rgmediatype': 'Media Type',
+    'rg_interestlevel': 'Interest Level',
+    'rg_readinglevel': 'Reading Level',
+    'rg_theme': 'Theme',
+    'rg_genre': 'Genre',
+    'rg_pov': 'Point of View',
+    'rg_availability': 'Availability',
+    'rg_geography': 'Geography',
+    'rg_chronology': 'Chronology',
+    'rg_hasteachingaids': 'Has Teaching Aids',
+    'rg_freewebversion': 'Free Web Version',
+    #'rg_relatedevents': 'Related Events',
+    #'rg_denshotopic': 'Topic',
+    #'rg_facility': 'Facility',
+}
+
+PAGE_SEARCH_FIELDS = [x for x in PAGE_BROWSABLE_FIELDS.keys()]
+PAGE_SEARCH_FIELDS.insert(0, 'fulltext')
+
+FACET_FIELDS = OrderedDict()
+FACET_FIELDS['rg_rgmediatype'] = {
+    'label':'Media Type',
+    'description':'The general form of the resource.',
+    'icon':'fa-cubes',
+    'stub':'media-type',
+}
+FACET_FIELDS['rg_interestlevel'] = {
+    'label':'Interest Level',
+    'description':'The grades or ages that would most likely be engaged by the resource.',
+    'icon':'fa-graduation-cap',
+    'stub':'interest-level',
+}
+FACET_FIELDS['rg_readinglevel'] = {
+    'label':'Reading Level',
+    'description':'The general reading level(s) based on grade groupings.',
+    'icon':'fa-bookmark',
+    'stub':'reading-level',
+}
+FACET_FIELDS['rg_genre'] = {
+    'label':'Genre',
+    'description':'The specific category or class of the resource within its media type.',
+    'icon':'fa-tags',
+    'stub':'genre',
+}
+FACET_FIELDS['rg_theme'] = {
+    'label':'Theme',
+    'description':'The universal ideas or messages expressed in the resource.',
+    'icon':'fa-compass',
+    'stub':'theme',
+}
+FACET_FIELDS['rg_pov'] = {
+    'label':'Point-of-View',
+    'description':'The point-of-view and characteristics of the primary protagonist.',
+    'icon':'fa-eye',
+    'stub':'pov',
+}
+FACET_FIELDS['rg_geography'] = {
+    'label':'Place',
+    'description':'The main geographic location(s) depicted in the resource.',
+    'icon':'fa-globe',
+    'stub':'place',
+}
+FACET_FIELDS['rg_chronology'] = {
+    'label':'Time',
+    'description':'The primary time period the resource describes or in which it is set.',
+    'icon':'fa-clock-o',
+    'stub':'time',
+}
+FACET_FIELDS['rg_availability'] = {
+    'label':'Availabilty',
+    'description':'Level of availability, from "Widely available", meaning, "easy to purchase or stream & reasonably priced/free", to "Not available", meaning, "not currently available to purchase or borrow."',
+    'icon':'fa-binoculars',
+    'stub':'availability',
+}
+FACET_FIELDS['rg_hasteachingaids'] = {
+    'label':'Teaching Aids',
+    'description':'The resource includes classroom teaching aids.',
+    'icon':'fa-users',
+    'stub':'teaching-aids',
+}
+FACET_FIELDS['rg_freewebversion'] = {
+    'label':'Free Web Version',
+    'description':'There is a free version available on the web.',
+    'icon':'fa-laptop',
+    'stub':'free-web-version',
+}
+MEDIATYPE_URLSTUBS = {val['stub']: key for key,val in FACET_FIELDS.items()}
+
+MEDIATYPE_INFO = {
+    'albums': {'label': 'Albums', 'icon': 'fa-music'},
+    'articles': {'label': 'Articles', 'icon': 'fa-newspaper-o'},
+    'books': {'label': 'Books', 'icon': 'fa-book'},
+    'curriculum': {'label': 'Curriculum', 'icon': 'fa-tasks'},
+    'essays': {'label': 'Essays', 'icon': 'fa-edit'},
+    'exhibitions': {'label': 'Museum Exhibitions', 'icon': 'fa-university'},
+    'films': {'label': 'Films and Video', 'icon': 'fa-film'},
+    'plays': {'label': 'Plays', 'icon': 'fa-ticket'},
+    'short stories': {'label': 'Short Stories', 'icon': 'fa-file-text'},
+    'websites': {'label': 'Websites', 'icon': 'fa-laptop'},
+}
+
+ACCORDION_SECTIONS = [
+    ('moreinfo', 'For_More_Information'),
+    ('reviews', 'Reviews'),
+    ('footnotes', 'Footnotes'),
+    ('related', 'Related_articles'),
 ]
 
 @python_2_unicode_compatible
@@ -260,6 +383,8 @@ class Page(DocType):
     url_title = String(index='not_analyzed')  # Elasticsearch id
     public = Boolean()
     published = Boolean()
+    published_encyc = Boolean()
+    published_rg = Boolean()
     modified = Date()
     mw_api_url = String(index='not_analyzed')
     title_sort = String(index='not_analyzed')
@@ -276,6 +401,7 @@ class Page(DocType):
             'parsed': String(index='not_analyzed', multi=True),
         }
     )
+    databoxes = String(index='not_analyzed', multi=True)
     
     rg_rgmediatype = String(index='not_analyzed', multi=True)
     rg_title = String()
@@ -284,13 +410,13 @@ class Page(DocType):
     rg_readinglevel = String(index='not_analyzed', multi=True)
     rg_theme = String(index='not_analyzed', multi=True)
     rg_genre = String(index='not_analyzed', multi=True)
-    rg_pov = String()
-    rg_relatedevents = String()
+    rg_pov = String(index='not_analyzed', multi=True)
+    #rg_relatedevents = String()
     rg_availability = String(index='not_analyzed')
     rg_freewebversion = String(index='not_analyzed')
-    rg_denshotopic = String(index='not_analyzed', multi=True)
+    #rg_denshotopic = String(index='not_analyzed', multi=True)
     rg_geography = String(index='not_analyzed', multi=True)
-    rg_facility = String(index='not_analyzed', multi=True)
+    #rg_facility = String(index='not_analyzed', multi=True)
     rg_chronology = String(index='not_analyzed', multi=True)
     rg_hasteachingaids = String(index='not_analyzed')
     rg_warnings = String()
@@ -311,6 +437,48 @@ class Page(DocType):
     def absolute_url(self):
         return reverse('rg-page', args=([self.title]))
     
+    def encyclopedia_url(self):
+        return os.path.join(settings.ENCYCLOPEDIA_URL, self.title)
+
+    def prepare(self):
+        soup = BeautifulSoup(self.body, 'html.parser')
+        
+        # rm databox display tables (note: 'Display' appended to databox name)
+        #   <div id="rgdatabox-CoreDisplay">
+        for d in [d.split('|')[0] for d in self.databoxes]:
+            if soup.find(id='%sDisplay' % d):
+                soup.find(id='%sDisplay' % d).decompose()
+        
+        # rm table of contents div
+        #   <div class="toc" id="toc">...
+        if soup.find(id='toc'):
+            soup.find(id='toc').decompose()
+        
+        # rm internal top links
+        #   <div class="toplink">...
+        for tag in soup.find_all(class_="toplink"):
+            tag.decompose()
+
+        # prepend encycfront domain for notrg links
+        for a in soup.find_all('a', class_='notrg'):
+            a['href'] = urljoin(settings.ENCYCLOPEDIA_URL, a['href'])
+        
+        # rm underscores from internal links
+        for a in soup.find_all('a', class_='rg'):
+            a['href'] = a['href'].replace('_', ' ')
+        
+        # rm sections from soup, to separate blocks of HTML
+        #   <div class="section" id="For_More_Information">
+        #   <div class="section" id="Reviews">
+        #   <div class="section" id="Footnotes">
+        #   <div class="section" id="Related_articles">
+        for fieldname,sectionid in ACCORDION_SECTIONS:
+            if soup.find(id=sectionid):
+                tag = soup.find(id=sectionid).extract()
+                setattr(self, fieldname, tag.prettify())
+        
+        self.body = soup.prettify()
+    
     @staticmethod
     def dict_list(hit, request):
         """Structure a search results hit for listing
@@ -325,7 +493,7 @@ class Page(DocType):
         data['doctype'] = hit.meta.doc_type
         data['links'] = {}
         data['links']['html'] = api_reverse(
-            'rg-api-article',
+            'rg-article',
             args=([hit.url_title]),
             request=request,
         )
@@ -356,6 +524,21 @@ class Page(DocType):
             args=([self.url_title]),
             request=request,
         )
+        data['title_sort'] = self.title_sort
+        data['description'] = self.description
+        
+        def setval(self, data, fieldname, is_list=False):
+            data[fieldname] = hitvalue(self, fieldname, is_list)
+        
+        setval(self, data, 'rg_rgmediatype', is_list=1)
+        if MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
+            data['mediatype_label'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['label']
+            data['mediatype_icon'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['icon']
+        setval(self, data, 'rg_interestlevel', is_list=1)
+        setval(self, data, 'rg_genre', is_list=1)
+        setval(self, data, 'rg_theme', is_list=1)
+        setval(self, data, 'rg_readinglevel', is_list=1)
+        setval(self, data, 'rg_availability', is_list=1)
         return data
     
     def dict_all(self, request=None):
@@ -364,8 +547,8 @@ class Page(DocType):
         @param request: django.http.request.HttpRequest
         @returns: OrderedDict
         """
-        def setval(self, data, fieldname):
-            data[fieldname] = hitvalue(self, fieldname)
+        def setval(self, data, fieldname, is_list=False):
+            data[fieldname] = hitvalue(self, fieldname, is_list)
         
         # basic data from list
         data = self.to_dict_list(request)
@@ -378,46 +561,71 @@ class Page(DocType):
         setval(self, data, 'title')
         setval(self, data, 'title_sort')
         #url_title
+        setval(self, data, 'description')
         #prev_page
         #next_page
         setval(self, data, 'categories')
         setval(self, data, 'source_ids')
         #public
         #published
+        setval(self, data, 'published_encyc')
+        setval(self, data, 'published_rg')
         setval(self, data, 'modified')
         #mw_api_url
         setval(self, data, 'coordinates')
         #self, 'authors_data'
-        setval(self, data, 'rg_rgmediatype')
+        data['databoxes'] = {}
+        setval(self, data, 'rg_rgmediatype', is_list=1)
+        if MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
+            data['mediatype_label'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['label']
+            data['mediatype_icon'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['icon']
         setval(self, data, 'rg_title')
-        setval(self, data, 'rg_creators')
-        setval(self, data, 'rg_interestlevel')
-        setval(self, data, 'rg_readinglevel')
-        setval(self, data, 'rg_theme')
-        setval(self, data, 'rg_genre')
-        setval(self, data, 'rg_pov')
-        setval(self, data, 'rg_relatedevents')
-        setval(self, data, 'rg_availability')
-        setval(self, data, 'rg_freewebversion')
-        setval(self, data, 'rg_denshotopic')
-        setval(self, data, 'rg_geography')
-        setval(self, data, 'rg_facility')
-        setval(self, data, 'rg_chronology')
-        setval(self, data, 'rg_hasteachingaids')
-        setval(self, data, 'rg_warnings')
+        setval(self, data, 'rg_creators', is_list=1)
+        setval(self, data, 'rg_interestlevel', is_list=1)
+        setval(self, data, 'rg_readinglevel', is_list=1)
+        setval(self, data, 'rg_theme', is_list=1)
+        setval(self, data, 'rg_genre', is_list=1)
+        setval(self, data, 'rg_pov', is_list=1)
+        #setval(self, data, 'rg_relatedevents', is_list=1)
+        setval(self, data, 'rg_availability', is_list=1)
+        setval(self, data, 'rg_freewebversion', is_list=1)
+        #setval(self, data, 'rg_denshotopic')
+        setval(self, data, 'rg_geography', is_list=1)
+        #setval(self, data, 'rg_facility')
+        setval(self, data, 'rg_chronology', is_list=1)
+        setval(self, data, 'rg_hasteachingaids', is_list=1)
+        setval(self, data, 'rg_warnings', is_list=1)
         setval(self, data, 'body')
+        for fieldname,sectionid in ACCORDION_SECTIONS:
+            setval(self, data, fieldname)
         # overwrite
         data['categories'] = [
-            api_reverse('rg-api-category', args=([category]), request=request)
+            {
+                'json': api_reverse('rg-api-category', args=([category]), request=request),
+                'html': api_reverse('rg-category', args=([category]), request=request),
+                'title': category,
+            }
             for category in self.categories
         ]
+        for text in getattr(self, 'databoxes', []):
+            key,databox_text = text.split('|')
+            if key and databox_text:
+                data['databoxes'][key] = json.loads(databox_text)
         #'ddr_topic_terms': topic_term_ids,
         data['sources'] = [
-            api_reverse('rg-api-source', args=([source_id]), request=request)
+            {
+                'json': api_reverse('rg-api-source', args=([source_id]), request=request),
+                'html': api_reverse('rg-source', args=([source_id]), request=request),
+                'id': source_id,
+            }
             for source_id in self.source_ids
         ]
         data['authors'] = [
-            api_reverse('rg-api-author', args=([author_titles]), request=request)
+            {
+                'json': api_reverse('rg-api-author', args=([author_titles]), request=request),
+                'html': api_reverse('rg-author', args=([author_titles]), request=request),
+                'title': author_titles,
+            }
             for author_titles in self.authors_data['display']
         ]
         return data
@@ -428,16 +636,27 @@ class Page(DocType):
         @returns: list
         """
         objects = []
-        for url_title in self.authors_data['display']:
-            try:
-                author = Author.get(url_title)
-            except NotFoundError:
-                author = url_title
-            objects.append(author)
+        if self.authors_data:
+            for url_title in self.authors_data['display']:
+                try:
+                    author = Author.get(url_title)
+                except NotFoundError:
+                    author = url_title
+                objects.append(author)
         return objects
 
     def first_letter(self):
         return self.title_sort[0]
+
+    @staticmethod
+    def search():
+        """RG-only Page Search
+        
+        @returns: elasticsearch_dsl.Search
+        """
+        s = search.Search().doc_type(Page)
+        s = s.filter('term', published_rg=True)
+        return s
     
     @staticmethod
     def pages(only_rg=True, start=0, stop=settings.MAX_SIZE):
@@ -446,34 +665,36 @@ class Page(DocType):
         @param only_rg: boolean Only return RG pages (rg_rgmediatype present)
         @returns: list
         """
-        s = Search().doc_type(Page)
-        if only_rg:
-            # require rg_rgmediatype
-            s = s.filter(Q('exists', field=['rg_rgmediatype']))
-        s = s.sort('title_sort')
-        s = s.fields(PAGE_LIST_FIELDS)
-        query = s.to_dict()
-        count = s.count()
-        s = s[start:stop]
-        results = s.execute()
-        
-        return search.SearchResults(
-            mappings=models.DOCTYPE_CLASS,
-            query=query,
-            count=count,
-            results=results,
-            limit=limit,
-            offset=offset,
-        )
-    
+        KEY = 'encyc-rg:pages'
+        data = cache.get(KEY)
+        if not data:
+            s = Page.search()
+            if only_rg:
+                s = s.filter('term', published_rg=True)
+            s = s.sort('title_sort')
+            s = s.fields(PAGE_LIST_FIELDS)
+            query = s.to_dict()
+            count = s.count()
+            if (start != 0) or (stop != settings.MAX_SIZE):
+                s = s[start:stop]
+            data = search.SearchResults(
+                mappings=DOCTYPE_CLASS,
+                query=query,
+                count=count,
+                results=s.execute(),
+                #limit=limit,
+                #offset=offset,
+            ).objects
+            cache.set(KEY, data, settings.CACHE_TIMEOUT)
+        return data
+
     @staticmethod
     def pages_by_category():
         """Returns list of (category, Pages) tuples, alphabetical by category
         
         @returns: list
         """
-        KEY = u'encyc-front:pages_by_category'
-        TIMEOUT = 60*5
+        KEY = u'encyc-rg:pages_by_category'
         data = cache.get(KEY)
         if not data:
             categories = {}
@@ -490,7 +711,21 @@ class Page(DocType):
                 (key,categories[key])
                 for key in sorted(categories.keys())
             ]
-            cache.set(KEY, data, TIMEOUT)
+            cache.set(KEY, data, settings.CACHE_TIMEOUT)
+        return data
+
+    @staticmethod
+    def mediatypes(pages=None):
+        KEY = u'encyc-rg:rgmediatypes'
+        data = cache.get(KEY)
+        if not data:
+            if not pages:
+                pages = Page.pages()
+            mediatypes = []
+            for page in pages:
+                mediatypes += page.rg_rgmediatype
+            data = set(mediatypes)
+            cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
 
     def scrub(self):
@@ -507,7 +742,12 @@ class Page(DocType):
         
         @returns: list
         """
-        return [Source.get(sid) for sid in self.source_ids]
+        try:
+            return Source.mget(self.source_ids, missing='skip')
+        except TransportError as err:
+            if err.status_code == 400:
+                return []
+            raise err
     
     def topics(self):
         """List of DDR topics associated with this page.
@@ -516,17 +756,17 @@ class Page(DocType):
         """
         # return list of dicts rather than an Elasticsearch results object
         terms = []
-        for t in Elasticsearch.topics_by_url().get(self.absolute_url(), []):
-            term = {
-                key: val
-                for key,val in list(t.items())
-            }
-            term.pop('encyc_urls')
-            term['ddr_topic_url'] = u'%s/%s/' % (
-                settings.DDR_TOPICS_BASE,
-                term['id']
-            )
-            terms.append(term)
+        #for t in Elasticsearch.topics_by_url().get(self.absolute_url(), []):
+        #    term = {
+        #        key: val
+        #        for key,val in list(t.items())
+        #    }
+        #    term.pop('encyc_urls')
+        #    term['ddr_topic_url'] = u'%s/%s/' % (
+        #        settings.DDR_TOPICS_BASE,
+        #        term['id']
+        #    )
+        #    terms.append(term)
         return terms
     
     def ddr_terms_objects(self, size=100):
@@ -617,10 +857,13 @@ class Source(DocType):
         return reverse('rg-source', args=([self.encyclopedia_id]))
     
     def img_url(self):
-        return os.path.join(settings.SOURCES_MEDIA_URL, self.img_path)
+        return os.path.join(settings.MEDIA_URL, self.img_path)
     
     def img_url_local(self):
-        return os.path.join(settings.SOURCES_MEDIA_URL_LOCAL, self.img_path)
+        return os.path.join(settings.MEDIA_URL_LOCAL, self.img_path)
+    
+    def encyc_url(self):
+        return '/'.join([settings.ENCYCLOPEDIA_URL, 'sources', self.encyclopedia_id])
     
     #def streaming_url(self):
     #    return os.path.join(settings.SOURCES_MEDIA_URL, self.streaming_path)
@@ -628,6 +871,14 @@ class Source(DocType):
     def transcript_url(self):
         if self.transcript_path():
             return os.path.join(settings.SOURCES_MEDIA_URL, self.transcript_path())
+
+    @staticmethod
+    def search():
+        """Source Search
+        
+        @returns: elasticsearch_dsl.Search
+        """
+        return search.Search().doc_type(Source)
 
     @staticmethod
     def dict_list(hit, request):
@@ -661,7 +912,7 @@ class Source(DocType):
         data = OrderedDict()
         data['id'] = self.encyclopedia_id
         data['doctype'] = u'sources'
-        data['links'] = {}
+        data['links'] = OrderedDict()
         data['links']['html'] = api_reverse(
             'rg-source',
             args=([self.encyclopedia_id]),
@@ -672,6 +923,8 @@ class Source(DocType):
             args=([self.encyclopedia_id]),
             request=request,
         )
+        data['links']['img'] = self.img_url()
+        data['links']['encyc'] = self.encyc_url()
         return data
 
     def dict_all(self, request=None):
@@ -752,8 +1005,7 @@ class Source(DocType):
         
         @returns: list
         """
-        KEY = u'encyc-front:sources'
-        TIMEOUT = 60*5
+        KEY = u'encyc-rg:sources'
         data = cache.get(KEY)
         if not data:
             s = Search(doc_type='sources')[0:settings.MAX_SIZE]
@@ -772,7 +1024,7 @@ class Source(DocType):
                 for hit in response
                 if hitvalue(hit, 'published')
             ]
-            cache.set(KEY, data, TIMEOUT)
+            cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
 
 
@@ -831,6 +1083,10 @@ DOCTYPE_CLASS['sources'] = Source
 
 SEARCH_LIST_FIELDS = AUTHOR_LIST_FIELDS + PAGE_LIST_FIELDS + SOURCE_LIST_FIELDS
 
+
+TERM_TITLES = {}  # values set later
+
+FACILITY_TYPES = {}
 
 class Location(InnerObjectWrapper):
     pass
@@ -937,6 +1193,8 @@ class FacetTerm(DocType):
     def dict_all(self, request=None):
         """Return a dict with all FacetTerm fields
         
+        NOTE: we assume that TERM_TITLES is populated when this is called.
+        
         @param request: django.http.request.HttpRequest
         @returns: OrderedDict
         """
@@ -961,20 +1219,40 @@ class FacetTerm(DocType):
             data['_title'] = self._title
             data['description'] = self.description
             data['path'] = self.path
+
+            def term_listitem(facet_id, tid, request=None):
+                term_id = '-'.join([facet_id, str(tid)])
+                item = TERM_TITLES.get(term_id)
+                if item:
+                    title = item['title']
+                    path = item['path']
+                else:
+                    title = term_id
+                    path = ''
+                d = OrderedDict()
+                d['id'] = term_id
+                d['json'] = api_reverse('rg-api-term', args=([u'%s-%s' % (facet_id, tid)]), request=request)
+                d['html'] = api_reverse('rg-term', args=([u'%s-%s' % (facet_id, tid)]), request=request)
+                d['path'] = path
+                d['title'] = title
+                return d
+            
             if self.parent_id:
                 data['parent_id'] = api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, self.parent_id)]), request=request)
+                data['parent'] = term_listitem(self.facet_id, self.parent_id, request)
             else:
                 data['parent_id'] = u''
+                data['parent'] = None
             data['ancestors'] = [
-                api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, tid)]), request=request)
+                term_listitem(self.facet_id, tid, request)
                 for tid in self.ancestors
             ]
             data['children'] = [
-                api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, tid)]), request=request)
+                term_listitem(self.facet_id, tid, request)
                 for tid in self.children
             ]
             data['siblings'] = [
-                api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, tid)]), request=request)
+                term_listitem(self.facet_id, tid, request)
                 for tid in self.siblings
             ]
             data['weight'] = self.weight
@@ -997,6 +1275,34 @@ class FacetTerm(DocType):
             d['links']['html'] = api_reverse('rg-article', args=([item.url_title]), request=request)
             data['encyc_urls'].append(d)
         return data
+
+TERM_TITLES = {
+    term.id: {
+        'id': term.id,
+        'title': term.title,
+        'path': term.path,
+    }
+    for term in FacetTerm.terms(request=None)
+}
+
+def facility_types():
+    types = {}
+    for term in FacetTerm.terms(request=None, facet_id='facility'):
+        if types.get(term.type):
+            types[term.type]['count'] += 1
+        else:
+            types[term.type] = term.dict_all()
+            types[term.type]['count'] = 1
+    return types
+
+def facility_type(type_id):
+    return [
+        term
+        for term in FacetTerm.terms(request=None, facet_id='facility')
+        if term.type == type_id
+    ]
+
+
 
 
 @python_2_unicode_compatible

@@ -1,0 +1,50 @@
+{% extends base_template %}
+
+
+{% block title %}
+Browse by {{ field_title }}
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<ul>
+  <li>
+    <a href="{% url "rg-browse" %}">Browse</a>
+  </li>
+  <li>
+    {{ field_title }}
+  </li>
+</ul>
+{% endblock breadcrumbs %}
+
+
+{% block container %}
+<div class="basePage">
+<div class="row">
+  <div class="col-md-12 col-sm-12 col-xs-12">
+    
+<h1 class="articleTitle">
+<a href="{% url "rg-browse" %}">Browse</a>
+&gt;
+<span class="iconBlock"><i class="fa {{ field_icon }}"></i></span>
+{{ field_title }}
+</h1>
+
+<table class="table table-responsive table-sm table-hover">
+  <caption><h4 style="color: #999;">{{ field_description }}</h4></caption>
+  {% for item in query %}
+  <tr>
+    <th>
+      <h4 class="browseFacetTitle color-2"><a class="browse browseFacetTitle color-2" href="{{ item.html }}">{{ item.label }}</a>
+      ({{ item.count }})</h4>
+    </th>
+    <td>
+    </td>
+  </tr>
+{% endfor %}
+</table>
+
+  </div>
+</div><!-- .row -->
+</div>
+{% endblock container %}

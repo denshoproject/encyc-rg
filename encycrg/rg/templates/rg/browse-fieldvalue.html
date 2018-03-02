@@ -1,0 +1,73 @@
+{% extends base_template %}
+{% load rg_tags bootstrap_pagination %}
+
+
+{% block title %}
+Browse by {{ field_title }} - {{ value }}
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<ul>
+  <li>
+    <a href="{% url "rg-browse" %}">Browse</a>
+  </li>
+  <li>
+    {{ stub }}
+    <a href="{% url "rg-browse-field" stub %}">{{ field_title }}</a>
+  </li>
+  <li>
+{{ value }}
+  </li>
+</ul>
+{% endblock breadcrumbs %}
+
+
+{% block container %}
+
+<div class="basePage">
+
+<div class="row">
+  <div class="col-md-12 col-sm-12 col-xs-12">
+
+<h1 class="articleTitle color-1">
+<a href="{% url "rg-browse" %}">Browse</a>
+&gt;
+<a href="{% url "rg-browse-field" stub %}">
+  <span class="iconBlock"><i class="fa {{ field_icon }}"></i></span>
+  {{ field_title }}
+</a>
+&gt;
+{{ value }}
+</h1>
+
+{% if page.object_list %}
+    
+    <div class="resultInfo">
+      <h3>
+        {{ paginator.count }} articles
+      </h3>
+    </div>
+
+{% if paginator.num_pages > 1 %}
+<div class="searchPaginator">
+{% bootstrap_paginate page range=10 show_first_last="true" %}
+</div>
+{% endif %}
+
+{% for object in page.object_list %}
+{% article object %}
+{% endfor %}
+
+{% if paginator.num_pages > 1 %}
+<div class="searchPaginator">
+{% bootstrap_paginate page range=10 show_first_last="true" %}
+</div>
+{% endif %}
+
+{% endif %}{# page.object_list #}
+
+  </div>
+</div><!-- .row -->
+</div>
+{% endblock container %}

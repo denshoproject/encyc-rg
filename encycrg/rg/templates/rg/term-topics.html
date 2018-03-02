@@ -1,0 +1,63 @@
+{% extends base_template %}
+
+
+{% block title %}
+{{ term.title }}
+{% endblock %}
+
+{% block headline %}
+{{ term.title }}
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<ul>
+  <li>
+    <a href="{% url "rg-topics" %}">Topics</a>
+  </li>
+  {% for t in term.ancestors %}
+  <li>
+    <a href="{{ t.html }}">{{ t.title }}</a>
+  </li>
+  {% endfor %}
+  <li>
+    {{ term.title }}
+  </li>
+</ul>
+{% endblock breadcrumbs %}
+
+
+{% block content %}
+
+{{ term.description|safe }}
+
+<p>
+BT:
+{% if term.parent %}
+<a href="{{ term.parent.html }}">{{ term.parent.title }}</a>
+{% endif %}
+<br/>
+OT:
+{% for term in term.siblings %}
+<a href="{{ term.html }}">{{ term.title }}</a>
+{% endfor %}
+<br/>
+NT:
+{% for term in term.children %}
+<a href="{{ term.html }}">{{ term.title }}</a>
+{% endfor %}
+</p>
+
+{% if term.encyc_urls %}
+<h3>
+  Articles
+</h3>
+<p>
+{% for article in term.encyc_urls %}
+<a href="{{ article.links.html }}">{{ article.id }}</a>
+<br/>
+{% endfor %}
+</p>
+{% endif %}
+
+{% endblock content %}

@@ -32,90 +32,201 @@ def index(request, format=None):
     data['search'] = reverse('rg-api-search', request=request)
     return Response(data)
 
-
-# ----------------------------------------------------------------------
-
 @api_view(['GET'])
 def articles(request, format=None):
-    s = search.Search().doc_type(models.Page).query("match_all")
-    s = s.sort('title_sort')
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    data = searcher.execute(limit, offset).ordered_dict(request)
-    return Response(data)
+    return Response(
+        _articles(request).ordered_dict(request)
+    )
 
 @api_view(['GET'])
 def authors(request, format=None):
-    s = search.Search().doc_type(models.Author).query("match_all")
-    s = s.sort('title_sort')
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    data = searcher.execute(limit, offset).ordered_dict(request)
-    return Response(data)
+    return Response(
+        _authors(request).ordered_dict(request)
+    )
 
 @api_view(['GET'])
 def sources(request, format=None):
-    s = search.Search().doc_type(models.Source).query("match_all")
-    s = s.sort('encyclopedia_id')
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    data = searcher.execute(limit, offset).ordered_dict(request)
-    return Response(data)
-
+    return Response(
+        _sources(request).ordered_dict(request)
+    )
 
 @api_view(['GET'])
 def article(request, url_title, format=None):
     """DOCUMENTATION GOES HERE.
     """
     try:
-        page = models.Page.get(url_title)
-        #page.scrub()
+        return Response(
+            _article(request, url_title).dict_all(request=request)
+        )
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    return Response(page.dict_all(request=request))
 
 @api_view(['GET'])
 def author(request, url_title, format=None):
     try:
-        author = models.Author.get(url_title)
+        return Response(
+            _author(request, url_title).dict_all(request=request)
+        )
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    return Response(author.dict_all(request=request))
 
 @api_view(['GET'])
 def source(request, url_title, format=None):
     try:
-        source = models.Source.get(url_title)
+        return Response(
+            _source(request, url_title).dict_all(request=request)
+        )
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    return Response(source.dict_all(request=request))
-
-
-# ----------------------------------------------------------------------
 
 @api_view(['GET'])
 def browse(request, format=None):
     """INDEX DOCS
     """
-    data = OrderedDict()
-    data['categories'] = reverse('rg-api-categories', request=request)
-    data['topics'] = reverse('rg-api-terms', args=(['topics']), request=request)
-    data['facilities'] = reverse('rg-api-terms', args=(['facility']), request=request)
-    for field in models.PAGE_BROWSABLE_FIELDS:
-        label = field.replace(u'rg_', u'')
-        data[label] = reverse(
-            'rg-api-browse-field', args=([field]), request=request
-        )
-    return Response(data)
+    return Response(
+        _browse(request)
+    )
 
 @api_view(['GET'])
-def browse_field(request, fieldname, format=None):
+def browse_field(request, stub, format=None):
     """List databox terms and counts
     """
-    s = search.Search().doc_type(models.Page).query("match_all")
+    return Response(
+        _browse_field(request, stub)
+    )
+
+@api_view(['GET'])
+def browse_field_value(request, stub, value, format=None):
+    """List of articles tagged with databox term.
+    """
+    return Response(
+        _browse_field_value(request, stub, value).ordered_dict(request)
+    )
+
+@api_view(['GET'])
+def categories(request, format=None):
+    """CATEGORIES DOCS
+    """
+    return Response(
+        _categories(request)
+    )
+
+@api_view(['GET'])
+def category(request, category, format=None):
+    return Response(
+        _category(request, category).ordered_dict(request)
+    )
+
+@api_view(['GET'])
+def facets(request, format=None):
+    return Response(
+        _facets(request).ordered_dict(request)
+    )
+
+@api_view(['GET'])
+def facet(request, facet_id, format=None):
+    try:
+        return Response(
+            _facet(request, facet_id)
+        )
+    except models.NotFoundError:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def terms(request, facet_id, format=None):
+    return Response(
+        _terms(request, facet_id).ordered_dict(request)
+    )
+
+@api_view(['GET'])
+def term(request, term_id, format=None):
+    try:
+        return Response(
+            _term(request, term_id)
+        )
+    except models.NotFoundError:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
+    return Response(
+        _term_objects(request, term_id, limit=limit, offset=offset)
+    )
+
+@api_view(['GET'])
+def search_form(request, format=None):
+    return Response(
+        _search(request).ordered_dict(request)
+    )
+
+
+# ----------------------------------------------------------------------
+
+def _articles(request, limit=None, offset=None):
+    s = models.Page.search().query("match_all").sort('title_sort')
+    if not limit:
+        limit = int(request.GET.get('limit', settings.MAX_SIZE))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
+    searcher = search.Searcher(mappings=MAPPINGS, fields=models.PAGE_LIST_FIELDS, search=s)
+    return searcher.execute(limit, offset)
+
+def _article_titles(request, limit=None, offset=None):
+    return [
+        author.url_title
+        for author in _authors(request, limit=limit, offset=offset).objects
+    ]
+
+def _authors(request, limit=None, offset=None):
+    s = models.Author.search().query("match_all")
+    s = s.sort('title_sort')
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
+    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
+    return searcher.execute(limit, offset)
+
+def _sources(request, limit=None, offset=None):
+    s = models.Source.search().query("match_all")
+    s = s.sort('encyclopedia_id')
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
+    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
+    return searcher.execute(limit, offset)
+
+def _article(request, url_title):
+    # TODO cache this stuff
+    article = models.Page.get(url_title)
+    article.prepare()
+    return article
+
+def _author(request, url_title):
+    return models.Author.get(url_title)
+
+def _source(request, url_title):
+    return models.Source.get(url_title)
+
+def _browse(request):
+    fields = []
+    for key,val in models.FACET_FIELDS.items():
+        stub = val['stub']
+        item = OrderedDict()
+        item['id'] = key
+        item['json'] = reverse('rg-api-browse-field', args=([stub]), request=request)
+        item['html'] = reverse('rg-browse-field', args=([stub]), request=request)
+        item['title'] = val['label']
+        item['description'] = val['description']
+        item['icon'] = val['icon']
+        item['stub'] = val['stub']
+        fields.append(item)
+    return fields
+
+def _browse_field(request, stub):
+    fieldname = models.MEDIATYPE_URLSTUBS[stub]
+    s = models.Page.search().query("match_all")
     s.aggs.bucket(
         fieldname,
         search.A(
@@ -125,46 +236,63 @@ def browse_field(request, fieldname, format=None):
     )
     response = s.execute()
     aggs = search.aggs_dict(response.aggregations.to_dict())[fieldname]
-    data = [
-        {
-            'term': term,
-            'count': aggs[term],
-            'url': reverse(
+    data = []
+    for term in sorted(list(aggs.keys())):
+        if term:
+            item = OrderedDict()
+            item['term'] = term
+            item['json'] = reverse(
                 'rg-api-browse-fieldvalue',
-                args=([fieldname, term]),
+                args=([stub, term]),
                 request=request
-            ),
-        }
-        for term in sorted(list(aggs.keys()))
-    ]
-    return Response(data)
+            )
+            item['html'] = reverse(
+                'rg-browse-fieldvalue',
+                args=([stub, term]),
+                request=request
+            )
+            if models.MEDIATYPE_INFO.get(item['term']):
+                item['label'] = models.MEDIATYPE_INFO[item['term']]['label']
+            else:
+                item['label'] = term
+            item['count'] = aggs[term]
+            data.append(item)
+    return data
 
-@api_view(['GET'])
-def browse_field_value(request, fieldname, value, format=None):
-    """List of articles tagged with databox term.
-    """
-    s = search.Search().doc_type(models.Page).from_dict({
-        "query": {
-            "match": {
-                fieldname: value,
-            }
-        }
-    }).sort('title_sort')
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    data = searcher.execute(limit, offset).ordered_dict(request)
-    return Response(data)
+def _browse_field_value(request, stub, value, limit=None, offset=None):
+    fieldname = models.MEDIATYPE_URLSTUBS[stub]
+    if fieldname not in models.PAGE_SEARCH_FIELDS:
+        raise Exception('Bad fieldname "%s".' % fieldname)
+    
+    if hasattr(request, 'query_params'):
+        # api (rest_framework)
+        params = dict(request.query_params)
+    elif hasattr(request, 'GET'):
+        # web ui (regular Django)
+        params = dict(request.GET)
+    else:
+        params = {}
+    
+    if params.get('page'):
+        thispage = int(params.pop('page')[-1])
+    else:
+        thispage = 0
+    limit = settings.DEFAULT_LIMIT
+    offset = search.es_offset(limit, thispage)
+    
+    s = models.Page.search()
+    
+    s = s.filter('match', **{fieldname: value})
+    
+    return search.Searcher(
+        mappings=MAPPINGS,
+        fields=FIELDS,
+        search=s,
+    ).execute(limit, offset)
 
-
-# ----------------------------------------------------------------------
-
-@api_view(['GET'])
-def categories(request, format=None):
-    """CATEGORIES DOCS
-    """
+def _categories(request):
     fieldname = 'categories'
-    s = search.Search().doc_type(models.Page).query("match_all")
+    s = models.Page.search().query("match_all")
     s.aggs.bucket(fieldname, search.A('terms', field=fieldname))
     response = s.execute()
     aggs = search.aggs_dict(response.aggregations.to_dict())[fieldname]
@@ -172,88 +300,80 @@ def categories(request, format=None):
         {
             'term': term,
             'count': aggs[term],
-            'url': reverse(
+            'api_url': reverse(
                 'rg-api-browse-fieldvalue',
                 args=([fieldname, term]),
+                request=request
+            ),
+            'url': reverse(
+                'rg-category',
+                args=([term]),
                 request=request
             ),
         }
         for term in sorted(list(aggs.keys()))
     ]
-    return Response(data)
+    return data
 
-@api_view(['GET'])
-def category(request, category, format=None):
+def _category(request, category, limit=None, offset=None):
     """CATEGORY DOCS
     """
-    s = search.Search().doc_type(models.Page).query(
+    s = models.Page.search().query("match_all")
+    s = s.query(
         "match", categories=category
     ).sort('title_sort')
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
     searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    data = searcher.execute(limit, offset).ordered_dict(request)
-    return Response(data)
+    return searcher.execute(limit, offset)
 
-
-# ----------------------------------------------------------------------
-
-@api_view(['GET'])
-def facets(request, format=None):
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    return Response(
-        search.SearchResults(
-            mappings=models.DOCTYPE_CLASS,
-            objects=models.Facet.facets(request),
-            limit=limit,
-            offset=offset,
-        ).ordered_dict(request)
+def _facets(request, limit=None, offset=None):
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
+    return search.SearchResults(
+        mappings=models.DOCTYPE_CLASS,
+        objects=models.Facet.facets(request),
+        limit=limit,
+        offset=offset,
     )
 
-@api_view(['GET'])
-def facet(request, facet_id, format=None):
-    try:
-        facet = models.Facet.get(facet_id)
-    except models.NotFoundError:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+def _facet(request, facet_id):
+    facet = models.Facet.get(facet_id)
     data = facet.dict_all(request)
     data['links']['children'] = reverse(
         'rg-api-terms',
         args=([facet_id]),
         request=request
     )
-    return Response(data)
+    return data
 
-@api_view(['GET'])
-def terms(request, facet_id, format=None):
-    limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    offset = int(request.GET.get('offset', 0))
-    return Response(
-        search.SearchResults(
-            mappings=MAPPINGS,
-            objects=models.FacetTerm.terms(request, facet_id),
-            limit=limit,
-            offset=offset,
-        ).ordered_dict(request)
+def _terms(request, facet_id, limit=None, offset=None):
+    if not limit:
+        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
+    if not offset:
+        offset = int(request.GET.get('offset', 0))
+    return search.SearchResults(
+        mappings=MAPPINGS,
+        objects=models.FacetTerm.terms(request, facet_id),
+        limit=limit,
+        offset=offset,
     )
 
-@api_view(['GET'])
-def term(request, term_id, format=None):
-    try:
-        term = models.FacetTerm.get(term_id)
-    except models.NotFoundError:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+def _term(request, term_id):
+    term = models.FacetTerm.get(term_id)
     data = term.dict_all(request)
     data['links']['children'] = reverse(
         'rg-api-term-objects',
         args=([term_id]),
         request=request
     )
-    return Response(data)
+    return data
 
-@api_view(['GET'])
-def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
+def _term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
     try:
         term = models.FacetTerm.get(term_id)
     except models.NotFoundError:
@@ -267,30 +387,64 @@ def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
         d['links']['json'] = reverse('rg-api-article', args=([item['url_title']]), request=request)
         d['links']['html'] = reverse('rg-article', args=([item['url_title']]), request=request)
         data.append(d)
-    return Response(data)
+    return data
 
-
-# ----------------------------------------------------------------------
-
-class SearchUI(APIView):
-    """
-    <a href="/api/1.0/search/help/">Search API help</a>
-    """
+def _search(request):
+    """Search Page objects
     
-    def get(self, request, format=None):
-        """
-        Search API info and UI.
-        """
-        return Response({})
+    @param request: WSGIRequest
+    @returns: search.SearchResults
+    """
+    if hasattr(request, 'query_params'):
+        # api (rest_framework)
+        params = dict(request.query_params)
+    elif hasattr(request, 'GET'):
+        # web ui (regular Django)
+        params = dict(request.GET)
+    else:
+        params = {}
+        
+    # scrub params
+    bad_fields = [
+        key for key in params.keys()
+        if key not in models.PAGE_SEARCH_FIELDS + ['page']
+    ]
+    for key in bad_fields:
+        params.pop(key)
+        
+    if params.get('page'):
+        thispage = int(params.pop('page')[-1])
+    else:
+        thispage = 0
+    limit = settings.DEFAULT_LIMIT
+    offset = search.es_offset(limit, thispage)
+
+    s = models.Page.search()
     
-    def post(self, request, format=None):
-        """
-        Return search results.
-        """
-        query = json.loads(request.data['_content'])
-        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-        offset = int(request.GET.get('offset', 0))
-        searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS)
-        searcher.prep(query)
-        data = searcher.execute(limit, offset).ordered_dict(request)
-        return Response(data)
+    if params.get('fulltext'):
+        # MultiMatch chokes on lists
+        fulltext = params.pop('fulltext')
+        if isinstance(fulltext, list) and (len(fulltext) == 1):
+            fulltext = fulltext[0]
+        # fulltext search
+        s = s.query(
+            search.MultiMatch(
+                query=fulltext,
+                fields=['title', 'body']
+            )
+        )
+        
+    # filters
+    for key,val in params.items():
+        if key in models.PAGE_SEARCH_FIELDS:
+            s = s.filter('terms', **{key: val})
+    
+    # aggregations
+    for fieldname in models.PAGE_BROWSABLE_FIELDS.keys():
+        s.aggs.bucket(fieldname, 'terms', field=fieldname)
+    
+    return search.Searcher(
+        mappings=MAPPINGS,
+        fields=FIELDS,
+        search=s,
+    ).execute(limit, offset)

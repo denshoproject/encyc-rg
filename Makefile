@@ -1,33 +1,28 @@
 PROJECT=encyc
 APP=encycrg
 USER=encyc
-
 SHELL = /bin/bash
+
+APP_VERSION := $(shell cat VERSION)
+GIT_SOURCE_URL=https://github.com/densho/encyc-rg
+
+# Release name e.g. jessie
 DEBIAN_CODENAME := $(shell lsb_release -sc)
+# Release numbers e.g. 8.10
 DEBIAN_RELEASE := $(shell lsb_release -sr)
+# Sortable major version tag e.g. deb8
+DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
 
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
-INSTALL_BASE=/usr/local/src
+INSTALL_BASE=/opt
 INSTALLDIR=$(INSTALL_BASE)/encyc-rg
 DOWNLOADS_DIR=/tmp/$(APP)-install
 REQUIREMENTS=$(INSTALLDIR)/requirements.txt
 PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 
-VIRTUALENV=$(INSTALLDIR)/env
+VIRTUALENV=$(INSTALLDIR)/venv/encycrg
 SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
-
-PACKAGE_BASE=/tmp/encycrg
-PACKAGE_TMP=$(PACKAGE_BASE)/encyc-rg
-PACKAGE_ENV=$(PACKAGE_TMP)/env
-# current branch name minus dashes or underscores
-PACKAGE_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
-# current commit date minus dashes
-PACKAGE_TIMESTAMP := $(shell git log -1 --pretty="%ad" --date=short | tr -d -)
-# current commit hash
-PACKAGE_COMMIT := $(shell git log -1 --pretty="%h")
-PACKAGE_TGZ=encycrg-$(PACKAGE_BRANCH)-$(PACKAGE_TIMESTAMP)-$(PACKAGE_COMMIT).tgz
-PACKAGE_RSYNC_DEST=takezo@takezo:~/packaging/encyc-rg
 
 CONF_BASE=/etc/encyc
 CONF_PRODUCTION=$(CONF_BASE)/encycrg.cfg
@@ -35,21 +30,43 @@ CONF_LOCAL=$(CONF_BASE)/encycrg-local.cfg
 CONF_SECRET=$(CONF_BASE)/encycrg-secret-key.txt
 CONF_DJANGO=$(INSTALLDIR)/encycrg/encycrg/settings.py
 
-LOGS_BASE=/var/log/$(PROJECT)
 SQLITE_BASE=/var/lib/$(PROJECT)
+LOGS_BASE=/var/log/$(PROJECT)
 
 MEDIA_BASE=/var/www/$(APP)
 MEDIA_ROOT=$(MEDIA_BASE)/media
 STATIC_ROOT=$(MEDIA_BASE)/static
 
+OPENJDK_PKG=
+ifeq ($(DEBIAN_RELEASE), jessie)
+	OPENJDK_PKG=openjdk-7-jre
+endif
+ifeq ($(DEBIAN_CODENAME), stretch)
+	OPENJDK_PKG=openjdk-8-jre
+endif
+
 ELASTICSEARCH=elasticsearch-2.4.4.deb
-ASSETS=encyc-rg-assets.tar.gz
 # wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.4.4.deb
 
 SUPERVISOR_GUNICORN_CONF=/etc/supervisor/conf.d/$(APP).conf
 SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
 NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
 NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
+
+DEB_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
+DEB_ARCH=amd64
+DEB_NAME_JESSIE=$(APP)-$(DEB_BRANCH)
+DEB_NAME_STRETCH=$(APP)-$(DEB_BRANCH)
+# Application version, separator (~), Debian release tag e.g. deb8
+# Release tag used because sortable and follows Debian project usage.
+DEB_VERSION_JESSIE=$(APP_VERSION)~deb8
+DEB_VERSION_STRETCH=$(APP_VERSION)~deb9
+DEB_FILE_JESSIE=$(DEB_NAME_JESSIE)_$(DEB_VERSION_JESSIE)_$(DEB_ARCH).deb
+DEB_FILE_STRETCH=$(DEB_NAME_STRETCH)_$(DEB_VERSION_STRETCH)_$(DEB_ARCH).deb
+DEB_VENDOR=Densho.org
+DEB_MAINTAINER=<geoffrey.jost@densho.org>
+DEB_DESCRIPTION=Densho Encyclopedia Resource Guide site
+DEB_BASE=opt/encyc-rg
 
 
 .PHONY: help
@@ -121,7 +138,7 @@ howto-install:
 	@echo "- # make restart"
 
 
-get: get-app get-static apt-update
+get: get-app apt-update
 
 install: install-prep install-app install-static install-configs
 
@@ -174,22 +191,29 @@ install-redis:
 	apt-get --assume-yes install redis-server
 
 get-elasticsearch:
-	apt-get --assume-yes install openjdk-7-jre
 	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(ELASTICSEARCH)
 
-install-elasticsearch: get-elasticsearch
+install-elasticsearch: install-core
 	@echo ""
 	@echo "Elasticsearch ----------------------------------------------------------"
 # Elasticsearch is configured/restarted here so it's online by the time script is done.
-	gdebi --non-interactive $(DOWNLOADS_DIR)/$(ELASTICSEARCH)
-	cp $(INSTALLDIR)/debian/conf/elasticsearch.yml /etc/elasticsearch/
-	chown root.root /etc/elasticsearch/elasticsearch.yml
-	chmod 644 /etc/elasticsearch/elasticsearch.yml
+	apt-get --assume-yes install $(OPENJDK_PKG)
+	-gdebi --non-interactive /tmp/downloads/$(ELASTICSEARCH)
+#cp $(INSTALL_BASE)/ddr-public/conf/elasticsearch.yml /etc/elasticsearch/
+#chown root.root /etc/elasticsearch/elasticsearch.yml
+#chmod 644 /etc/elasticsearch/elasticsearch.yml
 # 	@echo "${bldgrn}search engine (re)start${txtrst}"
-	/etc/init.d/elasticsearch restart
-	-mkdir -p /var/backups/elasticsearch
-	chown -R elasticsearch.elasticsearch /var/backups/elasticsearch
-	chmod -R 755 /var/backups/elasticsearch
+	-service elasticsearch stop
+	-systemctl disable elasticsearch.service
+
+enable-elasticsearch:
+	systemctl enable elasticsearch.service
+
+disable-elasticsearch:
+	systemctl disable elasticsearch.service
+
+remove-elasticsearch:
+	apt-get --assume-yes remove $(OPENJDK_PKG) elasticsearch
 
 
 install-virtualenv:
@@ -204,7 +228,7 @@ install-setuptools: install-virtualenv
 	pip3 install -U bpython setuptools
 
 
-get-app: get-encyc-rg get-static
+get-app: get-encyc-rg
 
 install-app: install-encyc-rg
 
@@ -235,6 +259,8 @@ install-encyc-rg: install-virtualenv
 	chmod -R 755 $(SQLITE_BASE)
 
 syncdb:
+	source $(VIRTUALENV)/bin/activate; \
+	cd $(INSTALLDIR)/encycrg && python manage.py makemigrations --noinput
 	source $(VIRTUALENV)/bin/activate; \
 	cd $(INSTALLDIR)/encycrg && python manage.py migrate --noinput
 	chown -R $(USER).root $(SQLITE_BASE)
@@ -273,27 +299,18 @@ branch:
 	cd $(INSTALLDIR)/encycrg; python ./bin/git-checkout-branch.py $(BRANCH)
 
 
-get-static: get-app-assets
-
-install-static: install-app-assets
-
-clean-static:
-
-
-make-static-dirs:
+install-static:
+	@echo ""
+	@echo "installing static files ---------------------------------------------"
 	-mkdir $(MEDIA_BASE)
 	-mkdir $(STATIC_ROOT)
-	-mkdir $(STATIC_ROOT)/js
+	-mkdir $(STATIC_ROOT)/css
 	chown -R $(USER).root $(MEDIA_BASE)
 	chmod -R 755 $(MEDIA_BASE)
+	-cp $(INSTALLDIR)/static/css/style.css $(STATIC_ROOT)/css/
 
-get-app-assets:
-	-wget -nc -P $(DOWNLOADS_DIR) http://$(PACKAGE_SERVER)/$(ASSETS)
-
-install-app-assets: make-static-dirs
-	@echo ""
-	@echo "get assets --------------------------------------------------------------"
-	-tar xzvf $(DOWNLOADS_DIR)/$(APP)-assets.tar.gz -C $(STATIC_ROOT)/
+clean-static:
+	-rm -Rf $(INSTALLDIR)/static/
 
 
 install-configs:
@@ -321,10 +338,10 @@ install-daemons-configs:
 	@echo ""
 	@echo "daemon configs ------------------------------------------------------"
 # nginx settings
-	cp $(INSTALLDIR)/conf/nginx-app.conf $(NGINX_APP_CONF)
-	chown root.root $(NGINX_APP_CONF)
-	chmod 644 $(NGINX_APP_CONF)
-	-ln -s $(NGINX_APP_CONF) $(NGINX_APP_CONF_LINK)
+	cp $(INSTALLDIR)/conf/nginx-app.conf $(NGINX_CONF)
+	chown root.root $(NGINX_CONF)
+	chmod 644 $(NGINX_CONF)
+	-ln -s $(NGINX_CONF) $(NGINX_CONF_LINK)
 	cp $(INSTALLDIR)/conf/nginx-elastic.conf $(NGINX_ELASTIC_CONF)
 	chown root.root $(NGINX_ELASTIC_CONF)
 	chmod 644 $(NGINX_ELASTIC_CONF)
@@ -393,23 +410,92 @@ git-status:
 	cd $(INSTALLDIR) && git status
 
 
-package:
-	@echo ""
-	@echo "packaging --------------------------------------------------------------"
-	-rm -Rf $(PACKAGE_TMP)
-	-rm -Rf $(PACKAGE_BASE)/*.tgz
-	-mkdir -p $(PACKAGE_BASE)
-	cp -R $(INSTALL_LOCAL) $(PACKAGE_TMP)
-	cd $(PACKAGE_TMP)
-	git clean -fd   # Remove all untracked files
-	virtualenv --relocatable $(PACKAGE_ENV)  # Make venv relocatable
-	-cd $(PACKAGE_BASE); tar czf $(PACKAGE_TGZ) encyc-rg
+# http://fpm.readthedocs.io/en/latest/
+# https://stackoverflow.com/questions/32094205/set-a-custom-install-directory-when-making-a-deb-package-with-fpm
+# https://brejoc.com/tag/fpm/
+deb: deb-jessie deb-stretch
 
-rsync-packaged:
+# deb-jessie and deb-stretch are identical EXCEPT:
+# jessie: --depends openjdk-7-jre
+# stretch: --depends openjdk-7-jre
+deb-jessie:
 	@echo ""
-	@echo "rsync-packaged ---------------------------------------------------------"
-	rsync -avz --delete $(PACKAGE_BASE)/encyc-rg $(PACKAGE_RSYNC_DEST)
+	@echo "FPM packaging (jessie) -------------------------------------------------"
+	-rm -Rf $(DEB_FILE_JESSIE)
+	virtualenv --python=python3 --relocatable $(VIRTUALENV)  # Make venv relocatable
+	fpm   \
+	--verbose   \
+	--input-type dir   \
+	--output-type deb   \
+	--name $(DEB_NAME_JESSIE)   \
+	--version $(DEB_VERSION_JESSIE)   \
+	--package $(DEB_FILE_JESSIE)   \
+	--url "$(GIT_SOURCE_URL)"   \
+	--vendor "$(DEB_VENDOR)"   \
+	--maintainer "$(DEB_MAINTAINER)"   \
+	--description "$(DEB_DESCRIPTION)"   \
+	--depends "python3"   \
+	--depends "imagemagick"   \
+	--depends "sqlite3"   \
+	--depends "supervisor"   \
+	--chdir $(INSTALLDIR)   \
+	.git=$(DEB_BASE)   \
+	.gitignore=$(DEB_BASE)   \
+	conf=$(DEB_BASE)   \
+	COPYRIGHT=$(DEB_BASE)   \
+	encycrg=$(DEB_BASE)   \
+	static=$(MEDIA_BASE)   \
+	venv=$(DEB_BASE)   \
+	INSTALL=$(DEB_BASE)   \
+	LICENSE=$(DEB_BASE)   \
+	Makefile=$(DEB_BASE)   \
+	README.rst=$(DEB_BASE)   \
+	requirements.txt=$(DEB_BASE)  \
+	VERSION=$(DEB_BASE)  \
+	conf/settings.py=$(DEB_BASE)/encycrg/encycrg   \
+	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
 
-install-packaged: install-prep install-dependencies install-static install-configs mkdirs syncdb install-daemon-configs
+# deb-jessie and deb-stretch are identical EXCEPT:
+# jessie: --depends openjdk-7-jre
+# stretch: --depends openjdk-7-jre
+deb-stretch:
 	@echo ""
-	@echo "install packaged -------------------------------------------------------"
+	@echo "FPM packaging (stretch) -------------------------------------------------"
+	-rm -Rf $(DEB_FILE_STRETCH)
+	virtualenv --python=python3 --relocatable $(VIRTUALENV)  # Make venv relocatable
+	fpm   \
+	--verbose   \
+	--input-type dir   \
+	--output-type deb   \
+	--name $(DEB_NAME_STRETCH)   \
+	--version $(DEB_VERSION_STRETCH)   \
+	--package $(DEB_FILE_STRETCH)   \
+	--url "$(GIT_SOURCE_URL)"   \
+	--vendor "$(DEB_VENDOR)"   \
+	--maintainer "$(DEB_MAINTAINER)"   \
+	--description "$(DEB_DESCRIPTION)"   \
+	--depends "python3"   \
+	--depends "imagemagick"   \
+	--depends "sqlite3"   \
+	--depends "supervisor"   \
+	--chdir $(INSTALLDIR)   \
+	.git=$(DEB_BASE)   \
+	.gitignore=$(DEB_BASE)   \
+	conf=$(DEB_BASE)   \
+	COPYRIGHT=$(DEB_BASE)   \
+	encycrg=$(DEB_BASE)   \
+	static=$(MEDIA_BASE)   \
+	venv=$(DEB_BASE)   \
+	INSTALL=$(DEB_BASE)   \
+	LICENSE=$(DEB_BASE)   \
+	Makefile=$(DEB_BASE)   \
+	README.rst=$(DEB_BASE)   \
+	requirements.txt=$(DEB_BASE)  \
+	VERSION=$(DEB_BASE)  \
+	conf/settings.py=$(DEB_BASE)/encycrg/encycrg   \
+	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
+
+secret-key:
+	@echo ""
+	@echo "secret-key -------------------------------------------------------------"
+	date +%s | sha256sum | base64 | head -c 50 > $(CONF_BASE)/encycrg-secret-key.txt

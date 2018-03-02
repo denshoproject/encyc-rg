@@ -1,0 +1,20 @@
+{% extends base_template %}
+
+
+{% block title %}
+Topics
+{% endblock %}
+
+{% block headline %}
+Topics
+{% endblock %}
+
+
+{% block content %}
+
+{% for term in query.objects %}
+<a href="{{ term.links.html }}">{{ term.path }}</a>
+<br/>
+{% endfor %}
+
+{% endblock content %}

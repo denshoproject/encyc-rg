@@ -5,8 +5,9 @@
 
                                    # LICENSE  Python3
                                    
-django>=1.11                       # MIT      y
-django-filter
+beautifulsoup4                     # MIT      y
+django>=1.11,<2.0                  # MIT      y
+django-bootstrap-pagination        # MIT      ???
 django-redis                       # BSD      y
 django-redis-cache
 django-redis-sessions

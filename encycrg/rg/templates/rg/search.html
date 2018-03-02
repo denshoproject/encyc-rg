@@ -1,0 +1,203 @@
+{% extends base_template %}
+{% load rg_tags bootstrap_pagination %}
+
+
+{% block title %}
+Search
+{% endblock %}
+
+
+{% block container %}
+<div class="basePage">
+<div class="row">
+  
+  <div class="col-xs-12">
+      
+      <h1 class="articleTitle">Search</h1>
+      <p>Find articles by keyword text. The returned results list can be filtered by Media Type, Interest Level, Reading Level, Genre and more!</p>
+  <form action="{{ this_url }}" method="get">
+
+    
+    <div class="input-group searchArea">
+      <span class="input-group-addon"><i class="fa fa-search" aria-hidden="true"></i></span>
+      <input id="id_query" name="fulltext" type="text" class="form-control" aria-label="" placeholder="Search..." value="{% if search_form.fulltext.value %}{{ search_form.fulltext.value }}{% endif %}" />
+      <button type="submit" class="input-group-addon button" id="basic-addon21">Search</button>
+    </div>
+    
+    {% if search_performed and not page.object_list %}
+
+    <div class="resultInfo">
+        <h3>
+          No results for "{{ search_form.fulltext.value }}"
+        </h3>
+    </div>
+       <div id="no_results" style="margin-top: -25px;margin-bottom: 20px;">We're sorry - your keywords were not found. Please enter another query or try browsing by category instead. </div>
+
+    {% elif page.object_list %}
+    <div class="resultInfo">
+      <h3>
+        {{ paginator.count }} search results for "{{ search_form.fulltext.value }}"
+      </h3>
+      {% if filters %}
+      <div id="filters" style="margin-top: -25px;margin-bottom: 20px;"><span style="padding-right: .5em;"><strong>Filters active -</strong></span> 
+        {% for key,vals in filters %}
+        <span style="color: #555;">{{ key }}: {{ vals }}{% if not forloop.last %};{% endif %}</span>
+        {% endfor %}
+      </div><!-- #params -->
+      {% endif %}
+    </div>
+    
+    <div class="accordionCommon hello" id="filtersArea">
+      <div class="panel-group" id="articleAccordian">
+        <!-- begin searchResultsFilters -->
+        <div class="panel panel-default">
+          <a class="panel-heading accordion-toggle bg-color-2" data-toggle="collapse"  href="#collapse-filters">
+            <span><i class="fa fa-filter"></i> Search filters</span>
+            <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
+          </a>
+          <!-- collapsed by default: class="panel-collapse collapse in" to expand by default -->
+          <div id="collapse-filters" class="panel-collapse collapse">
+            <div class="panel-body">
+              
+              <div class="searchResultsFilters form-group">
+                <div class="row">
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_rgmediatype.icon }}"></i>
+                      {{ search_form.rg_rgmediatype.label }}
+                    </strong><br/>
+                    {{ search_form.rg_rgmediatype }}
+                    
+                  </div>
+                  <div class="col-sm-6">
+
+                    <strong><i class="fa {{ fields.rg_interestlevel.icon }}"></i>
+                      {{ search_form.rg_interestlevel.label }}
+                    </strong><br/>
+                    {{ search_form.rg_interestlevel }}
+                    
+                  </div>
+                </div><!-- .row -->
+                <div class="row">
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_readinglevel.icon }}"></i>
+                      {{ search_form.rg_readinglevel.label }}
+                    </strong><br/>
+                    {{ search_form.rg_readinglevel }}
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_genre.icon }}"></i>
+                      {{ search_form.rg_genre.label }}
+                    </strong><br/>
+                    {{ search_form.rg_genre }}
+                    
+                  </div>
+                </div><!-- .row -->
+                <div class="row">
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_theme.icon }}"></i>
+                      {{ search_form.rg_theme.label }}
+                    </strong><br/>
+                    {{ search_form.rg_theme }}
+                    
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_chronology.icon }}"></i>
+                      {{ search_form.rg_chronology.label }}
+                    </strong><br/>
+                    {{ search_form.rg_chronology }}
+                    
+                  </div>
+                  </div><!-- .row -->
+                 <div class="row"> 
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_geography.icon }}"></i>
+                      {{ search_form.rg_geography.label }}
+                    </strong><br/>
+                    {{ search_form.rg_geography }}
+                    
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_availability.icon }}"></i>
+                      {{ search_form.rg_availability.label }}
+                    </strong><br/>
+                    {{ search_form.rg_availability }}
+                    
+                  </div>
+                </div><!-- .row -->
+<!--
+                <div class="row">
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_hasteachingaids.icon }}"></i>
+                      {{ search_form.rg_hasteachingaids.label }}
+                    </strong><br/>
+                    {{ search_form.rg_hasteachingaids }}
+                    
+                  </div>
+                  <div class="col-sm-6">
+                    
+                    <strong><i class="fa {{ fields.rg_freewebversion.icon }}"></i>
+                      {{ search_form.rg_freewebversion.label }}
+                    </strong><br/>
+                    {{ search_form.rg_freewebversion }}
+                    
+                  </div>
+                </div>
+-->
+              </div><!--  .searchResultsFilters .form-group -->
+            </div><!--  .panel-body -->
+          </div><!--  #collapse-filters .panel-collapse .collapse in -->
+        </div><!--  .panel .panel-default -->
+      </div><!--  .panel-group #articleAccordian -->
+    </div><!--  .accordionCommon .hello #filtersArea -->
+
+
+  </form>
+    
+{% if paginator.num_pages > 1 %}
+<div class="searchPaginator">
+{% bootstrap_paginate page range=10 show_first_last="true" %}
+</div>
+{% endif %}
+
+{% for object in page.object_list %}
+{% article object %}
+{% endfor %}
+
+{% if paginator.num_pages > 1 %}
+<div class="searchPaginator">
+{% bootstrap_paginate page range=10 show_first_last="true" %}
+</div>
+{% endif %}
+
+{% endif %}{# page.object_list #}
+
+<!-- --------------------------------------------------------------- -->
+
+<div id="querymeta">
+
+{% if terms %}
+  <div class="terms">
+    <b>Terms</b>
+
+    <strong><a href="{% url "ui-browse-facet" terms.field %}">{{ terms.field }}</a>:</strong>
+    {{ terms.term }}
+
+  </div>
+{% endif %}
+
+</div><!-- .querymeta -->
+
+{{ query_json|safe }}
+
+</div><!-- .col -->
+</div><!-- .row -->
+</div>
+{% endblock container %}

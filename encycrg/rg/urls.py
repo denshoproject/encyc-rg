@@ -20,8 +20,8 @@ urlpatterns = [
 
     url(r"^api/1.0/browse/categories/(?P<category>[\w\W]+)/$", api.category, name='rg-api-category'),
     url(r"^api/1.0/browse/categories/$", api.categories, name='rg-api-categories'),
-    url(r"^api/1.0/browse/(?P<fieldname>[\w\W]+)/(?P<value>[\w\W]+)/$", api.browse_field_value, name='rg-api-browse-fieldvalue'),
-    url(r"^api/1.0/browse/(?P<fieldname>[\w\W]+)/$", api.browse_field, name='rg-api-browse-field'),
+    url(r"^api/1.0/browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/$", api.browse_field_value, name='rg-api-browse-fieldvalue'),
+    url(r"^api/1.0/browse/(?P<stub>[\w\W]+)/$", api.browse_field, name='rg-api-browse-field'),
     url(r"^api/1.0/browse/$", api.browse, name='rg-api-browse'),
     
     url(r"^api/1.0/articles/(?P<url_title>[\w\W]+)/$", api.article, name='rg-api-article'),
@@ -32,23 +32,44 @@ urlpatterns = [
     url(r"^api/1.0/sources/$", api.sources, name='rg-api-sources'),
     
     url(r'^api/1.0/search/help/$', TemplateView.as_view(template_name="rg/api/search-help.html"), name='rg-api-search-help'),
-    url(r"^api/1.0/search/$", api.SearchUI.as_view(), name='rg-api-search'),
+    url(r"^api/1.0/search/$", api.search_form, name='rg-api-search'),
+    
+    url(r'^api/1.0/$', api.index, name='rg-api-index'),
     
     url(r'^terms/(?P<term_id>[\w\d-]+)/$', views.term, name='rg-term'),
     url(r"^facets/(?P<facet_id>[\w\W]+)/$", views.facet, name='rg-facet'),
+    url(r"^facets/$", views.facets, name='rg-facets'),
+    
+    url(r"^facilities/types/(?P<type_id>[\w\W]+)/$", views.facility_type, name='rg-facility-type'),
+    url(r'^facilities/(?P<term_id>[\w\d-]+)/$', views.facility, name='rg-facility'),
+    url(r"^facilities/$", views.facilities, name='rg-facilities'),
+
+    url(r'^topics/(?P<term_id>[\w\d-]+)/$', views.topic, name='rg-topic'),
+    url(r"^topics/$", views.topics, name='rg-topics'),
+    
     url(r"^categories/(?P<url_title>[\w\W]+)/$", views.category, name='rg-category'),
     url(r"^categories/$", views.categories, name='rg-categories'),
     
-    url(r"^articles/(?P<url_title>[\w\W]+)/$", views.article, name='rg-article'),
+    url(r"^browse/title/$", views.articles, name='rg-articles'),
+    url(r"^browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/$", views.browse_field_value, name='rg-browse-fieldvalue'),
+    url(r"^browse/(?P<stub>[\w\W]+)/$", views.browse_field, name='rg-browse-field'),
+    url(r"^browse/$", views.browse, name='rg-browse'),
+    
+    url(r"^search/$", views.search_ui, name='rg-search'),
+    
     url(r"^authors/(?P<url_title>[\w\W]+)/$", views.author, name='rg-author'),
     url(r"^sources/(?P<url_title>[\w\W]+)/$", views.source, name='rg-source'),
     
-    url(r"^articles/$", views.articles, name='rg-articles'),
     url(r"^authors/$", views.authors, name='rg-authors'),
     url(r"^sources/$", views.sources, name='rg-sources'),
     
-    url(r'^api/1.0/$', api.index, name='rg-api-index'),
-    url(r'^$', views.Index.as_view(), name='rg-index'),
+    url(r'^about/$', TemplateView.as_view(template_name="rg/about.html"), name='rg-about'),
+    url(r'^terms/$', TemplateView.as_view(template_name="rg/terms-of-use.html"), name='rg-terms'),
+    
+    #url(r"^wiki/(?P<url_title>[\w\W]+)/$", views.article, name='rg-article'),
+    url(r"^(?P<url_title>[\w\W ,.:\(\)-/]+)/$", views.article, name='rg-article'),
+    
+    url(r'^$', views.index, name='rg-index'),
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)
 

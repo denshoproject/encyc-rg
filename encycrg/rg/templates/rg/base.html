@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <title>{% block title %}{% endblock %}</title>
+
+  <style>
+    a.offsite { border-bottom:2px solid orange; }
+    a.encyc { border-bottom:2px solid purple; }
+  </style>
+
+</head>
+<body>
+
+  <header>
+
+    <div style="float:right;">
+      <a href="{% url "rg-articles" %}">Articles</a>
+      <!-- | <a href="{% url "rg-categories" %}">Categories</a> -->
+      <!-- | <a href="{% url "rg-topics" %}">Topics</a> -->
+      <!-- | <a href="{% url "rg-facilities" %}">Facilities</a> -->
+      &bull; <a href="{% url "rg-browse" %}">Browse</a>
+      <!-- | <a href="{% url "rg-authors" %}">Authors</a> -->
+      &bull; <a href="{% url "rg-search" %}">Search</a>
+    </div>
+
+    <h2>
+      <a href="{% url "rg-index" %}">encyc-rg</a>
+    </h2>
+
+<!--
+{% block breadcrumbs %}{% endblock %}
+-->
+
+    <h1>{% block headline %}Home{% endblock %}</h1>
+
+    <hr />
+
+  </header>
+
+  <div class="row">
+
+{% block content %}{% endblock %}
+
+  </div> <!-- end div.row -->
+
+  <footer>
+{% block footer %}
+
+    <hr />
+
+    <p>
+
+      API <a href="{{ api_url }}">{{ api_url }}</a>
+      <br/>
+
+      {{ docstore_hosts }}/{{ docstore_index }}
+      <br/>
+
+      {{ git_commit }}
+      {{ git_branch }}
+      v{{ version }}
+      {{ packages }}
+      <br/>
+
+      served by {{ pid }}
+      on {{ host }}
+      at {{ time|date:"Y-m-d" }}T{{ time|time:"H:i:s(T)" }}
+
+    </p>
+
+{% endblock footer %}
+  </footer>
+
+</body>
+</html>

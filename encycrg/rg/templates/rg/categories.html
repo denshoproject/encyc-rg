@@ -1,0 +1,19 @@
+{% extends base_template %}
+
+
+{% block title %}
+Categories
+{% endblock %}
+
+{% block headline %}
+Categories
+{% endblock %}
+
+
+{% block content %}
+
+{% for object in categories %}
+<a href="{{ object.url }}">{{ object.term }} ({{ object.count }})</a><br/>
+{% endfor %}
+
+{% endblock content %}
