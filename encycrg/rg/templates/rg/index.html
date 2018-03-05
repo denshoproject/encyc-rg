@@ -336,21 +336,21 @@
   <div class="copyRight clearfix">
     <div class="container">
       <div class="row">
-        <div class="col-sm-5 col-sm-push-7 col-xs-12">
-            
-            <a href="{{ api_url }}">API</a>
+        <div class="col-sm-5 col-sm-push-7 col-xs-12" style="text-align: right;">
 
-            {{ docstore_hosts }}/{{ docstore_index }}
+            <a href="{{ api_url }}" style="padding-right: 20px;">API</a>
+<!-- 
+{{ docstore_hosts }}/{{ docstore_index }}
 
-            {{ git_commit }}
-            {{ git_branch }}
-            v{{ version }}
-            {{ packages }}
+{{ git_commit }}
+{{ git_branch }}
+v{{ version }}
+{{ packages }}
 
-            served by {{ pid }}
-            on {{ host }}
-            at {{ time|date:"Y-m-d" }}T{{ time|time:"H:i:s(T)" }}
-            
+served by {{ pid }}
+on {{ host }}
+at {{ time|date:"Y-m-d" }}T{{ time|time:"H:i:s(T)" }}
+-->
         </div>
         <div class="col-sm-7 col-sm-pull-5 col-xs-12">
           <div class="copyRightText">
