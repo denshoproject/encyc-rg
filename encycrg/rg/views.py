@@ -129,6 +129,9 @@ def articles(request):
     #    'api_url': api_url,
     #})
 
+def wiki_article(request, url_title):
+    return HttpResponsePermanentRedirect(reverse('rg-article', args=([url_title])))
+
 def article(request, url_title):
     article_titles = api._article_titles(request, limit=settings.MAX_SIZE)
     article = None
