@@ -19,6 +19,8 @@ import os
 import subprocess
 import sys
 
+import requests
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -52,11 +54,28 @@ ALLOWED_HOSTS = [
 ]
 
 # Elasticsearch
+DOCSTORE_PROTOCOL = 'http'
 DOCSTORE_HOSTS = [{
     'host':config.get('elasticsearch', 'docstore_host').split(':')[0],
     'port':config.get('elasticsearch', 'docstore_host').split(':')[1],
 }]
 DOCSTORE_INDEX = config.get('elasticsearch', 'docstore_index')
+
+# quit if can't connect to ES
+DOCSTORE_BASE = '%s://%s:%s/%s' % (
+    DOCSTORE_PROTOCOL,
+    DOCSTORE_HOSTS[0]['host'],
+    str(DOCSTORE_HOSTS[0]['port']),
+    DOCSTORE_INDEX,
+)
+try:
+    r = requests.get(DOCSTORE_BASE, timeout=3)
+except:
+    print('FATAL: Could not connect to Elasticsearch - %s' % DOCSTORE_BASE)
+    sys.exit(1)
+if r.status_code != 200:
+    print('FATAL: Could not connect to Elasticsearch - %s' % DOCSTORE_BASE)
+    sys.exit(1)
 
 DEFAULT_LIMIT = 25
 MAX_SIZE = 10000
