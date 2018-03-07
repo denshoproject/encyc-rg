@@ -56,3 +56,20 @@ def availabilitylevel(rawlevel):
             empty = ""
             leveltext = 'Widely available (easy to purchase or stream and reasonably priced/free)'
     return {'leveltext':leveltext, 'full':full, 'empty':empty}
+
+@register.simple_tag(takes_context=True)
+def databox(context):
+    """Selects specified databox and displays it in databox-NAME.html template
+    
+    NOTE: mediatype_label MAY NOT MARCH databox_name!
+    """
+    databox_id = 'databox-%s' % context['article']['mediatype_label']
+    template_name = 'rg/databox-%s.html' % databox_id
+    try:
+        t = template.loader.get_template(template_name)
+    except:
+        t = template.loader.get_template('rg/databox-default.html')
+    return t.render({
+        'databox': context['article']['databoxes'].get(databox_id, {}),
+        'template_name': template_name,
+    })
