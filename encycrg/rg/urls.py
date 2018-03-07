@@ -66,7 +66,7 @@ urlpatterns = [
     url(r'^about/$', TemplateView.as_view(template_name="rg/about.html"), name='rg-about'),
     url(r'^terms/$', TemplateView.as_view(template_name="rg/terms-of-use.html"), name='rg-terms'),
     
-    #url(r"^wiki/(?P<url_title>[\w\W]+)/$", views.article, name='rg-article'),
+    url(r"^wiki/(?P<url_title>[\w\W]+)/$", views.wiki_article, name='rg-wiki-article'),
     url(r"^(?P<url_title>[\w\W ,.:\(\)-/]+)/$", views.article, name='rg-article'),
     
     url(r'^$', views.index, name='rg-index'),
