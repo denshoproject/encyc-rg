@@ -15,11 +15,25 @@ As per convention, variables in this documentation are written in upper case wit
 Install From Package Repository
 ===============================
 
+Add package repository and install packages.
 ::
     $ sudo apt-get update && sudo apt-get install curl apt-transport-https gnupg
     $ sudo curl -s http://packages.densho.org/debian/keys/archive.asc | sudo apt-key add -
     $ echo "deb http://packages.densho.org/debian/ jessie main" | sudo tee /etc/apt/sources.list.d/packages_densho_org_debian.list
     $ sudo apt-get update && sudo apt-get install encycrg-master
+
+Once packages are installed you can upgrade to newer versions thusly
+::
+    $ sudo apt-get update && sudo apt-get upgrade
+
+
+Install From Package File
+=========================
+
+You can install from a `.deb` package file.  Note that with this method you will not receive automatic updates via `apt-get upgrade`.
+::
+    $ sudo apt-get install gdebi-core
+    $ sudo gdebi install encycrg-BRANCH_VERSION~deb8_amd64.deb
 
 
 Install From Source
@@ -77,3 +91,38 @@ Restart the servers and the web application to see the effects of your edits.::
     # make restart
 
 At this point `encyc-rg` is installed but the Elasticsearch database contains no data.
+
+
+Making Packages
+===============
+
+For a totally fresh package, or when switching branches, remove the virtualenv and start fresh.
+::
+    # rm -Rf venv
+    # make install
+
+Make packages for deb8 and deb9.
+::
+    # make deb
+
+At this point you have .deb packages for one or more Debian versions (e.g. deb8/Jessie, deb9/Stretch) that you can upload to a package repository or use to install on any Debian system of the corresponding version.
+
+Packages are named thusly::
+
+    encycrg-BRANCH_VERSION~deb8_amd64.deb
+    encycrg-BRANCH_VERSION~deb9_amd64.deb
+
+
+Publishing Packages
+===================
+
+Packages are deployed using reprepro, a tool for managing Debian-style package repositories.  See operations manual for location of the repository.  SSH in to the repository server as the `reprepro` user (it will not work to log in as another user and become `reprepro` user via `sudo su -`).  once logged in, run the following to ingest the packages into the repository.
+::
+    # Debian 8 / Jessie
+    $ cp encycrg-BRANCH_VERSION~deb8_amd64.deb incoming/
+    $ reprepro-ingest -c /etc/reprepro.conf jessie
+    # Debian 9 / Stretch
+    $ cp encycrg-BRANCH_VERSION~deb9_amd64.deb incoming/
+    $ reprepro-ingest -c /etc/reprepro.conf stretch
+
+At this point you can install the app as per Install From Package Repository above.
