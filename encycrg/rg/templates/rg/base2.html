@@ -1,14 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-  <!-- SITE TITTLE -->
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  
-  <title>{% block title %}{% endblock %} - Densho Resource Guide</title>
-
   {% if google_analytics_id %}<!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
   <script>
@@ -17,6 +9,13 @@
     gtag('js', new Date());
     gtag('config', '{{ google_analytics_id }}');
   </script>{% endif %}
+
+  <!-- SITE TITTLE -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <title>{% block title %}{% endblock %} - Densho Resource Guide</title>
 
   <!-- PLUGINS CSS STYLE -->
   <link rel="stylesheet"                                href="{{ static_url }}plugins/jquery-ui/jquery-ui.css">
