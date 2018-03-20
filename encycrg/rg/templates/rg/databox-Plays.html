@@ -1,0 +1,89 @@
+      <table class="table table-hover table-striped">
+          <tbody>
+              {% if databox.firstdate.0 %}
+              <tr>
+                  <th style="width: 150px;">Date Opened</th>
+                  <td>{{ databox.firstdate.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.finaldate.0 %}
+              <tr>
+                  <th>Date Closed</th>
+                  <td>{{ databox.finaldate.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.location %}
+              <tr>
+                  <th>Location</th>
+                  <td>{% for place in databox.location %}{{ place }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.writer %}
+              <tr>
+                  <th>Writer</th>
+                  <td>{% for name in databox.writer %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.director %}
+              <tr>
+                  <th>Director</th>
+                  <td>{% for name in databox.director %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.producer %}
+              <tr>
+                  <th>Producer</th>
+                  <td>{% for name in databox.producer %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.creative %}
+              <tr>
+                  <th>Creative Team</th>
+                  <td>{% for name in databox.creative %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.technical %}
+              <tr>
+                  <th>Technical Team</th>
+                  <td>{% for name in databox.technical %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.characters %}
+              <tr>
+                  <th>Characters</th>
+                  <td>{% for name in databox.characters %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.website.0 %}
+              <tr>
+                  <th>Website</th>
+                  <td>{{ databox.website.0 | safe }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.playbilllink.0 %}
+              <tr>
+                  <th>Playbill Link</th>
+                  <td>{{ databox.playbilllink.0 | safe }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.ibdbid.0 %}
+              <tr>
+                  <th>Internet Broadway DB Link</th>
+                  <td>{{ databox.ibdbid.0 | safe }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.iodbid.0 %}
+              <tr>
+                  <th>Lortel Archives Link</th>
+                  <td>{{ databox.iodbid.0 | safe }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.theatricaliaid.0 %}
+              <tr>
+                  <th>Theatricalia Link</th>
+                  <td>{{ databox.theatricaliaid.0 | safe }}</td>
+              </tr>
+              {% endif %}
+          </tbody>
+      </table>
+

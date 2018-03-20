@@ -1,0 +1,53 @@
+      <table class="table table-hover table-striped">
+          <tbody>
+              {% if databox.firstdate.0 %}
+              <tr>
+                  <th style="width: 150px;">Date Opened</th>
+                  <td>{{ databox.firstdate.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.finaldate.0 %}
+              <tr>
+                  <th>Date Closed</th>
+                  <td>{{ databox.finaldate.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.organization.0 %}
+              <tr>
+                  <th>Institution</th>
+                  <td>{{ databox.organization.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.location %}
+              <tr>
+                  <th>Location</th>
+                  <td>{% for place in databox.location %}{{ place }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.curator %}
+              <tr>
+                  <th>Curator</th>
+                  <td>{% for name in databox.curator %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.producer %}
+              <tr>
+                  <th>Producer</th>
+                  <td>{% for name in databox.producer %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.keystaff %}
+              <tr>
+                  <th>Key Staff</th>
+                  <td>{% for name in databox.keystaff %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.website.0 %}
+              <tr>
+                  <th>Website</th>
+                  <td>{{ databox.website.0 | safe }}</td>
+              </tr>
+              {% endif %}
+          </tbody>
+      </table>
+

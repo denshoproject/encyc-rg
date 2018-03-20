@@ -1,0 +1,41 @@
+      <table class="table table-hover table-striped">
+          <tbody>
+              {% if databox.type %}
+              <tr>
+                  <th style="width: 150px;">Type of Content</th>
+                  <td>{% for t in databox.type %}{{ t }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.url.0 %}
+              <tr>
+                  <th>URL</th>
+                  <td>{{ databox.url.0 | safe }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.creator %}
+              <tr>
+                  <th>Creator</th>
+                  <td>{% for name in databox.creator %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.hasblog.0 %}
+              <tr>
+                  <th>Has Blog?</th>
+                  <td>{{ databox.hasblog.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.isactive.0 %}
+              <tr>
+                  <th>Is Active?</th>
+                  <td>{{ databox.isactive.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.primarysources.0 %}
+              <tr>
+                  <th>Contains Primary Sources?</th>
+                  <td>{{ databox.primarysources.0 }}</td>
+              </tr>
+              {% endif %}
+          </tbody>
+      </table>
+

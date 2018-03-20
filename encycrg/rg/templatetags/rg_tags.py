@@ -63,8 +63,19 @@ def databox(context):
     
     NOTE: mediatype_label MAY NOT MARCH databox_name!
     """
-    databox_id = 'databox-%s' % context['article']['mediatype_label']
-    template_name = 'rg/databox-%s.html' % databox_id
+    DATABOXES = [
+            ('books', 'databox-Books'), 
+            ('articles', 'databox-Articles'), 
+            ('short stories', 'databox-Articles'), 
+            ('essays', 'databox-Articles'), 
+            ('films', 'databox-Films'), 
+            ('plays', 'databox-Plays'), 
+            ('exhibitions', 'databox-Exhibitions'), 
+            ('websites', 'databox-Websites')
+    ]
+
+    databox_id = dict(DATABOXES)[context['article']['rg_rgmediatype'][0]]
+    template_name = "rg/{}.html".format(databox_id)
     try:
         t = template.loader.get_template(template_name)
     except:
