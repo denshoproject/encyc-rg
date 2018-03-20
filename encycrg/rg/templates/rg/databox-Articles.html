@@ -1,0 +1,46 @@
+<div style="border:2px dashed red; padding:5px;">
+  DATABOX BOOKS TEMPLATE "rg/databox-Articles.html"<br/>
+  
+      
+      <table class="table table-hover table-striped">
+          <tbody>
+              {% if databox.author %}
+              <tr>
+                  <th style="width: 150px;">Author</th>
+                  <td>{% for name in databox.author %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.publication.0 %}
+              <tr>
+                  <th>Publication</th>
+                  <td>{{ databox.publication.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.pubdate.0 %}
+              <tr>
+                  <th>Publication Date</th>
+                  <td>{{ databox.pubdate.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.pubdetails.0 %}
+              <tr>
+                  <th>Publication Details</th>
+                  <td>{{ databox.pubdetails.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.website.0 %}
+              <tr>
+                  <th>Website</th>
+                  <td>{{ databox.website.0 | safe }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.doi.0 %}
+              <tr>
+                  <th>DOI</th>
+                  <td>{{ databox.doi.0 }}</td>
+              </tr>
+              {% endif %}
+          </tbody>
+      </table>
+</div>
+

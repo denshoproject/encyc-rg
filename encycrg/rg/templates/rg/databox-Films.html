@@ -1,0 +1,107 @@
+      <table class="table table-hover table-striped">
+          <tbody>
+              {% if databox.date.0 %}
+              <tr>
+                  <th style="width: 150px;">Release Date</th>
+                  <td>{{ databox.date.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.runtime.0 %}
+              <tr>
+                  <th>Runtime</th>
+                  <td>{{ databox.runtime.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.director.0 %}
+              <tr>
+                  <th>Director</th>
+                  <td>{{ databox.director.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.producer.0 %}
+              <tr>
+                  <th>Producer</th>
+                  <td>{{ databox.producer.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.writer.0 %}
+              <tr>
+                  <th>Writer</th>
+                  <td>{{ databox.writer.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.screenplay.0 %}
+              <tr>
+                  <th>Screenplay</th>
+                  <td>{{ databox.screenplay.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.narrator.0 %}
+              <tr>
+                  <th>Narrator</th>
+                  <td>{{ databox.narrator.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.starring %}
+              <tr>
+                  <th>Starring</th>
+                  <td>{% for name in databox.starring %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.music.0 %}
+              <tr>
+                  <th>Music</th>
+                  <td>{{ databox.music.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.cinematography.0 %}
+              <tr>
+                  <th>Cinematography</th>
+                  <td>{{ databox.cinematography.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.editing.0 %}
+              <tr>
+                  <th>Editing</th>
+                  <td>{{ databox.editing.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.studio.0 %}
+              <tr>
+                  <th>Studio</th>
+                  <td>{{ databox.studio.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.distributor.0 %}
+              <tr>
+                  <th>Distributor</th>
+                  <td>{{ databox.distributor.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.language.0 %}
+              <tr>
+                  <th>Language</th>
+                  <td>{{ databox.language.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.budget.0 %}
+              <tr>
+                  <th>Budget</th>
+                  <td>{{ databox.budget.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.gross.0 %}
+              <tr>
+                  <th>Gross Revenue</th>
+                  <td>{{ databox.gross.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.imdblink.0 %}
+              <tr>
+                  <th>IMDB Link</th>
+                  <td>{{ databox.imdblink.0 | safe }}</td>
+              </tr>
+              {% endif %}
+          </tbody>
+      </table>
+

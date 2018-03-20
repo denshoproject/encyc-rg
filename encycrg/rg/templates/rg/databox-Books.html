@@ -1,0 +1,47 @@
+      <table class="table table-hover table-striped">
+          <tbody>
+              {% if databox.author %}
+              <tr>
+                  <th style="width: 150px;">Author</th>
+                  <td>{% for name in databox.author %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.illustrator %}
+              <tr>
+                  <th>Illustrator</th>
+                  <td>{% for name in databox.illustrator %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              </tr>
+              {% endif %}
+              {% if databox.pages.0 %}
+              <tr>
+                  <th>Pages</th>
+                  <td>{{ databox.pages.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.pubdate.0 %}
+              <tr>
+                  <th>Publication Date</th>
+                  <td>{{ databox.pubdate.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.isbn.0 %}
+              <tr>
+                  <th>ISBN</th>
+                  <td>{{ databox.isbn.0 }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.worldcat.0 %}
+              <tr>
+                  <th>WorldCat URL</th>
+                  <td>{{ databox.worldcatlink.0 | safe }}</td>
+              </tr>
+              {% endif %}
+              {% if databox.awards.0 %}
+              <tr>
+                  <th>Awards</th>
+                  <td>{{ databox.awards.0 }}</td>
+              </tr>
+              {% endif %}
+          </tbody>
+      </table>
+

@@ -14,8 +14,6 @@
     {% if article.rg_creators %}
     <h3 class="articleCreatorsTitle">Creators: {% for c in article.rg_creators %}{{c}}{% if not forloop.last %},{% endif %} {% endfor %}</h3>
     {% endif %}
-
-    {% databox %}
     
     <div class="hidden-sm hidden-md hidden-lg">
         <div class="well">
@@ -89,6 +87,22 @@
            <!-- begin articleExtraInfo-->
            <div class="accordionCommon hello" id="articleExtraInfo">
                <div class="panel-group" id="articleAccordian">
+
+                   {% if article.databoxes|length > 1 %}
+                   <!-- begin rg_SectionMediaDetails -->
+                   <div class="panel panel-default">
+                       <a class="panel-heading accordion-toggle bg-color-6" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-mediadetails">
+                           <span><i class="fa fa-list" style="padding-right: 5px;"></i> Media Details</span>
+                           <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
+                       </a>
+                       <div id="collapse-mediadetails" class="panel-collapse collapse">
+                           <div class="panel-body">
+                               {% databox %}
+                           </div>
+                       </div>
+                   </div> 
+                   <!-- end rg_SectionMediaDetails -->
+                   {% endif %}
         
                    {% if article.related %}
                    <!-- begin rg_SectionRelatedArticles -->
@@ -97,7 +111,7 @@
                            <span><i class="fa fa-copy" style="padding-right: 5px;"></i> Related Articles</span>
                            <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
                        </a>
-                       <div id="collapse-relatedarticles" class="panel-collapse collapse in">
+                       <div id="collapse-relatedarticles" class="panel-collapse collapse">
                            <div class="panel-body">
                                {{ article.related|safe }}
                            </div>
@@ -113,7 +127,7 @@
                            <span><i class="fa fa-warning" style="padding-right: 5px;"></i> Ratings and Warnings</span>
                            <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
                        </a>
-                       <div id="collapse-warnings" class="panel-collapse collapse in">
+                       <div id="collapse-warnings" class="panel-collapse collapse">
                            <div class="panel-body">
                                {{ article.warnings|safe }}
                            </div>
