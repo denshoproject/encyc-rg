@@ -45,7 +45,7 @@
             <span class="small"><i class="fa {{ fields.rg_availability.icon }}" aria-hidden="true"></i> Availability: {{ article.rg_availability.0 }}  <span style="padding-left: 5px;"> </span></span>
             {% endif %}
             {% if article.rg_freewebversion %}
-            <span class="small"><i class="fa fa-laptop" aria-hidden="true"></i> Free Web Version: {{ article.rg_freewebversion.0 }}  <span style="padding-left: 5px;"> </span></span>
+            <span class="small"><i class="fa fa-laptop" aria-hidden="true"></i> Free Web Version: {% if article.rg_freewebversion.0 != 'No' %}Yes{% else %}No{% endif %}  <span style="padding-left: 5px;"> </span></span>
             {% endif %}
             {% if article.rg_hasteachingaids %}
             <span class="small"><i class="fa fa-users" aria-hidden="true"></i> Has Teaching Aids: {{ article.rg_hasteachingaids.0 }} <span style="padding-left: 5px;"> </span></span>
