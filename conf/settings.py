@@ -110,6 +110,9 @@ ENCYCLOPEDIA_URL = config.get('encycrg', 'encyclopedia_url')
 
 GOOGLE_ANALYTICS_ID = config.get('encycrg', 'google_analytics_id')
 
+THROTTLE_ANON = config.get('encycrg', 'throttle_anon')
+THROTTLE_USER = config.get('encycrg', 'throttle_user')
+
 # ----------------------------------------------------------------------
 
 ADMINS = (
@@ -138,7 +141,15 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': THROTTLE_ANON,
+        'user': THROTTLE_USER,
+    },
 }
 UNAUTHENTICATED_USER = None
 UNAUTHENTICATED_TOKEN = None
