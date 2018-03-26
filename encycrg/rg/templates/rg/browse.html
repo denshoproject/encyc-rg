@@ -13,45 +13,50 @@ Browse
     
 <h1 class="articleTitle">Browse</h1>
 
-<table class="table table-responsive table-sm table-hover">
-  <caption><h4 style="color: #999;">Explore articles in the guide through a variety of different facets.</h4></caption>
-  <tr>
-      <th>
-          <div class="media searchResultsList">
-            <span class="media-left bg-color-2">
-                <i class="fa fa-sort-alpha-asc" aria-hidden="true"></i>
-            </span>
-          </div>
-    </th>
-    <th>
-      <h2 class="browseFacetTitle color-2"><a class="browse browseFacetTitle color-2" href="{% url 'rg-articles' %}">Title</a></h2>
-    </th>
-    <td>
-      <div style="font-weight: 600;">Full article list sorted by title.</div>
-    </td>
-  </tr>
-  {% for item in databox_fields %}
-  {% if item.title != 'Teaching Aids' and item.title != 'Free Web Version' %}
-  <tr>
-    <th>
-          <div class="media searchResultsList">
-            <span class="media-left bg-color-2">
-                <i class="fa {{ item.icon }}" aria-hidden="true"></i>
-            </span>
-          </div>
-    </th>
-    <th>
-      <h2 class="browseFacetTitle color-2"><a class="browse browseFacetTitle color-2" href="{{ item.html }}">{{ item.title }}</a></h2>
-    </th>
-    <td>
-      <div style="font-weight: 600;">{{ item.description }}</div>
-    </td>
-  </tr>
-  {% endif %}
-  {% endfor %}
-</table>
+
+<h4 style="color: #999;">Explore articles in the guide through a variety of different facets.</h4>
+
+<div class="media searchResultsList">
+    <a href="{% url 'rg-articles' %}"><span class="media-left bg-color-2">
+        <i class="fa fa-sort-alpha-asc" aria-hidden="true"></i>
+    </span></a>
+    <div class="media-body">
+        <h3 class="media-heading color-2">
+          <a href="{% url 'rg-articles' %}" class="color-2">
+            Title
+          </a>
+        </h3>
+        <p>
+            <div style="font-weight: 600;">Full article list sorted by title.</div>
+        </p>
+    </div>
+</div>
+
+
+    {% for item in databox_fields %}
+    {% if item.title != 'Teaching Aids' and item.title != 'Free Web Version' %}
+<div class="media searchResultsList">
+    <a href="{{ item.html }}"><span class="media-left bg-color-2">
+        <i class="fa {{ item.icon }}" aria-hidden="true"></i>
+    </span></a>
+    <div class="media-body">
+        <h3 class="media-heading color-2">
+          <a href="{{ item.html }}" class="color-2">
+            {{ item.title }}
+          </a>
+        </h3>
+        <p>
+            <div style="font-weight: 600;">{{ item.description }}</div>
+        </p>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+</div>
 
   </div>
 </div><!-- .row -->
 </div>
 {% endblock container %}
+
+ß
