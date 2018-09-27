@@ -413,47 +413,7 @@ git-status:
 # http://fpm.readthedocs.io/en/latest/
 # https://stackoverflow.com/questions/32094205/set-a-custom-install-directory-when-making-a-deb-package-with-fpm
 # https://brejoc.com/tag/fpm/
-deb: deb-jessie deb-stretch
-
-# deb-jessie and deb-stretch are identical EXCEPT:
-# jessie: --depends openjdk-7-jre
-# stretch: --depends openjdk-7-jre
-deb-jessie:
-	@echo ""
-	@echo "FPM packaging (jessie) -------------------------------------------------"
-	-rm -Rf $(DEB_FILE_JESSIE)
-	virtualenv --python=python3 --relocatable $(VIRTUALENV)  # Make venv relocatable
-	fpm   \
-	--verbose   \
-	--input-type dir   \
-	--output-type deb   \
-	--name $(DEB_NAME_JESSIE)   \
-	--version $(DEB_VERSION_JESSIE)   \
-	--package $(DEB_FILE_JESSIE)   \
-	--url "$(GIT_SOURCE_URL)"   \
-	--vendor "$(DEB_VENDOR)"   \
-	--maintainer "$(DEB_MAINTAINER)"   \
-	--description "$(DEB_DESCRIPTION)"   \
-	--depends "python3"   \
-	--depends "imagemagick"   \
-	--depends "sqlite3"   \
-	--depends "supervisor"   \
-	--chdir $(INSTALLDIR)   \
-	.git=$(DEB_BASE)   \
-	.gitignore=$(DEB_BASE)   \
-	conf=$(DEB_BASE)   \
-	COPYRIGHT=$(DEB_BASE)   \
-	encycrg=$(DEB_BASE)   \
-	static=$(MEDIA_BASE)   \
-	venv=$(DEB_BASE)   \
-	INSTALL=$(DEB_BASE)   \
-	LICENSE=$(DEB_BASE)   \
-	Makefile=$(DEB_BASE)   \
-	README.rst=$(DEB_BASE)   \
-	requirements.txt=$(DEB_BASE)  \
-	VERSION=$(DEB_BASE)  \
-	conf/settings.py=$(DEB_BASE)/encycrg/encycrg   \
-	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
+deb: deb-stretch
 
 # deb-jessie and deb-stretch are identical EXCEPT:
 # jessie: --depends openjdk-7-jre
