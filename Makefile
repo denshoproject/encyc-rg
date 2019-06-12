@@ -82,8 +82,6 @@ help:
 	@echo ""
 	@echo "syncdb  - Initialize or update Django app's database tables."
 	@echo ""
-	@echo "update  - Updates encyc-rg and re-copies config files."
-	@echo ""
 	@echo "reload  - Reloads supervisord and nginx configs"
 	@echo ""
 	@echo "restart - Restarts all servers"
@@ -111,11 +109,9 @@ help-all:
 	@echo "install-daemons - install-nginx install-redis install-elasticsearch"
 	@echo "install-app     - install-encyc-rg"
 	@echo "install-static  - "
-	@echo "update  - Do an update"
 	@echo "restart - Restart servers"
 	@echo "status  - Server status"
 	@echo "install-configs - "
-	@echo "update-app - "
 	@echo "uninstall - "
 	@echo "clean - "
 
@@ -140,8 +136,6 @@ howto-install:
 get: get-app apt-update
 
 install: install-prep install-app install-static install-configs
-
-update: update-app
 
 uninstall: uninstall-app
 
@@ -231,8 +225,6 @@ get-app: get-encyc-rg
 
 install-app: install-encyc-rg
 
-update-app: update-encyc-rg install-configs
-
 uninstall-app: uninstall-encyc-rg
 
 clean-app: clean-encyc-rg
@@ -266,13 +258,6 @@ syncdb:
 	chmod -R 750 $(SQLITE_BASE)
 	chown -R $(USER).root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
-
-update-encyc-rg:
-	@echo ""
-	@echo "encyc-rg --------------------------------------------------------------"
-	git fetch && git pull
-	source $(VIRTUALENV)/bin/activate; \
-	pip3 install -U -r $(REQUIREMENTS)
 
 uninstall-encyc-rg:
 	cd $(INSTALLDIR)/encycrg
