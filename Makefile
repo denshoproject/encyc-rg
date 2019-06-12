@@ -259,6 +259,14 @@ syncdb:
 	chown -R $(USER).root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 
+shell:
+	source $(VIRTUALENV)/bin/activate; \
+	cd $(INSTALLDIR); python encycrg/manage.py shell
+
+runserver:
+	source $(VIRTUALENV)/bin/activate; \
+	cd $(INSTALLDIR); python encycrg/manage.py runserver 0.0.0.0:8081
+
 uninstall-encyc-rg:
 	cd $(INSTALLDIR)/encycrg
 	source $(VIRTUALENV)/bin/activate; \
