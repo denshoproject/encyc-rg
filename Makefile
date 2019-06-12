@@ -82,6 +82,8 @@ help:
 	@echo ""
 	@echo "syncdb  - Initialize or update Django app's database tables."
 	@echo ""
+	@echo "test    - Run unit tests"
+	@echo ""
 	@echo "reload  - Reloads supervisord and nginx configs"
 	@echo ""
 	@echo "restart - Restarts all servers"
@@ -136,6 +138,8 @@ howto-install:
 get: get-app apt-update
 
 install: install-prep install-app install-static install-configs
+
+test: test-app
 
 uninstall: uninstall-app
 
@@ -225,6 +229,8 @@ get-app: get-encyc-rg
 
 install-app: install-encyc-rg
 
+test-app: test-encyc-rg
+
 uninstall-app: uninstall-encyc-rg
 
 clean-app: clean-encyc-rg
@@ -258,6 +264,13 @@ syncdb:
 	chmod -R 750 $(SQLITE_BASE)
 	chown -R $(USER).root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
+
+test-encyc-rg:
+	@echo ""
+	@echo "test-encyc-rg ----------------------------------------------------------"
+	source $(VIRTUALENV)/bin/activate; \
+	cd $(INSTALLDIR); \
+	pytest --disable-warnings --rootdir=$(INSTALLDIR) encycrg/
 
 shell:
 	source $(VIRTUALENV)/bin/activate; \
