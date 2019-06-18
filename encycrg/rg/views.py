@@ -41,7 +41,7 @@ MEDIATYPE_TEMPLATES = load_templates(DEFAULT_ARTICLE_LIST_TEMPLATE)
 def _mkurl(request, path, query=None):
     return urlunparse((
         request.META['wsgi.url_scheme'],
-        request.META['HTTP_HOST'],
+        request.META.get('HTTP_HOST'),
         path, None, query, None
     ))
 

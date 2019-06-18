@@ -282,7 +282,7 @@ class SearchResults(object):
         if request:
             return urllib.parse.urlunsplit([
                 request.META['wsgi.url_scheme'],
-                request.META['HTTP_HOST'],
+                request.META.get('HTTP_HOST'),
                 request.META['PATH_INFO'],
                 query,
                 None,
