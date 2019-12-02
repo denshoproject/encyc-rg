@@ -25,4 +25,5 @@ def sitewide(request):
         'docstore_hosts': docstore_hosts,
         'docstore_index': settings.DOCSTORE_INDEX,
         'google_analytics_id': settings.GOOGLE_ANALYTICS_ID,
+        'site_msg_text': settings.SITE_MSG_TEXT,
     }
