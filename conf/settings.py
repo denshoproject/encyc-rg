@@ -113,6 +113,8 @@ GOOGLE_ANALYTICS_ID = config.get('encycrg', 'google_analytics_id')
 THROTTLE_ANON = config.get('encycrg', 'throttle_anon')
 THROTTLE_USER = config.get('encycrg', 'throttle_user')
 
+SITE_MSG_TEXT = config.get('encycrg', 'site_msg_text')
+
 # ----------------------------------------------------------------------
 
 ADMINS = (
