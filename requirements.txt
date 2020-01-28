@@ -12,7 +12,8 @@ django-redis                       # BSD      y
 django-redis-cache
 django-redis-sessions
 djangorestframework                # BSD      y
-elasticsearch-dsl>=2.0.0,<3.0.0
+elasticsearch>=7.0.0,<8.0.0        # Apache   y
+elasticsearch-dsl>=7.0.0,<8.0.0    # Apache   y
 gunicorn                           # MIT      y
 markdown
 redis                              # MIT      y
