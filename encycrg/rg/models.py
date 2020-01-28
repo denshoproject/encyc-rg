@@ -44,9 +44,6 @@ from elasticsearch_dsl import DocType, String, Date, Nested, Boolean, analysis
 from elasticsearch_dsl import Search
 MAX_SIZE = 10000
 
-connections.create_connection(hosts=settings.DOCSTORE_HOSTS)
-index = Index(settings.DOCSTORE_INDEX)
-
 s = Search(doc_type='articles')[0:MAX_SIZE]
 s = s.sort('title_sort')
 s = s.fields([

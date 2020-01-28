@@ -28,7 +28,6 @@ CONF_BASE=/etc/encyc
 CONF_PRODUCTION=$(CONF_BASE)/encycrg.cfg
 CONF_LOCAL=$(CONF_BASE)/encycrg-local.cfg
 CONF_SECRET=$(CONF_BASE)/encycrg-secret-key.txt
-CONF_DJANGO=$(INSTALLDIR)/encycrg/encycrg/settings.py
 
 SQLITE_BASE=/var/lib/$(PROJECT)
 LOGS_BASE=/var/log/$(PROJECT)
@@ -331,12 +330,12 @@ install-configs:
 	python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)])' > $(CONF_SECRET)
 	chown encyc.root $(CONF_SECRET)
 	chmod 640 $(CONF_SECRET)
-	cp $(INSTALLDIR)/conf/settings.py $(CONF_DJANGO)
-	chown root.root $(CONF_DJANGO)
-	chmod 644 $(CONF_DJANGO)
+	cp $(INSTALLDIR)/conf/encycrg.conf $(NGINX_CONF)
+	chown root.root $(NGINX_CONF)
+	chmod 644 $(NGINX_CONF)
+	-ln -s $(NGINX_CONF) $(NGINX_CONF_LINK)
 
 uninstall-configs:
-	-rm $(CONF_DJANGO)
 	-rm $(CONF_SECRET)
 
 install-daemons-configs:
