@@ -21,6 +21,7 @@ from django.urls import reverse
 from rest_framework.reverse import reverse as api_reverse
 
 from . import repo_models
+from . import docstore
 from . import search
 
 DOCTYPE_CLASS = {}  # Maps doctype names to classes
@@ -65,6 +66,12 @@ def hitvalue(hit, field, is_list=False):
     if value and isinstance(value, list) and not is_list:
         value = value[0]
     return value
+
+def _set_attr(obj, hit, fieldname):
+    """Assign a SearchResults Hit value if present
+    """
+    if hasattr(hit, fieldname):
+        setattr(obj, fieldname, getattr(hit, fieldname))
 
 
 AUTHOR_LIST_FIELDS = [
@@ -579,25 +586,64 @@ class Page(repo_models.Page):
         KEY = 'encyc-rg:pages'
         data = cache.get(KEY)
         if not data:
-            s = Page.search()
-            if only_rg:
-                s = s.filter('term', published_rg=True)
-            s = s.sort('title_sort')
-            s = s.fields(PAGE_LIST_FIELDS)
-            query = s.to_dict()
-            count = s.count()
-            if (start != 0) or (stop != settings.MAX_SIZE):
-                s = s[start:stop]
-            data = search.SearchResults(
-                mappings=DOCTYPE_CLASS,
-                query=query,
-                count=count,
-                results=s.execute(),
-                #limit=limit,
-                #offset=offset,
-            ).objects
+            #s = Page.search()
+            #if only_rg:
+            #    s = s.filter('term', published_rg=True)
+            #s = s.sort('title_sort')
+            #s = s.fields(PAGE_LIST_FIELDS)
+            #query = s.to_dict()
+            #count = s.count()
+            #if (start != 0) or (stop != settings.MAX_SIZE):
+            #    s = s[start:stop]
+            #data = search.SearchResults(
+            #    mappings=DOCTYPE_CLASS,
+            #    query=query,
+            #    count=count,
+            #    results=s.execute(),
+            #    #limit=limit,
+            #    #offset=offset,
+            #).objects
+            params={
+                # only ResourceGuide items
+                'published_rg': True,
+            }
+            searcher = search.Searcher()
+            searcher.prepare(
+                params=params,
+                search_models=[docstore.Docstore().index_name('article')],
+                fields_nested=[],
+                fields_agg={},
+            )
+            data = sorted([
+                Page.from_hit(hit)
+                for hit in searcher.execute(docstore.MAX_SIZE, 0).objects
+            ])
             cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
+    
+    @staticmethod
+    def from_hit(hit):
+        """Creates a Page object from a elasticsearch_dsl.response.hit.Hit.
+        """
+        obj = Page(
+            meta={'id': hit.url_title}
+        )
+        _set_attr(obj, hit, 'url_title')
+        _set_attr(obj, hit, 'public')
+        _set_attr(obj, hit, 'published')
+        _set_attr(obj, hit, 'published_encyc')
+        _set_attr(obj, hit, 'published_rg')
+        _set_attr(obj, hit, 'modified')
+        _set_attr(obj, hit, 'mw_api_url')
+        _set_attr(obj, hit, 'title_sort')
+        _set_attr(obj, hit, 'title')
+        _set_attr(obj, hit, 'description')
+        _set_attr(obj, hit, 'body')
+        _set_attr(obj, hit, 'authors_data')
+        _set_attr(obj, hit, 'categories')
+        _set_attr(obj, hit, 'coordinates')
+        _set_attr(obj, hit, 'source_ids')
+        return obj
 
     @staticmethod
     def pages_by_category():
