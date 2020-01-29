@@ -12,28 +12,20 @@ from urllib.parse import urlparse, urljoin
 
 from bs4 import BeautifulSoup
 
-from elasticsearch.exceptions import NotFoundError, TransportError
-from elasticsearch_dsl import Index
-from elasticsearch_dsl import DocType, InnerObjectWrapper, analysis
-from elasticsearch_dsl import String, Date, Nested, Boolean
-from elasticsearch_dsl import Search, Q
-from elasticsearch_dsl.connections import connections
-from elasticsearch_dsl.utils import AttrList
+from elasticsearch.exceptions import NotFoundError
+import elasticsearch_dsl as dsl
 
 from django.conf import settings
 from django.core.cache import cache
 from django.urls import reverse
 from rest_framework.reverse import reverse as api_reverse
 
+from . import repo_models
 from . import search
 
 DOCTYPE_CLASS = {}  # Maps doctype names to classes
 
 SEARCH_LIST_FIELDS = []
-
-# set default hosts and index
-connections.create_connection(hosts=settings.DOCSTORE_HOSTS)
-index = Index(settings.DOCSTORE_INDEX)
 
 """
 
@@ -84,29 +76,7 @@ AUTHOR_LIST_FIELDS = [
 ]
 
 @python_2_unicode_compatible
-class Author(DocType):
-    """
-    IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
-    """
-    url_title = String(index='not_analyzed')  # Elasticsearch id
-    public = Boolean()
-    published = Boolean()
-    modified = Date()
-    mw_api_url = String(index='not_analyzed')
-    title_sort = String(index='not_analyzed')
-    title = String()
-    body = String()
-    article_titles = String(index='not_analyzed', multi=True)
-    
-    class Meta(object):
-        index = settings.DOCSTORE_INDEX
-        doc_type = 'authors'
-    
-    def __repr__(self):
-        return u"<Author '%s'>" % self.url_title
-    
-    def __str__(self):
-        return self.title
+class Author(repo_models.Author):
 
     def absolute_url(self):
         return reverse('rg-author', args=([self.title,]))
@@ -213,7 +183,7 @@ class Author(DocType):
         KEY = 'encyc-rg:authors'
         data = cache.get(KEY)
         if not data:
-            s = Search(doc_type='authors')[0:settings.MAX_SIZE]
+            s = search.Search(doc_type='authors')[0:settings.MAX_SIZE]
             s = s.sort('title_sort')
             s = s.fields(AUTHOR_LIST_FIELDS)
             response = s.execute()
@@ -373,63 +343,7 @@ ACCORDION_SECTIONS = [
 ]
 
 @python_2_unicode_compatible
-class Page(DocType):
-    """
-    IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
-    """
-    url_title = String(index='not_analyzed')  # Elasticsearch id
-    public = Boolean()
-    published = Boolean()
-    published_encyc = Boolean()
-    published_rg = Boolean()
-    modified = Date()
-    mw_api_url = String(index='not_analyzed')
-    title_sort = String(index='not_analyzed')
-    title = String()
-    body = String()
-    prev_page = String(index='not_analyzed')
-    next_page = String(index='not_analyzed')
-    categories = String(index='not_analyzed', multi=True)
-    coordinates = String(index='not_analyzed', multi=True)
-    source_ids = String(index='not_analyzed', multi=True)
-    authors_data = Nested(
-        properties={
-            'display': String(index='not_analyzed', multi=True),
-            'parsed': String(index='not_analyzed', multi=True),
-        }
-    )
-    databoxes = String(index='not_analyzed', multi=True)
-    
-    rg_rgmediatype = String(index='not_analyzed', multi=True)
-    rg_title = String()
-    rg_creators = String(multi=True)
-    rg_interestlevel = String(index='not_analyzed', multi=True)
-    rg_readinglevel = String(index='not_analyzed', multi=True)
-    rg_theme = String(index='not_analyzed', multi=True)
-    rg_genre = String(index='not_analyzed', multi=True)
-    rg_pov = String(index='not_analyzed', multi=True)
-    #rg_relatedevents = String()
-    rg_availability = String(index='not_analyzed')
-    rg_freewebversion = String(index='not_analyzed')
-    #rg_denshotopic = String(index='not_analyzed', multi=True)
-    rg_geography = String(index='not_analyzed', multi=True)
-    #rg_facility = String(index='not_analyzed', multi=True)
-    rg_chronology = String(index='not_analyzed', multi=True)
-    rg_hasteachingaids = String(index='not_analyzed')
-    rg_warnings = String()
-    #rg_primarysecondary = String(index='not_analyzed', multi=True)
-    #rg_lexile = String(index='not_analyzed', multi=True)
-    #rg_guidedreadinglevel = String(index='not_analyzed', multi=True)
-    
-    class Meta(object):
-        index = settings.DOCSTORE_INDEX
-        doc_type = u'articles'
-    
-    def __repr__(self):
-        return u"<Page '%s'>" % self.url_title
-    
-    def __str__(self):
-        return self.url_title
+class Page(repo_models.Page):
     
     def absolute_url(self):
         return reverse('rg-page', args=([self.title]))
@@ -806,49 +720,7 @@ SOURCE_LIST_FIELDS = [
 ]
 
 @python_2_unicode_compatible
-class Source(DocType):
-    """
-    IMPORTANT: uses Elasticsearch-DSL, not the Django ORM.
-    """
-    encyclopedia_id = String(index='not_analyzed')  # Elasticsearch id
-    densho_id = String(index='not_analyzed')
-    psms_id = String(index='not_analyzed')
-    psms_api_uri = String(index='not_analyzed')
-    institution_id = String(index='not_analyzed')
-    collection_name = String(index='not_analyzed')
-    created = Date()
-    modified = Date()
-    published = Boolean()
-    creative_commons = Boolean()
-    headword = String(index='not_analyzed')
-    #original_path = String(index='not_analyzed')
-    original_url = String(index='not_analyzed')  # TODO use original_path
-    #streaming_path = String(index='not_analyzed')
-    #rtmp_path = String(index='not_analyzed')
-    streaming_url = String(index='not_analyzed')  # TODO remove
-    external_url = String(index='not_analyzed')
-    media_format = String(index='not_analyzed')
-    aspect_ratio = String(index='not_analyzed')
-    original_size = String(index='not_analyzed')
-    display_size = String(index='not_analyzed')
-    display = String(index='not_analyzed')
-    caption = String()
-    caption_extended = String()
-    #transcript_path = String(index='not_analyzed')
-    transcript = String()  # TODO remove
-    courtesy = String(index='not_analyzed')
-    filename = String(index='not_analyzed')
-    img_path = String(index='not_analyzed')
-    
-    class Meta(object):
-        index = settings.DOCSTORE_INDEX
-        doc_type = u'sources'
-    
-    def __repr__(self):
-        return u"<Source '%s'>" % self.encyclopedia_id
-    
-    def __str__(self):
-        return self.encyclopedia_id
+class Source(repo_models.Source):
     
     def absolute_url(self):
         return reverse('rg-source', args=([self.encyclopedia_id]))
@@ -1005,7 +877,7 @@ class Source(DocType):
         KEY = u'encyc-rg:sources'
         data = cache.get(KEY)
         if not data:
-            s = Search(doc_type='sources')[0:settings.MAX_SIZE]
+            s = search.Search(doc_type='sources')[0:settings.MAX_SIZE]
             s = s.sort('encyclopedia_id')
             s = s.fields(SOURCE_LIST_FIELDS)
             response = s.execute()
@@ -1085,85 +957,33 @@ TERM_TITLES = {}  # values set later
 
 FACILITY_TYPES = {}
 
-class Location(InnerObjectWrapper):
-    pass
-
-class GeoPoint(InnerObjectWrapper):
-    pass
-
-class ELink(InnerObjectWrapper):
-    pass
-
 @python_2_unicode_compatible
-class FacetTerm(DocType):
-    id = String(index='not_analyzed')  # Elasticsearch id
-    facet_id = String(index='not_analyzed')
-    title = String()
-    # topics
-    _title = String()
-    description = String()
-    path = String(index='not_analyzed')
-    parent_id = String(index='not_analyzed')
-    ancestors = String(index='not_analyzed', multi=True)
-    children = String(index='not_analyzed', multi=True)
-    siblings = String(index='not_analyzed', multi=True)
-    encyc_urls = String(index='not_analyzed', multi=True)
-    weight = String()
-    # facility
-    type = String(index='not_analyzed')
-    locations = Nested(
-        doc_class=Location,
-        properties={
-            'label': String(),
-            'geopoint': Nested(
-                doc_class=GeoPoint,
-                properties={
-                    'lat': String(),
-                    'lng': String(),
-                }
-            )
-        }
-    )
-    elinks = Nested(
-        doc_class=ELink,
-        properties={
-            'label': String(),
-            'url': String(index='not_analyzed'),
-        }
-    )
-    
-    class Meta(object):
-        index = settings.DOCSTORE_INDEX
-        doc_type = u'facetterms'
-    
-    def __repr__(self):
-        return u"<FacetTerm '%s-%s'>" % (self.facet_id, self.id)
-    
-    def __str__(self):
-        return u'%s-%s' % (self.facet_id, self.id)
+class FacetTerm(repo_models.FacetTerm):
     
     @staticmethod
     def terms(request, facet_id=None, limit=settings.DEFAULT_LIMIT, offset=0):
-        s = Search(doc_type='facetterms')[0:settings.MAX_SIZE]
-        if facet_id:
-            s = s.query("match", facet_id=facet_id)
-            if facet_id == 'topics':
-                s = s.sort('path')
-            elif facet_id == 'facility':
-                s = s.sort('type', 'title')
-        response = s.execute()
-        data = [
-            FacetTerm(
-                id = hitvalue(hit, 'id'),
-                facet_id = hitvalue(hit, 'facet_id'),
-                term_id = hitvalue(hit, 'term_id'),
-                title = hitvalue(hit, 'title'),
-                path = hitvalue(hit, 'path'),
-                type = hitvalue(hit, 'type'),
-               )
-            for hit in response
-        ]
-        return data
+        # TODO
+        #s = search.Search(doc_type='facetterms')[0:settings.MAX_SIZE]
+        #if facet_id:
+        #    s = s.query("match", facet_id=facet_id)
+        #    if facet_id == 'topics':
+        #        s = s.sort('path')
+        #    elif facet_id == 'facility':
+        #        s = s.sort('type', 'title')
+        #response = s.execute()
+        #data = [
+        #    FacetTerm(
+        #        id = hitvalue(hit, 'id'),
+        #        facet_id = hitvalue(hit, 'facet_id'),
+        #        term_id = hitvalue(hit, 'term_id'),
+        #        title = hitvalue(hit, 'title'),
+        #        path = hitvalue(hit, 'path'),
+        #        type = hitvalue(hit, 'type'),
+        #       )
+        #    for hit in response
+        #]
+        #return data
+        return []
     
     def to_dict_list(self, request=None):
         data = OrderedDict()
@@ -1303,21 +1123,7 @@ def facility_type(type_id):
 
 
 @python_2_unicode_compatible
-class Facet(DocType):
-    id = String(index='not_analyzed')  # Elasticsearch id
-    title = String()
-    description = String()
-    terms = []
-    
-    class Meta(object):
-        index = settings.DOCSTORE_INDEX
-        doc_type = u'facets'
-    
-    def __repr__(self):
-        return u"<Facet '%s'>" % self.id
-    
-    def __str__(self):
-        return self.id
+class Facet(repo_models.Facet):
     
     def absolute_url(self):
         return reverse('rg-facet', args=([self.id]))
@@ -1375,7 +1181,7 @@ class Facet(DocType):
 
     @staticmethod
     def facets(request, limit=settings.DEFAULT_LIMIT, offset=0):
-        s = Search(doc_type=u'facets')[0:settings.MAX_SIZE]
+        s = search.Search(doc_type=u'facets')[0:settings.MAX_SIZE]
         response = s.execute()
         data = [
             Facet(
@@ -1386,300 +1192,3 @@ class Facet(DocType):
             for hit in response
         ]
         return data
-    
-#    @staticmethod
-#    def children(oid, request, sort=[], limit=DEFAULT_LIMIT, offset=0, raw=False):
-#        LIST_FIELDS = [
-#            'id',
-#            'sort',
-#            'title',
-#            'facet',
-#            'ancestors',
-#            'path',
-#            'type',
-#        ]
-#        q = docstore.search_query(
-#            must=[
-#                {'term': {'facet': oid}}
-#            ]
-#        )
-#        results = docstore.Docstore().search(
-#            doctypes=['facetterm'],
-#            query=q,
-#            sort=sort,
-#            fields=LIST_FIELDS,
-#            from_=offset,
-#            size=limit,
-#        )
-#        if raw:
-#            return [
-#                term['_source']
-#                for term in results['hits']['hits']
-#            ]
-#        return format_list_objects(
-#            paginate_results(
-#                results,
-#                offset,
-#                limit,
-#                request
-#            ),
-#            request,
-#            format_term
-#        )
-    
-#    @staticmethod
-#    def make_tree(terms_list):
-#        """Rearranges terms list into hierarchical list.
-#        
-#        Uses term['ancestors'] to generate a tree structure
-#        then "prints out" the tree to a list with indent (depth) indicators.
-#        More specifically, it adds term['depth'] attribs and reorders
-#        terms so they appear in the correct places in the hierarchy.
-#        source: https://gist.github.com/hrldcpr/2012250
-#        
-#        @param terms_list: list
-#        @returns: list
-#        """
-#        def tree():
-#            """Define a tree data structure
-#            """
-#            return defaultdict(tree)
-        
-#        def add(tree_, path):
-#            """
-#            @param tree_: defaultdict
-#            @param path: list of ancestor term IDs
-#            """
-#            for node in path:
-#                tree_ = tree_[node]
-        
-#        def populate(terms_list):
-#            """Create and populate tree structure
-#            by iterating through list of terms and referencing ancestor/path keys
-#            
-#            @param terms_list: list of dicts
-#            @returns: defaultdict
-#            """
-#            tree_ = tree()
-#            for term in terms_list:
-#                path = [tid for tid in term['ancestors']]
-#                path.append(term['id'])
-#                add(tree_, path)
-#            return tree_
-        
-#        def flatten(tree_, depth=0):
-#            """Takes tree dict and returns list of terms with depth values
-#            
-#            Variation on ptr() from the gist
-#            Recursively gets term objects from terms_dict, adds depth,
-#            and appends to list of terms.
-#            
-#            @param tree_: defaultdict Tree
-#            @param depth: int Depth of indents
-#            """
-#            for key in sorted(tree_.keys()):
-#                term = terms_dict[key]
-#                term['depth'] = depth
-#                terms.append(term)
-#                depth += 1
-#                flatten(tree_[key], depth)
-#                depth -= 1
-#        
-#        terms_dict = {t['id']: t for t in terms_list}
-#        terms_tree = populate(terms_list)
-#        terms = []
-#        flatten(terms_tree)
-#        return terms
-
-#    @staticmethod
-#    def topics_terms(request):
-#        """List of topics facet terms, with tree indents and doc counts
-#        
-#        TODO ES does query and aggregations caching.
-#        Does caching this mean the query/aggs won't be cached in ES?
-#        
-#        @param request: Django request object.
-#        @returns: list of Terms
-#        """
-#        facet_id = 'topics'
-#        key = 'facet:%s:terms' % facet_id
-#        cached = cache.get(key)
-#        if not cached:
-#            terms = Facet.children(
-#                facet_id, request,
-#                sort=[('title','asc')],
-#                limit=10000, raw=True
-#            )
-#            for term in terms:
-#                term['links'] = {}
-#                term['links']['html'] = reverse(
-#                    'ui-browse-term', args=[facet_id, term['id']]
-#                )
-#            terms = Facet.make_tree(terms)
-#            Term.term_aggregations('topics.id', 'topics', terms, request)
-#            cached = terms
-#            cache.set(key, cached, settings.CACHE_TIMEOUT)
-#        return cached
-    
-#    @staticmethod
-#    def get(oid, request):
-#        document = docstore.Docstore().get(
-#            model='facet', document_id=oid
-#        )
-#        if not document:
-#            raise NotFound()
-#        data = format_facet(document, request)
-#        HIDDEN_FIELDS = []
-#        for field in HIDDEN_FIELDS:
-#            pop_field(data, field)
-#        return data
-
-#    @staticmethod
-#    def facility_terms(request):
-#        """List of facility facet terms, sorted and with doc counts
-#        
-#        TODO ES does query and aggregations caching.
-#        Does caching this mean the query/aggs won't be cached in ES?
-#        
-#        @param request: Django request object.
-#        @returns: list of Terms
-#        """
-#        facet_id = 'facility'
-#        key = 'facet:%s:terms' % facet_id
-#        cached = cache.get(key)
-#        if not cached:
-#            terms = Facet.children(
-#                facet_id, request,
-#                sort=[('title','asc')],
-#                limit=10000, raw=True
-#            )
-#            for term in terms:
-#                term['links'] = {}
-#                term['links']['html'] = reverse(
-#                    'ui-browse-term', args=[facet_id, term['id']]
-#                )
-#            terms = sorted(terms, key=lambda term: term['title'])
-#            Term.term_aggregations('facility.id', 'facility', terms, request)
-#            cached = terms
-#            cache.set(key, cached, settings.CACHE_TIMEOUT)
-#        return cached
-
-
-class Term(object):
-    pass
-
-#    @staticmethod
-#    def terms(request, limit=DEFAULT_LIMIT, offset=0):
-#        SORT_FIELDS = [
-#        ]
-#        LIST_FIELDS = [
-#            'id',
-#            'title',
-#        ]
-#        q = docstore.search_query(
-#            must=[
-#                { "match_all": {}}
-#            ]
-#        )
-#        results = docstore.Docstore().search(
-#            doctypes=['facetterm'],
-#            query=q,
-#            sort=SORT_FIELDS,
-#            fields=LIST_FIELDS,
-#            from_=offset,
-#            size=limit,
-#        )
-#        return format_list_objects(
-#            paginate_results(
-#                results,
-#                offset,
-#                limit,
-#                request
-#            ),
-#            request,
-#            format_facet
-#        )
-
-#    @staticmethod
-#    def term_aggregations(field, fieldname, terms, request):
-#        """Add number of documents for each facet term
-#        
-#        @param field: str Field name in ES (e.g. 'topics.id')
-#        @param fieldname: str Fieldname in ddrpublic (e.g. 'topics')
-#        @param terms list
-#        """
-#        # aggregations
-#        query = {
-#            'models': [
-#                'entity',
-#                'segment',
-#            ],
-#            'aggs': {
-#                fieldname: {
-#                    'terms': {
-#                        'field': field,
-#                        'size': len(terms), # doc counts for all terms
-#                    }
-#                },
-#            }
-#        }
-#        results = docstore_search(
-#            models=query['models'],
-#            aggs=query['aggs'],
-#            request=request,
-#        )
-#        aggs = aggs_dict(results.get('aggregations'))[fieldname]
-#        # assign num docs per term
-#        for term in terms:
-#            num = aggs.get(str(term['id']), 0) # aggs keys are str(int)s
-#            term['doc_count'] = num            # could be used for sorting terms!
-    
-#    @staticmethod
-#    def get(oid, request):
-#        document = docstore.Docstore().get(
-#            model='facetterm', document_id=oid
-#        )
-#        if not document:
-#            raise NotFound()
-#        # save data for breadcrumbs
-#        # (we assume ancestors and path in same order)
-#        facet = document['_source']['facet']
-#        path = document['_source'].get('path')
-#        ancestors = document['_source'].get('ancestors')
-#        
-#        data = format_term(document, request)
-#        HIDDEN_FIELDS = []
-#        for field in HIDDEN_FIELDS:
-#            pop_field(data, field)
-#        # breadcrumbs
-#        # join path (titles) and ancestors (IDs)
-#        if path and ancestors:
-#            data['breadcrumbs'] = []
-#            path = path.split(':')
-#            path.pop() # last path item is not an ancestor
-#            if len(path) == len(ancestors):
-#                for n,tid in enumerate(ancestors):
-#                    data['breadcrumbs'].append({
-#                        'url':reverse('ui-browse-term', args=[facet, tid]),
-#                        'title':path[n]
-#                    })
-#        return data
-
-#    @staticmethod
-#    def objects(facet_id, term_id, limit=DEFAULT_LIMIT, offset=0, request=None):
-#        field = '%s.id' % facet_id
-#        return docstore_search(
-#            must=[
-#                {'terms': {field: [term_id]}},
-#            ],
-#            models=[],
-#            sort_fields=[
-#                'sort',
-#                'id',
-#                'record_created',
-#                'record_lastmod',
-#            ],
-#            limit=limit,
-#            offset=offset,
-#            request=request,
-#        )
