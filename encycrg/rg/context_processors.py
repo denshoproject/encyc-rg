@@ -7,10 +7,6 @@ from django.conf import settings
 def sitewide(request):
     """Variables that need to be inserted into all templates.
     """
-    docstore_hosts = '%s:%s' % (
-        settings.DOCSTORE_HOSTS[0]['host'],
-        settings.DOCSTORE_HOSTS[0]['port'],
-    )
     return {
         'request': request,
         'base_template': settings.BASE_TEMPLATE,
@@ -22,8 +18,7 @@ def sitewide(request):
         'git_branch': settings.GIT_BRANCH,
         'version': settings.VERSION,
         'packages': settings.PACKAGES,
-        'docstore_hosts': docstore_hosts,
-        'docstore_index': settings.DOCSTORE_INDEX,
+        'docstore_host': settings.DOCSTORE_HOST,
         'google_analytics_id': settings.GOOGLE_ANALYTICS_ID,
         'site_msg_text': settings.SITE_MSG_TEXT,
     }
