@@ -61,7 +61,7 @@ def hitvalue(hit, field, is_list=False):
             return []
         return None
     value = getattr(hit, field)
-    if isinstance(value, AttrList):
+    if isinstance(value, list):
         value = list(value)
     if value and isinstance(value, list) and not is_list:
         value = value[0]
