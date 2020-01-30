@@ -376,7 +376,7 @@ ACCORDION_SECTIONS = [
 class Page(repo_models.Page):
     
     def absolute_url(self):
-        return reverse('rg-page', args=([self.title]))
+        return reverse('rg-article', args=([self.title]))
     
     def encyclopedia_url(self):
         return os.path.join(settings.ENCYCLOPEDIA_URL, self.title)
