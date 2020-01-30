@@ -481,9 +481,9 @@ class Page(repo_models.Page):
         
         def setval(self, data, fieldname, is_list=False):
             data[fieldname] = hitvalue(self, fieldname, is_list)
-        
+
         setval(self, data, 'rg_rgmediatype', is_list=1)
-        if MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
+        if self.rg_rgmediatype and MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
             data['mediatype_label'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['label']
             data['mediatype_icon'] = MEDIATYPE_INFO[self.rg_rgmediatype[0]]['icon']
         setval(self, data, 'rg_interestlevel', is_list=1)
@@ -668,7 +668,37 @@ class Page(repo_models.Page):
             page.url_title
             for page in Page.pages()
         ]
-
+     
+    @staticmethod
+    def pages_by_initial():
+        """List of Pages grouped by first letter of title
+        Returns list of initial letters, list of groups, total number of Pages
+        @returns: (initials,groups,total)
+        """
+        def _initial_char(text):
+            for char in text:
+                if char.isdigit():
+                    return '1'
+                elif char.isalpha():
+                    return char
+            return char
+        
+        initials = []
+        groups = {}
+        for n,page in enumerate(Page.pages()):
+            initial = _initial_char(page.title_sort)
+            initials.append(initial)
+            if not groups.get(initial):
+                groups[initial] = []
+            groups[initial].append(page)
+        initials = sorted(set(initials))
+        groups = [
+            (initial, groups.pop(initial))
+            for initial in initials
+        ]
+        total = n + 1
+        return initials,groups,total
+    
     @staticmethod
     def pages_by_category():
         """Returns list of (category, Pages) tuples, alphabetical by category
@@ -708,6 +738,14 @@ class Page(repo_models.Page):
             data = set(mediatypes)
             cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
+    
+    def mediatype_label(self):
+        if self.rg_rgmediatype and MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
+            return MEDIATYPE_INFO[self.rg_rgmediatype[0]]['label']
+    
+    def mediatype_icon(self):
+        if self.rg_rgmediatype and MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
+            return MEDIATYPE_INFO[self.rg_rgmediatype[0]]['icon']
 
     def scrub(self):
         """remove internal editorial markers.

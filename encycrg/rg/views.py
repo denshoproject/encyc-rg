@@ -81,34 +81,10 @@ def debug(request):
     return technical_500_response(request, Debug, Debug(DEBUG_TEXT), None)
 
 
-def _initial_char(text):
-    for char in text:
-        if char.isdigit():
-            return '1'
-        elif char.isalpha():
-            return char
-    return char
-
-def _group_articles_by_initial(articles):
-    initials = []
-    groups = {}
-    for article in articles:
-        initial = _initial_char(article['title_sort'])
-        initials.append(initial)
-        if not groups.get(initial):
-            groups[initial] = []
-        groups[initial].append(article)
-    initials = sorted(set(initials))
-    return initials, [
-        (initial, groups.pop(initial))
-        for initial in initials
-    ]
-
 def articles(request):
-    objects = models.Page.pages(limit=settings.MAX_SIZE)
-    initials,groups = _group_articles_by_initial(objects)
+    initials,groups,total = models.Page.pages_by_initial()
     return render(request, 'rg/articles.html', {
-        'num_articles': len(objects),
+        'num_articles': total,
         'initials': initials,
         'groups': groups,
         'fields': models.FACET_FIELDS,
