@@ -387,9 +387,10 @@ class Page(repo_models.Page):
         page = super(Page, Page).get(
             id=title, index=ds.index_name('article'), using=ds.es
         )
-        # filter out ResourceGuide items
+        # only show ResourceGuide items
         if not page.published_rg:
             return None
+        page.prepare()
         return page
 
     def prepare(self):
