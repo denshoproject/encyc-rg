@@ -105,38 +105,24 @@ def _group_articles_by_initial(articles):
     ]
 
 def articles(request):
-    results = api._articles(request, limit=settings.MAX_SIZE)
-    initials,groups = _group_articles_by_initial(
-        results.to_dict()['objects']
-    )
+    objects = models.Page.pages(limit=settings.MAX_SIZE)
+    initials,groups = _group_articles_by_initial(objects)
     return render(request, 'rg/articles.html', {
-        'num_articles': results.total,
+        'num_articles': len(objects),
         'initials': initials,
         'groups': groups,
         'fields': models.FACET_FIELDS,
         'api_url': _mkurl(request, reverse('rg-api-articles')),
     })
-    #api_url = _mkurl(request, reverse('rg-api-articles'))
-    #r = api.get_articles(request)
-    #paginator = Paginator(
-    #    r.ordered_dict(request=request, pad=True)['objects'],
-    #    r.page_size
-    #)
-    #page = paginator.page(r.this_page)
-    #return render(request, 'rg/articles.html', {
-    #    'paginator': paginator,
-    #    'page': page,
-    #    'api_url': api_url,
-    #})
 
 def wiki_article(request, url_title):
     return HttpResponsePermanentRedirect(reverse('rg-article', args=([url_title])))
 
 def article(request, url_title):
-    article_titles = api._article_titles(request, limit=settings.MAX_SIZE)
+    article_titles = models.Page.titles()
     article = None
     try:
-        article = api._article(request, url_title)
+        article = models.Page.get(url_title)
     except models.NotFoundError as err:
         # Bad title might just be an author link
         if '_' in url_title:

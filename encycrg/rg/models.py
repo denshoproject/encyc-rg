@@ -89,6 +89,13 @@ class Author(repo_models.Author):
         return reverse('rg-author', args=([self.title,]))
 
     @staticmethod
+    def get(title):
+        ds = docstore.Docstore()
+        return super(Author, Author).get(
+            title, index=ds.index_name('author'), using=ds.es
+    )
+
+    @staticmethod
     def search():
         """AuthorSearch
         
@@ -182,33 +189,49 @@ class Author(repo_models.Author):
         ]
 
     @staticmethod
-    def authors(num_columns=None):
+    def authors(limit=settings.MAX_SIZE, offset=0, num_columns=None):
         """Returns list of published light Author objects.
         
         @returns: list
         """
-        KEY = 'encyc-rg:authors'
+        KEY = 'encyc-rg:authors:{}:{}'.format(limit, offset)
         data = cache.get(KEY)
         if not data:
-            s = search.Search(doc_type='authors')[0:settings.MAX_SIZE]
-            s = s.sort('title_sort')
-            s = s.fields(AUTHOR_LIST_FIELDS)
-            response = s.execute()
-            data = [
-                Author(
-                    url_title  = hitvalue(hit, 'url_title'),
-                    title      = hitvalue(hit, 'title'),
-                    title_sort = hitvalue(hit, 'title_sort'),
-                    published  = hitvalue(hit, 'published'),
-                    modified   = hitvalue(hit, 'modified'),
-                )
-                for hit in response
-                if hitvalue(hit, 'published')
-            ]
+            searcher = search.Searcher()
+            searcher.prepare(
+                params={},
+                search_models=[docstore.Docstore().index_name('author')],
+                fields_nested=[],
+                fields_agg={},
+            )
+            data = sorted([
+                Author.from_hit(hit)
+                for hit in searcher.execute(limit, offset).objects
+            ])
+            if num_columns:
+                return _columnizer(data, num_columns)
             cache.set(KEY, data, settings.CACHE_TIMEOUT)
         if num_columns:
             return _columnizer(data, num_columns)
         return data
+
+    @staticmethod
+    def from_hit(hit):
+        """Creates an Author object from a elasticsearch_dsl.response.hit.Hit.
+        """
+        obj = Author(
+            meta={'id': hit.url_title}
+        )
+        _set_attr(obj, hit, 'url_title')
+        _set_attr(obj, hit, 'public')
+        _set_attr(obj, hit, 'published')
+        _set_attr(obj, hit, 'modified')
+        _set_attr(obj, hit, 'mw_api_url')
+        _set_attr(obj, hit, 'title_sort')
+        _set_attr(obj, hit, 'title')
+        _set_attr(obj, hit, 'body')
+        _set_attr(obj, hit, 'article_titles')
+        return obj
 
     def scrub(self):
         """Removes internal editorial markers.
@@ -357,6 +380,17 @@ class Page(repo_models.Page):
     
     def encyclopedia_url(self):
         return os.path.join(settings.ENCYCLOPEDIA_URL, self.title)
+
+    @staticmethod
+    def get(title):
+        ds = docstore.Docstore()
+        page = super(Page, Page).get(
+            id=title, index=ds.index_name('article'), using=ds.es
+        )
+        # filter out ResourceGuide items
+        if not page.published_rg:
+            return None
+        return page
 
     def prepare(self):
         soup = BeautifulSoup(self.body, 'html.parser')
@@ -577,32 +611,15 @@ class Page(repo_models.Page):
         return s
     
     @staticmethod
-    def pages(only_rg=True, start=0, stop=settings.MAX_SIZE):
+    def pages(only_rg=True, limit=settings.MAX_SIZE, offset=0):
         """Returns list of published light Page objects.
         
         @param only_rg: boolean Only return RG pages (rg_rgmediatype present)
         @returns: list
         """
-        KEY = 'encyc-rg:pages'
+        KEY = 'encyc-rg:pages:{}:{}'.format(limit, offset)
         data = cache.get(KEY)
         if not data:
-            #s = Page.search()
-            #if only_rg:
-            #    s = s.filter('term', published_rg=True)
-            #s = s.sort('title_sort')
-            #s = s.fields(PAGE_LIST_FIELDS)
-            #query = s.to_dict()
-            #count = s.count()
-            #if (start != 0) or (stop != settings.MAX_SIZE):
-            #    s = s[start:stop]
-            #data = search.SearchResults(
-            #    mappings=DOCTYPE_CLASS,
-            #    query=query,
-            #    count=count,
-            #    results=s.execute(),
-            #    #limit=limit,
-            #    #offset=offset,
-            #).objects
             params={
                 # only ResourceGuide items
                 'published_rg': True,
@@ -616,7 +633,7 @@ class Page(repo_models.Page):
             )
             data = sorted([
                 Page.from_hit(hit)
-                for hit in searcher.execute(docstore.MAX_SIZE, 0).objects
+                for hit in searcher.execute(limit, offset).objects
             ])
             cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
@@ -644,6 +661,13 @@ class Page(repo_models.Page):
         _set_attr(obj, hit, 'coordinates')
         _set_attr(obj, hit, 'source_ids')
         return obj
+
+    @staticmethod
+    def titles():
+        return [
+            page.url_title
+            for page in Page.pages()
+        ]
 
     @staticmethod
     def pages_by_category():
@@ -788,6 +812,13 @@ class Source(repo_models.Source):
             return os.path.join(settings.SOURCES_MEDIA_URL, self.transcript_path())
 
     @staticmethod
+    def get(title):
+        ds = docstore.Docstore()
+        return super(Source, Source).get(
+            title, index=ds.index_name('source'), using=ds.es
+        )
+
+    @staticmethod
     def search():
         """Source Search
         
@@ -915,32 +946,70 @@ class Source(repo_models.Source):
         return page
     
     @staticmethod
-    def sources():
+    def sources(limit=settings.MAX_SIZE, offset=0):
         """Returns list of published light Source objects.
         
         @returns: list
         """
-        KEY = u'encyc-rg:sources'
+        KEY = u'encyc-rg:sources:{}:{}'.format(limit, offset)
         data = cache.get(KEY)
         if not data:
-            s = search.Search(doc_type='sources')[0:settings.MAX_SIZE]
-            s = s.sort('encyclopedia_id')
-            s = s.fields(SOURCE_LIST_FIELDS)
-            response = s.execute()
-            data = [
-                Source(
-                    encyclopedia_id = hitvalue(hit, 'encyclopedia_id'),
-                    published = hitvalue(hit, 'published'),
-                    modified = hitvalue(hit, 'modified'),
-                    headword = hitvalue(hit, 'headword'),
-                    media_format = hitvalue(hit, 'media_format'),
-                    img_path = hitvalue(hit, 'img_path'),
-                   )
-                for hit in response
-                if hitvalue(hit, 'published')
-            ]
+            searcher = search.Searcher()
+            searcher.prepare(
+                params={},
+                search_models=[docstore.Docstore().index_name('source')],
+                fields_nested=[],
+                fields_agg={},
+            )
+            data = sorted([
+                Source.from_hit(hit)
+                for hit in searcher.execute(limit, offset).objects
+            ])
             cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
+    
+    @staticmethod
+    def from_hit(hit):
+        """Creates a Source object from a elasticsearch_dsl.response.hit.Hit.
+        """
+        obj = Source(
+            meta={'id': hit.encyclopedia_id}
+        )
+        _set_attr(obj, hit, 'encyclopedia_id')
+        _set_attr(obj, hit, 'densho_id')
+        _set_attr(obj, hit, 'psms_id')
+        _set_attr(obj, hit, 'psms_api')
+        _set_attr(obj, hit, 'institution_id')
+        _set_attr(obj, hit, 'collection_name')
+        _set_attr(obj, hit, 'created')
+        _set_attr(obj, hit, 'modified')
+        _set_attr(obj, hit, 'published')
+        _set_attr(obj, hit, 'creative_commons')
+        _set_attr(obj, hit, 'headword')
+        _set_attr(obj, hit, 'original')
+        _set_attr(obj, hit, 'original_size')
+        _set_attr(obj, hit, 'original_url')
+        _set_attr(obj, hit, 'original_path')
+        _set_attr(obj, hit, 'original_path_abs')
+        _set_attr(obj, hit, 'display')
+        _set_attr(obj, hit, 'display_size')
+        _set_attr(obj, hit, 'display_url')
+        _set_attr(obj, hit, 'display_path')
+        _set_attr(obj, hit, 'display_path_abs')
+        #_set_attr(obj, hit, 'streaming_path')
+        #_set_attr(obj, hit, 'rtmp_path')
+        _set_attr(obj, hit, 'streaming_url')
+        _set_attr(obj, hit, 'external_url')
+        _set_attr(obj, hit, 'media_format')
+        _set_attr(obj, hit, 'aspect_ratio')
+        _set_attr(obj, hit, 'caption')
+        _set_attr(obj, hit, 'caption_extended')
+        #_set_attr(obj, hit, 'transcript_path')
+        _set_attr(obj, hit, 'transcript')
+        _set_attr(obj, hit, 'courtesy')
+        _set_attr(obj, hit, 'filename')
+        _set_attr(obj, hit, 'img_path')
+        return obj
 
 
 @python_2_unicode_compatible

@@ -34,48 +34,38 @@ def index(request, format=None):
 
 @api_view(['GET'])
 def articles(request, format=None):
-    return Response(
-        _articles(request).ordered_dict(request)
-    )
+    return Response(models.Page.pages())
 
 @api_view(['GET'])
 def authors(request, format=None):
-    return Response(
-        _authors(request).ordered_dict(request)
-    )
+    return Response(models.Author.authors())
 
 @api_view(['GET'])
 def sources(request, format=None):
-    return Response(
-        _sources(request).ordered_dict(request)
-    )
+    return Response(models.Source.sources())
 
 @api_view(['GET'])
 def article(request, url_title, format=None):
     """DOCUMENTATION GOES HERE.
     """
     try:
-        return Response(
-            _article(request, url_title).dict_all(request=request)
-        )
+        article = models.Page.get(url_title)
+        article.prepare()
+        return Response(article)
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 def author(request, url_title, format=None):
     try:
-        return Response(
-            _author(request, url_title).dict_all(request=request)
-        )
+        return Response(models.Author.get(url_title))
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 def source(request, url_title, format=None):
     try:
-        return Response(
-            _source(request, url_title).dict_all(request=request)
-        )
+        return Response(models.Source.get(url_title))
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -161,53 +151,6 @@ def search_form(request, format=None):
 
 
 # ----------------------------------------------------------------------
-
-def _articles(request, limit=None, offset=None):
-    s = models.Page.search().query("match_all").sort('title_sort')
-    if not limit:
-        limit = int(request.GET.get('limit', settings.MAX_SIZE))
-    if not offset:
-        offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=models.PAGE_LIST_FIELDS, search=s)
-    return searcher.execute(limit, offset)
-
-def _article_titles(request, limit=None, offset=None):
-    return [
-        author.url_title
-        for author in _authors(request, limit=limit, offset=offset).objects
-    ]
-
-def _authors(request, limit=None, offset=None):
-    s = models.Author.search().query("match_all")
-    s = s.sort('title_sort')
-    if not limit:
-        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    if not offset:
-        offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    return searcher.execute(limit, offset)
-
-def _sources(request, limit=None, offset=None):
-    s = models.Source.search().query("match_all")
-    s = s.sort('encyclopedia_id')
-    if not limit:
-        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    if not offset:
-        offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    return searcher.execute(limit, offset)
-
-def _article(request, url_title):
-    # TODO cache this stuff
-    article = models.Page.get(url_title)
-    article.prepare()
-    return article
-
-def _author(request, url_title):
-    return models.Author.get(url_title)
-
-def _source(request, url_title):
-    return models.Source.get(url_title)
 
 def _browse(request):
     fields = []
