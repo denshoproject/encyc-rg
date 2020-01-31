@@ -961,29 +961,53 @@ FACILITY_TYPES = {}
 class FacetTerm(repo_models.FacetTerm):
     
     @staticmethod
-    def terms(request, facet_id=None, limit=settings.DEFAULT_LIMIT, offset=0):
-        # TODO
-        #s = search.Search(doc_type='facetterms')[0:settings.MAX_SIZE]
-        #if facet_id:
-        #    s = s.query("match", facet_id=facet_id)
-        #    if facet_id == 'topics':
-        #        s = s.sort('path')
-        #    elif facet_id == 'facility':
-        #        s = s.sort('type', 'title')
-        #response = s.execute()
-        #data = [
-        #    FacetTerm(
-        #        id = hitvalue(hit, 'id'),
-        #        facet_id = hitvalue(hit, 'facet_id'),
-        #        term_id = hitvalue(hit, 'term_id'),
-        #        title = hitvalue(hit, 'title'),
-        #        path = hitvalue(hit, 'path'),
-        #        type = hitvalue(hit, 'type'),
-        #       )
-        #    for hit in response
-        #]
-        #return data
-        return []
+    def terms(request=None, facet_id=None, limit=settings.DEFAULT_LIMIT, offset=0):
+        params={}
+        if facet_id:
+            params['facet_id'] = facet_id
+        searcher = search.Searcher()
+        searcher.prepare(
+            params=params,
+            search_models=[docstore.Docstore().index_name('facetterm')],
+            fields_nested=[],
+            fields_agg={},
+        )
+        results = searcher.execute(docstore.MAX_SIZE, 0)
+        objects = results.objects
+        data = sorted([FacetTerm.from_hit(hit) for hit in objects])
+        return data
+    
+    @staticmethod
+    def from_hit(hit):
+        """Creates a Source object from a elasticsearch_dsl.response.hit.Hit.
+        """
+        obj = FacetTerm(
+            meta={'id': hit.id}
+        )
+        _set_attr(obj, hit, 'id')
+        _set_attr(obj, hit, 'facet')
+        _set_attr(obj, hit, 'term_id')
+        if obj.id and not obj.facet:
+            obj.facet = obj.id.split('-')[0]
+            obj.facet_id = obj.facet
+        _set_attr(obj, hit, 'links_html')
+        _set_attr(obj, hit, 'links_json')
+        _set_attr(obj, hit, 'links_children')
+        _set_attr(obj, hit, 'title')
+        _set_attr(obj, hit, 'description')
+        # topics
+        _set_attr(obj, hit, 'path')
+        _set_attr(obj, hit, 'parent_id')
+        _set_attr(obj, hit, 'ancestors')
+        _set_attr(obj, hit, 'siblings')
+        _set_attr(obj, hit, 'children')
+        _set_attr(obj, hit, 'weight')
+        _set_attr(obj, hit, 'encyc_urls')
+        # facility
+        _set_attr(obj, hit, 'type')
+        _set_attr(obj, hit, 'elinks')
+        _set_attr(obj, hit, 'location_geopoint')
+        return obj
     
     def to_dict_list(self, request=None):
         data = OrderedDict()
@@ -1129,6 +1153,36 @@ class Facet(repo_models.Facet):
         return reverse('rg-facet', args=([self.id]))
 
     @staticmethod
+    def facets(limit=settings.DEFAULT_LIMIT, offset=0):
+        searcher = search.Searcher()
+        searcher.prepare(
+            params={},
+            search_models=[docstore.Docstore().index_name('facet')],
+            fields_nested=[],
+            fields_agg={},
+        )
+        data = sorted([
+            Facet.from_hit(hit)
+            for hit in searcher.execute(limit, offset).objects
+        ])
+        return data
+    
+    @staticmethod
+    def from_hit(hit):
+        """Creates a Source object from a elasticsearch_dsl.response.hit.Hit.
+        """
+        obj = Facet(
+            meta={'id': hit.id}
+        )
+        _set_attr(obj, hit, 'id')
+        _set_attr(obj, hit, 'links_html')
+        _set_attr(obj, hit, 'links_json')
+        _set_attr(obj, hit, 'links_children')
+        _set_attr(obj, hit, 'title')
+        _set_attr(obj, hit, 'description')
+        return obj
+
+    @staticmethod
     def dict_list(hit, request):
         data = OrderedDict()
         data['id'] = hit.id
@@ -1177,18 +1231,4 @@ class Facet(repo_models.Facet):
         )
         data['title'] = self.title
         data['description'] = self.description
-        return data
-
-    @staticmethod
-    def facets(request, limit=settings.DEFAULT_LIMIT, offset=0):
-        s = search.Search(doc_type=u'facets')[0:settings.MAX_SIZE]
-        response = s.execute()
-        data = [
-            Facet(
-                id = hitvalue(hit, 'id'),
-                title = hitvalue(hit, 'title'),
-                description = hitvalue(hit, 'description'),
-               )
-            for hit in response
-        ]
         return data

@@ -220,6 +220,14 @@ class Facet(dsl.Document):
             self.__class__.__name__,
             self.id
         )
+    
+    def __eq__(self, other):
+        """Enable Pythonic sorting"""
+        return self.id == other.id
+    
+    def __lt__(self, other):
+        """Enable Pythonic sorting"""
+        return self.id < other.id
 
 
 class Elinks(dsl.InnerDoc):
@@ -272,6 +280,14 @@ class FacetTerm(dsl.Document):
             self.__class__.__name__,
             self.id
         )
+    
+    def __eq__(self, other):
+        """Enable Pythonic sorting"""
+        return self.id == other.id
+    
+    def __lt__(self, other):
+        """Enable Pythonic sorting"""
+        return self.id < other.id
 
 
 ELASTICSEARCH_CLASSES = {
