@@ -385,6 +385,46 @@ ACCORDION_SECTIONS = [
     ('related', 'Related_articles'),
 ]
 
+def format_page(document, request, listitem=False):
+    """Format Page object from SearchResults to OrderedDict for lists
+    
+    @param document
+    @param request
+    @param listitem
+    @returns: OrderedDict
+    """
+    doc_keys = document.keys()
+    
+    if document.get('_source'):
+        oid = document['_id']
+        model = document['_index']
+        document = document['_source']
+    oid = document['url_title']
+    if hasattr(document, 'model'):
+        model = document.pop('model')
+    else:
+        model = 'article'
+    d = OrderedDict()
+    d['id'] = oid
+    d['model'] = model
+    if document.get('index'): d['index'] = document.pop('index')
+    # links
+    d['links'] = OrderedDict()
+    d['links']['html'] = api_reverse('rg-article', args=[oid], request=request)
+    d['links']['json'] = api_reverse('rg-api-article', args=[oid], request=request)
+    d['title'] = document.pop('title')
+    d['description'] = document.pop('description')
+    # everything else
+    HIDDEN_FIELDS = []
+    for key in document.keys():
+        if key not in HIDDEN_FIELDS:
+            d[key] = document[key]
+    return d
+
+FORMATTERS = {
+    'encycarticle': format_page,
+}
+
 @python_2_unicode_compatible
 class Page(repo_models.Page):
     
