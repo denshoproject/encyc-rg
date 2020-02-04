@@ -272,6 +272,17 @@ class SearchResults(object):
             self.prev_offset = None
         if self.next_offset >= self.total:
             self.next_offset = None
+
+        # django
+        self.page_size = self.limit
+        self.this_page = django_page(self.limit, self.offset)
+        self.prev_page = u''
+        self.next_page = u''
+        # django pagination
+        self.page_start = (self.this_page - 1) * self.page_size
+        self.page_next = self.this_page * self.page_size
+        self.pad_before = range(0, self.page_start)
+        self.pad_after = range(self.page_next, self.total)
     
     def __repr__(self):
         try:
@@ -294,7 +305,7 @@ class SearchResults(object):
             params = deepcopy(self.params)
         return self._dict(params, {}, format_functions)
     
-    def ordered_dict(self, format_functions, pad=False):
+    def ordered_dict(self, format_functions, request, pad=False):
         """Express search results in API and Redis-friendly structure
         
         @param format_functions: dict
@@ -302,7 +313,7 @@ class SearchResults(object):
         """
         if hasattr(self, 'params') and self.params:
             params = deepcopy(self.params)
-        return self._dict(params, OrderedDict(), format_functions, pad=pad)
+        return self._dict(params, OrderedDict(), format_functions, request, pad)
     
     def _dict(self, params, data, format_functions, request=None, pad=False):
         """
