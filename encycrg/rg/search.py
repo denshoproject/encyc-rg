@@ -333,7 +333,7 @@ class SearchResults(object):
         if params.get('page'): params.pop('page')
         if params.get('limit'): params.pop('limit')
         if params.get('offset'): params.pop('offset')
-        qs = [key + '=' + val for key,val in params.items()]
+        qs = [key + '=' + str(val) for key,val in params.items()]
         query_string = '&'.join(qs)
         data['prev_api'] = ''
         data['next_api'] = ''
