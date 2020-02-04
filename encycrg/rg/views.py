@@ -239,14 +239,14 @@ def browse_field(request, stub):
     if 'rg_' not in fieldname:
         fieldname = 'rg_%s' % fieldname
     api_url = _mkurl(request, reverse('rg-api-browse-field', args=([stub])))
-    r = api.browse_field(request, stub, format='json')
+    r = models.Page.browse_field(stub, request)
     return render(request, 'rg/browse-field.html', {
         'stub': stub,
         'fieldname': fieldname,
         'field_icon': models.FACET_FIELDS[fieldname]['icon'],
         'field_title': models.FACET_FIELDS[fieldname]['label'],
         'field_description': models.FACET_FIELDS[fieldname]['description'],
-        'query': r.data,
+        'query': r,
         'api_url': api_url,
     })
 

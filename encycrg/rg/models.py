@@ -279,6 +279,19 @@ PAGE_BROWSABLE_FIELDS = {
     #'rg_denshotopic': 'Topic',
     #'rg_facility': 'Facility',
 }
+PAGE_AGG_FIELDS = {
+    'media-type': 'rg_rgmediatype',
+    'interest-level': 'rg_interestlevel',
+    'reading-level': 'rg_readinglevel',
+    'genre': 'rg_genre',
+    'theme': 'rg_theme',
+    'pov': 'rg_pov',
+    'place': 'rg_geography',
+    'time': 'rg_chronology',
+    'availability': 'rg_availability',
+    'teaching-aids': 'rg_hasteachingaids',
+    'free-web-version': 'rg_freewebversion',
+}
 
 PAGE_SEARCH_FIELDS = [x for x in PAGE_BROWSABLE_FIELDS.keys()]
 PAGE_SEARCH_FIELDS.insert(0, 'fulltext')
@@ -768,6 +781,58 @@ class Page(repo_models.Page):
             if err.status_code == 400:
                 return []
             raise err
+    
+    @staticmethod
+    def browse_field(stub, request=None):
+        """Get aggregations for specified field
+        
+        TODO only get aggregations not documents
+        
+        @param stub: str Field name from URL stub
+        @param request
+        @returns: list of aggregations with links, labels, etc
+        """
+        fieldname = MEDIATYPE_URLSTUBS[stub]
+        params={
+            # only ResourceGuide items
+            'published_rg': True,
+        }
+        # TODO don't get all the records just the aggregations
+        searcher = search.Searcher()
+        searcher.prepare(
+            params=params,
+            params_whitelist=search.SEARCH_PARAM_WHITELIST,
+            search_models=search.SEARCH_MODELS,
+            fields=PAGE_LIST_FIELDS,
+            fields_nested={},
+            fields_agg=PAGE_AGG_FIELDS,
+        )
+        response = searcher.execute(limit=search.DEFAULT_LIMIT, offset=0)
+        aggs = response.aggregations[stub]
+        # prep aggregations data
+        # TODO sorting
+        data = []
+        for t in aggs:
+            term = t['key']
+            item = OrderedDict()
+            item['term'] = term
+            item['json'] = api_reverse(
+                'rg-api-browse-fieldvalue',
+                args=([stub, term]),
+                request=request
+            )
+            item['html'] = api_reverse(
+                'rg-browse-fieldvalue',
+                args=([stub, term]),
+                request=request
+            )
+            if MEDIATYPE_INFO.get(term):
+                item['label'] = MEDIATYPE_INFO[term]['label']
+            else:
+                item['label'] = term
+            item['count'] = t['doc_count']
+            data.append(item)
+        return data
     
     def topics(self):
         """List of DDR topics associated with this page.

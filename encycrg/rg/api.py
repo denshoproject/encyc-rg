@@ -82,7 +82,7 @@ def browse_field(request, stub, format=None):
     """List databox terms and counts
     """
     return Response(
-        _browse_field(request, stub)
+        models.Page.browse_field(stub, request)
     )
 
 @api_view(['GET'])
@@ -153,6 +153,10 @@ def search_form(request, format=None):
 # ----------------------------------------------------------------------
 
 def _browse(request):
+    """List of API,UI links and labels for various browse fields
+    Use to generate list for browsing
+    @returns: list
+    """
     fields = []
     for key,val in models.FACET_FIELDS.items():
         stub = val['stub']
@@ -166,41 +170,6 @@ def _browse(request):
         item['stub'] = val['stub']
         fields.append(item)
     return fields
-
-def _browse_field(request, stub):
-    fieldname = models.MEDIATYPE_URLSTUBS[stub]
-    s = models.Page.search().query("match_all")
-    s.aggs.bucket(
-        fieldname,
-        search.A(
-            'terms',
-            field=fieldname,
-        )
-    )
-    response = s.execute()
-    aggs = search.aggs_dict(response.aggregations.to_dict())[fieldname]
-    data = []
-    for term in sorted(list(aggs.keys())):
-        if term:
-            item = OrderedDict()
-            item['term'] = term
-            item['json'] = reverse(
-                'rg-api-browse-fieldvalue',
-                args=([stub, term]),
-                request=request
-            )
-            item['html'] = reverse(
-                'rg-browse-fieldvalue',
-                args=([stub, term]),
-                request=request
-            )
-            if models.MEDIATYPE_INFO.get(item['term']):
-                item['label'] = models.MEDIATYPE_INFO[item['term']]['label']
-            else:
-                item['label'] = term
-            item['count'] = aggs[term]
-            data.append(item)
-    return data
 
 def _browse_field_value(request, stub, value, limit=None, offset=None):
     fieldname = models.MEDIATYPE_URLSTUBS[stub]
