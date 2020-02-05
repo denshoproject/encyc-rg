@@ -253,31 +253,39 @@ def browse_field(request, stub):
 def browse_field_value(request, stub, value):
     if stub not in models.MEDIATYPE_URLSTUBS:
         raise Http404
+    api_url = _mkurl(request, reverse(
+        'rg-api-browse-fieldvalue', args=([stub, value])
+    ))
     # trade the pretty urlstub for the actual mediatype fieldname
     fieldname = models.MEDIATYPE_URLSTUBS[stub]
-    api_url = _mkurl(request, reverse('rg-api-browse-fieldvalue', args=([stub, value])))
-    context = {
+    if fieldname == 'rg_rgmediatype':
+        context_value = models.MEDIATYPE_INFO[value]['label']
+    else:
+        context_value = value
+    thispage = int(request.GET.get('page', 1))
+    pagesize = settings.RESULTS_PER_PAGE
+    offset = models.search_offset(thispage, pagesize)
+    results = models.Page.browse_field_objects(stub, value, pagesize, offset)
+    paginator = Paginator(
+        results.ordered_dict(
+            format_functions=models.FORMATTERS,
+            request=request,
+            pad=True,
+        )['objects'],
+        results.page_size,
+    )
+    page = paginator.page(results.this_page)
+    return render(request, 'rg/browse-fieldvalue.html', {
         'api_url': api_url,
         'stub': stub,
         'fieldname': fieldname,
-        'value': value,
+        'value': context_value,
         'field_icon': models.FACET_FIELDS[fieldname]['icon'],
         'field_title': models.FACET_FIELDS[fieldname]['label'],
         'field_description': models.FACET_FIELDS[fieldname]['description'],
-    }
-    if fieldname == 'rg_rgmediatype':
-        context['value'] = models.MEDIATYPE_INFO[value]['label']
-
-    results = api._browse_field_value(request, stub, value)
-    if results.objects:
-        paginator = Paginator(
-            results.ordered_dict(request=request, pad=True)['objects'],
-            results.page_size,
-        )
-        context['paginator'] = paginator
-        context['page'] = paginator.page(results.this_page)
-    
-    return render(request, 'rg/browse-fieldvalue.html', context)
+        'paginator': paginator,
+        'page': page,
+    })
 
 
 def search_ui(request):

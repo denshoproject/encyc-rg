@@ -89,9 +89,14 @@ def browse_field(request, stub, format=None):
 def browse_field_value(request, stub, value, format=None):
     """List of articles tagged with databox term.
     """
-    return Response(
-        _browse_field_value(request, stub, value).ordered_dict(request)
+    results = models.Page.browse_field_objects(stub, value).ordered_dict(
+        format_functions=models.FORMATTERS,
+        request=request,
+        pad=False,
     )
+    data['query'] = {}
+    data['aggregations'] = {}
+    return Response(data)
 
 @api_view(['GET'])
 def categories(request, format=None):
@@ -170,37 +175,6 @@ def _browse(request):
         item['stub'] = val['stub']
         fields.append(item)
     return fields
-
-def _browse_field_value(request, stub, value, limit=None, offset=None):
-    fieldname = models.MEDIATYPE_URLSTUBS[stub]
-    if fieldname not in models.PAGE_SEARCH_FIELDS:
-        raise Exception('Bad fieldname "%s".' % fieldname)
-    
-    if hasattr(request, 'query_params'):
-        # api (rest_framework)
-        params = dict(request.query_params)
-    elif hasattr(request, 'GET'):
-        # web ui (regular Django)
-        params = dict(request.GET)
-    else:
-        params = {}
-    
-    if params.get('page'):
-        thispage = int(params.pop('page')[-1])
-    else:
-        thispage = 0
-    limit = settings.DEFAULT_LIMIT
-    offset = search.es_offset(limit, thispage)
-    
-    s = models.Page.search()
-    
-    s = s.filter('match', **{fieldname: value})
-    
-    return search.Searcher(
-        mappings=MAPPINGS,
-        fields=FIELDS,
-        search=s,
-    ).execute(limit, offset)
 
 def _categories(request):
     fieldname = 'categories'

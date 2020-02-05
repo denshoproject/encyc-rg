@@ -73,6 +73,14 @@ def _set_attr(obj, hit, fieldname):
     if hasattr(hit, fieldname):
         setattr(obj, fieldname, getattr(hit, fieldname))
 
+def search_offset(thispage, pagesize):
+    """Calculate index for start of current page
+    
+    @param thispage: int The current pagep (1-indexed)
+    @param pagesize: int Number of items per page
+    @returns: int offset
+    """
+    return pagesize * (thispage - 1)
 
 AUTHOR_LIST_FIELDS = [
     'url_title',
@@ -415,7 +423,40 @@ def format_page(document, request, listitem=False):
     d['title'] = document.pop('title')
     d['description'] = document.pop('description')
     # everything else
-    HIDDEN_FIELDS = []
+    HIDDEN_FIELDS = [
+        'public',
+        'published',
+        'published_encyc',
+        'published_rg',
+        'modified',
+        'mw_api_url',
+        'title_sort',
+        'body',
+        'prev_page',
+        'next_page',
+        'categories',
+        'coordinates',
+        'source_ids',
+        'authors_data',
+        'databoxes',
+        'rg_rgmediatype',
+        'rg_title',
+        'rg_creators',
+        'rg_interestlevel',
+        'rg_readinglevel',
+        'rg_theme',
+        'rg_genre',
+        'rg_pov',
+        'rg_relatedevents',
+        'rg_availability',
+        'rg_freewebversion',
+        'rg_denshotopic',
+        'rg_geography',
+        'rg_facility',
+        'rg_chronology',
+        'rg_hasteachingaids',
+        'rg_warnings',
+    ]
     for key in document.keys():
         if key not in HIDDEN_FIELDS:
             d[key] = document[key]
@@ -873,6 +914,32 @@ class Page(repo_models.Page):
             item['count'] = t['doc_count']
             data.append(item)
         return data
+    
+    def browse_field_objects(stub, value, limit=settings.DEFAULT_LIMIT, offset=0):
+        """TODO
+        
+        @param stub: str Field name from URL stub e.g. 'media-type'.
+        @param value: str Value of field e.g. 'books'
+        @param request
+        @returns: ???
+        """
+        fieldname = MEDIATYPE_URLSTUBS[stub]
+        if fieldname not in PAGE_SEARCH_FIELDS:
+            raise Exception('Bad fieldname "%s".' % fieldname)
+        params = {
+            'published_rg': True, # only ResourceGuide items
+            fieldname: value,
+        }
+        searcher = search.Searcher()
+        searcher.prepare(
+            params=params,
+            params_whitelist=search.SEARCH_PARAM_WHITELIST,
+            search_models=search.SEARCH_MODELS,
+            fields=PAGE_LIST_FIELDS,
+            fields_nested={},
+            fields_agg=PAGE_AGG_FIELDS,
+        )
+        return searcher.execute(limit, offset)
     
     def topics(self):
         """List of DDR topics associated with this page.
