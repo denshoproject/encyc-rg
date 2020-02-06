@@ -294,6 +294,20 @@ PAGE_SEARCH_FIELDS = [
     'categories',
     'coordinates',
     'fulltext',
+    'rg_rgmediatype',
+    'rg_interestlevel',
+    'rg_readinglevel',
+    'rg_theme',
+    'rg_genre',
+    'rg_pov',
+    'rg_availability',
+    'rg_geography',
+    'rg_chronology',
+    'rg_hasteachingaids',
+    'rg_freewebversion',
+    #'rg_relatedevents',
+    #'rg_denshotopic',
+    #'rg_facility',
 ]
 PAGE_AGG_FIELDS = {
     'media-type': 'rg_rgmediatype',
@@ -760,6 +774,20 @@ class Page(repo_models.Page):
         _set_attr(obj, hit, 'categories')
         _set_attr(obj, hit, 'coordinates')
         _set_attr(obj, hit, 'source_ids')
+        _set_attr(obj, hit, 'rg_rgmediatype')
+        _set_attr(obj, hit, 'rg_interestlevel')
+        _set_attr(obj, hit, 'rg_readinglevel')
+        _set_attr(obj, hit, 'rg_theme')
+        _set_attr(obj, hit, 'rg_genre')
+        _set_attr(obj, hit, 'rg_pov')
+        _set_attr(obj, hit, 'rg_relatedevents')
+        _set_attr(obj, hit, 'rg_availability')
+        _set_attr(obj, hit, 'rg_freewebversion')
+        _set_attr(obj, hit, 'rg_denshotopic')
+        _set_attr(obj, hit, 'rg_geography')
+        _set_attr(obj, hit, 'rg_facility')
+        _set_attr(obj, hit, 'rg_chronology')
+        _set_attr(obj, hit, 'rg_hasteachingaids')
         return obj
 
     @staticmethod

@@ -314,11 +314,10 @@ def search_ui(request):
         limit,offset = limit_offset(request)
         results = searcher.execute(limit, offset)
         paginator = Paginator(
-            results.ordered_dict(
-                request=request,
-                format_functions=models.FORMATTERS,
-                pad=True,
-            )['objects'],
+            [
+                models.Page.from_hit(hit).to_dict_list(request)
+                for hit in results.objects
+            ],
             results.page_size,
         )
         page = paginator.page(results.this_page)
