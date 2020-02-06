@@ -299,39 +299,71 @@ def search_ui(request):
     }
 
     if request.GET.get('fulltext'):
-
-        results = api._search(request)
-        form = forms.SearchForm(
-            search_results=results,
-            data=request.GET
-        )
-        context['results'] = results
-        context['search_form'] = form
-        context['search_performed'] = True
         
-        if results.objects:
-            paginator = Paginator(
-                results.ordered_dict(request=request, pad=True)['objects'],
-                results.page_size,
+        params = request.GET.copy()
+        params['published_rg'] = True  # only ResourceGuide items
+        searcher = search.Searcher()
+        searcher.prepare(
+            params=params,
+            params_whitelist=search.SEARCH_PARAM_WHITELIST,
+            search_models=search.SEARCH_MODELS,
+            fields=models.PAGE_SEARCH_FIELDS,
+            fields_nested={},
+            fields_agg=models.PAGE_AGG_FIELDS,
+        )
+        limit,offset = limit_offset(request)
+        results = searcher.execute(limit, offset)
+        paginator = Paginator(
+            results.ordered_dict(
+                request=request,
+                format_functions=models.FORMATTERS,
+                pad=True,
+            )['objects'],
+            results.page_size,
+        )
+        page = paginator.page(results.this_page)
+        
+        form = forms.SearchForm(
+            data=request.GET.copy(),
+            search_results=results,
+        )
+        
+        context['results'] = results
+        context['paginator'] = paginator
+        context['page'] = page
+        context['search_form'] = form
+        
+        # list filters below fulltext field
+        filters = [
+            (
+                models.PAGE_BROWSABLE_FIELDS[key],  # pretty label
+                ', '.join(values)
             )
-            context['paginator'] = paginator
-            context['page'] = paginator.page(results.this_page)
-
+            for key,values in request.GET.lists()
+            if (key != 'fulltext') and (key in models.PAGE_BROWSABLE_FIELDS.keys())
+        ]
+        context['filters'] = filters
+        
     else:
         context['search_form'] = forms.SearchForm()
 
-    # list filters below fulltext field
-    filters = [
-        (
-            models.PAGE_BROWSABLE_FIELDS[key],  # pretty label
-            ', '.join(values)
-        )
-        for key,values in request.GET.lists()
-        if (key != 'fulltext') and (key in models.PAGE_BROWSABLE_FIELDS.keys())
-    ]
-    context['filters'] = filters
-    
     return render(request, 'rg/search.html', context)
+
+def limit_offset(request):
+    if request.GET.get('offset'):
+        # limit and offset args take precedence over page
+        limit = request.GET.get(
+            'limit', int(request.GET.get('limit', settings.RESULTS_PER_PAGE))
+        )
+        offset = request.GET.get('offset', int(request.GET.get('offset', 0)))
+    elif request.GET.get('page'):
+        limit = settings.RESULTS_PER_PAGE
+        thispage = int(request.GET['page'])
+        offset = search.es_offset(limit, thispage)
+    else:
+        limit = settings.RESULTS_PER_PAGE
+        offset = 0
+    return limit,offset
 
 
 def facets(request):

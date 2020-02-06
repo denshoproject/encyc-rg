@@ -287,6 +287,14 @@ PAGE_BROWSABLE_FIELDS = {
     #'rg_denshotopic': 'Topic',
     #'rg_facility': 'Facility',
 }
+PAGE_SEARCH_FIELDS = [
+    'title',
+    'description',
+    'body',
+    'categories',
+    'coordinates',
+    'fulltext',
+]
 PAGE_AGG_FIELDS = {
     'media-type': 'rg_rgmediatype',
     'interest-level': 'rg_interestlevel',
@@ -300,9 +308,6 @@ PAGE_AGG_FIELDS = {
     'teaching-aids': 'rg_hasteachingaids',
     'free-web-version': 'rg_freewebversion',
 }
-
-PAGE_SEARCH_FIELDS = [x for x in PAGE_BROWSABLE_FIELDS.keys()]
-PAGE_SEARCH_FIELDS.insert(0, 'fulltext')
 
 FACET_FIELDS = OrderedDict()
 FACET_FIELDS['rg_rgmediatype'] = {
