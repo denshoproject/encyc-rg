@@ -51,6 +51,8 @@ SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
 NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
 NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
 
+ASSETS=encyc-rg-assets.tgz
+
 DEB_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
 DEB_ARCH=amd64
 DEB_NAME_JESSIE=$(APP)-$(DEB_BRANCH)
@@ -305,13 +307,13 @@ branch:
 
 install-static:
 	@echo ""
-	@echo "installing static files ---------------------------------------------"
-	-mkdir $(MEDIA_BASE)
-	-mkdir $(STATIC_ROOT)
-	-mkdir $(STATIC_ROOT)/css
-	chown -R $(USER).root $(MEDIA_BASE)
+	@echo "install static ---------------------------------------------------------"
+	-mkdir -p $(MEDIA_BASE)
+	chown -R root.root $(MEDIA_BASE)
 	chmod -R 755 $(MEDIA_BASE)
-	-cp $(INSTALLDIR)/static/css/style.css $(STATIC_ROOT)/css/
+	wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
+	tar xzvf /tmp/$(ASSETS) -C /tmp/
+	cp -R /tmp/encyc-rg-assets/* $(STATIC_ROOT)
 
 clean-static:
 	-rm -Rf $(INSTALLDIR)/static/
