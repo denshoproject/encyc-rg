@@ -20,6 +20,7 @@ DEFAULT_LIMIT = 1000
 
 # whitelist of params recognized in URL query
 # TODO derive from ddr-defs/repo_models/
+# TODO THESE ARE FROM DDR!
 SEARCH_PARAM_WHITELIST = [
     'published_encyc',
     'published_rg',
@@ -56,31 +57,12 @@ SEARCH_NESTED_FIELDS = [
 
 # TODO derive from ddr-defs/repo_models/
 SEARCH_AGG_FIELDS = {
-    #'model': 'model',
-    #'status': 'status',
-    #'public': 'public',
-    #'contributor': 'contributor',
-    #'creators': 'creators.namepart',
-    'facility': 'facility.id',
-    'format': 'format',
-    'genre': 'genre',
-    #'geography': 'geography.term',
-    #'language': 'language',
-    #'location': 'location',
-    #'mimetype': 'mimetype',
-    #'persons': 'persons',
-    'rights': 'rights',
-    'topics': 'topics.id',
+    'media-type': 'rg_rgmediatype',
 }
 
 # TODO derive from ddr-defs/repo_models/
 SEARCH_MODELS = [
-    'ddrrepository',
-    'ddrorganization',
-    'ddrcollection',
-    'ddrentity',
-    'ddrfile',
-    'ddrnarrator',
+    'encycarticle',
 ]
 
 # fields searched by query
