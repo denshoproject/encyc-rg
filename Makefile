@@ -28,7 +28,6 @@ CONF_BASE=/etc/encyc
 CONF_PRODUCTION=$(CONF_BASE)/encycrg.cfg
 CONF_LOCAL=$(CONF_BASE)/encycrg-local.cfg
 CONF_SECRET=$(CONF_BASE)/encycrg-secret-key.txt
-CONF_DJANGO=$(INSTALLDIR)/encycrg/encycrg/settings.py
 
 SQLITE_BASE=/var/lib/$(PROJECT)
 LOGS_BASE=/var/log/$(PROJECT)
@@ -51,6 +50,8 @@ SUPERVISOR_GUNICORN_CONF=/etc/supervisor/conf.d/$(APP).conf
 SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
 NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
 NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
+
+ASSETS=encyc-rg-assets.tgz
 
 DEB_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
 DEB_ARCH=amd64
@@ -306,13 +307,13 @@ branch:
 
 install-static:
 	@echo ""
-	@echo "installing static files ---------------------------------------------"
-	-mkdir $(MEDIA_BASE)
-	-mkdir $(STATIC_ROOT)
-	-mkdir $(STATIC_ROOT)/css
-	chown -R $(USER).root $(MEDIA_BASE)
+	@echo "install static ---------------------------------------------------------"
+	-mkdir -p $(MEDIA_BASE)
+	chown -R root.root $(MEDIA_BASE)
 	chmod -R 755 $(MEDIA_BASE)
-	-cp $(INSTALLDIR)/static/css/style.css $(STATIC_ROOT)/css/
+	wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
+	tar xzvf /tmp/$(ASSETS) -C /tmp/
+	cp -R /tmp/encyc-rg-assets/* $(STATIC_ROOT)
 
 clean-static:
 	-rm -Rf $(INSTALLDIR)/static/
@@ -331,12 +332,12 @@ install-configs:
 	python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)])' > $(CONF_SECRET)
 	chown encyc.root $(CONF_SECRET)
 	chmod 640 $(CONF_SECRET)
-	cp $(INSTALLDIR)/conf/settings.py $(CONF_DJANGO)
-	chown root.root $(CONF_DJANGO)
-	chmod 644 $(CONF_DJANGO)
+	cp $(INSTALLDIR)/conf/encycrg.conf $(NGINX_CONF)
+	chown root.root $(NGINX_CONF)
+	chmod 644 $(NGINX_CONF)
+	-ln -s $(NGINX_CONF) $(NGINX_CONF_LINK)
 
 uninstall-configs:
-	-rm $(CONF_DJANGO)
 	-rm $(CONF_SECRET)
 
 install-daemons-configs:

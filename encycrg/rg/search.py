@@ -1,26 +1,116 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
-from past.builtins import basestring
-from builtins import object
 from collections import OrderedDict
+from copy import deepcopy
 import json
 import logging
 logger = logging.getLogger(__name__)
-import urllib
+import os
+import re
+from urllib.parse import urlparse, urljoin
 
-from elasticsearch_dsl import Index, Search, A, Q, A
-from elasticsearch_dsl.query import MultiMatch, Match
+from elasticsearch_dsl import Index, Search, A, Q
+from elasticsearch_dsl.query import Match, MultiMatch, QueryString
 from elasticsearch_dsl.connections import connections
-from elasticsearch_dsl.result import Result
 
 from django.conf import settings
-from django.core.paginator import Paginator
 
+from . import docstore
 
-# set default hosts and index
-connections.create_connection(hosts=settings.DOCSTORE_HOSTS)
-INDEX = Index(settings.DOCSTORE_INDEX)
+#SEARCH_LIST_FIELDS = models.all_list_fields()
+DEFAULT_LIMIT = 1000
+
+# whitelist of params recognized in URL query
+# TODO derive from ddr-defs/repo_models/
+# TODO THESE ARE FROM DDR!
+SEARCH_PARAM_WHITELIST = [
+    'published_encyc',
+    'published_rg',
+    'fulltext',
+    'sort',
+    'topics',
+    'facility',
+    'model',
+    'models',
+    'parent',
+    'status',
+    'public',
+    'topics',
+    'facility',
+    'contributor',
+    'creators',
+    'format',
+    'genre',
+    'geography',
+    'language',
+    'location',
+    'mimetype',
+    'persons',
+    'rights',
+    'facet_id',
+]
+
+# fields where the relevant value is nested e.g. topics.id
+# TODO derive from ddr-defs/repo_models/
+SEARCH_NESTED_FIELDS = [
+    'facility',
+    'topics',
+]
+
+# TODO derive from ddr-defs/repo_models/
+SEARCH_AGG_FIELDS = {
+    'media-type': 'rg_rgmediatype',
+}
+
+# TODO derive from ddr-defs/repo_models/
+SEARCH_MODELS = [
+    'encycarticle',
+]
+
+# fields searched by query
+# TODO derive from ddr-defs/repo_models/
+SEARCH_INCLUDE_FIELDS = [
+    'id',
+    'model',
+    'links_html',
+    'links_json',
+    'links_img',
+    'links_thumb',
+    'links_children',
+    'status',
+    'public',
+    'title',
+    'description',
+    'contributor',
+    'creators',
+    'facility',
+    'format',
+    'genre',
+    'geography',
+    'label',
+    'language',
+    'location',
+    'persons',
+    'rights',
+    'topics',
+]
+
+# TODO derive from ddr-defs/repo_models/
+SEARCH_FORM_LABELS = {
+    'model': 'Model',
+    'status': 'Status',
+    'public': 'Public',
+    'contributor': 'Contributor',
+    'creators.namepart': 'Creators',
+    'facility': 'Facility',
+    'format': 'Format',
+    'genre': 'Genre',
+    'geography.term': 'Geography',
+    'language': 'Language',
+    'location': 'Location',
+    'mimetype': 'Mimetype',
+    'persons': 'Persons',
+    'rights': 'Rights',
+    'topics': 'Topics',
+}
 
 
 def es_offset(pagesize, thispage):
@@ -52,8 +142,8 @@ def start_stop(limit, offset):
     >>> start_stop(10, 2)
     20,29
     """
-    start = offset
-    stop = (start + limit)  #- 1
+    start = int(offset)
+    stop = (start + int(limit))
     return start,stop
     
 def django_page(limit, offset):
@@ -72,127 +162,23 @@ def django_page(limit, offset):
     """
     return divmod(offset, limit)[0] + 1
 
-#def page_start_next(pagesize, thispage):
-#    """
-#    @param pagesize: int
-#    @param thispage: int
-#    @returns: page_start,page_next (int,int)
-#    """
-#    return (
-#        (thispage-1) * pagesize,
-#        (thispage) * pagesize,
-#    )
-
-#def pad_results(results, pagesize, thispage):
-#    """Returns result set objects with dummy objects before/after specified page
-#    
-#    This is necessary for displaying API results using the
-#    Django paginator.
-#    
-#    @param objects: dict Raw output of search API
-#    @param pagesize: int
-#    @param thispage: int
-#    @param total: int Total number of results
-#    @returns: list of objects
-#    """
-#    page_start = (thispage-1) * pagesize
-#    page_next = (thispage) * pagesize
-#    # pad before
-#    for n in range(0, page_start):
-#        results['objects'].insert(n, {'n':n})
-#    # pad after
-#    for n in range(page_next, results['total']):
-#        results['objects'].append({'n':n})
-#    return results['objects']
-
-
-
-class Searcher(object):
-    """
-    >>> s = Searcher(index, mappings=DOCTYPE_CLASS, fields=SEARCH_LIST_FIELDS)
-    >>> s.prep(request_data)
-    'ok'
-    >>> r = s.execute()
-    'ok'
-    >>> d = r.to_dict(request)
-    """
-    index = INDEX
-    mappings = {}
-    fields = []
-    q = OrderedDict()
-    query = {}
-    sort_cleaned = None
-    s = None
+def es_host_name(conn):
+    """Extracts host:port from Elasticsearch conn object.
     
-    def __init__(self, mappings, fields, search=None):
-        self.mappings = mappings
-        self.fields = fields
-        self.s = search
+    >>> es_host_name(Elasticsearch(settings.DOCSTORE_HOST))
+    "<Elasticsearch([{'host': '192.168.56.1', 'port': '9200'}])>"
     
-    def prep(self, request_data):
-        """
-        searcher.prep(request_data)
-        OR
-        searcher.s = Search()
-        
-        """
-        query = prep_query(
-            text=request_data.get('fulltext', ''),
-            must=request_data.get('must', []),
-            should=request_data.get('should', []),
-            mustnot=request_data.get('mustnot', []),
-            aggs={},
-        )
-        logger.debug(json.dumps(query))
-        if not query:
-            raise Exception("Searcher.prep: Can't do an empty search. Give me something to work with here.")
-        
-        s = Search.from_dict(query)
-        s = s.source(
-            include=self.fields,
-            exclude=[],
-        )
-        # doc_types
-        doctype_names = None
-        if isinstance(request_data.get('doctypes'), basestring):
-            doctype_names = request_data['doctypes'].split(',')
-        elif isinstance(request_data.get('doctypes'), list):
-            doctype_names = request_data['doctypes']
-        if not doctype_names:
-            doctype_names = list(self.mappings.keys())
-        doctypes = [self.mappings[d] for d in doctype_names]
-        s = s.doc_type(','.join(doctype_names))
-
-        if request_data.get('sort'):
-            sorts = ','.join(request_data['sort'])
-            s = s.sort(sorts)
-        self.s = s
-    
-    def execute(self, limit, offset):
-        """Execute a query and return SearchResults
-        
-        @param limit: int
-        @param offset: int
-        @returns: SearchResults
-        """
-        if not self.s:
-            raise Exception('Searcher has no ES Search object.')
-        start,stop = start_stop(limit, offset)
-        response = self.s[start:stop].execute()
-        return SearchResults(
-            mappings=self.mappings,
-            query=self.query,
-            results=response,
-            limit=limit,
-            offset=offset,
-        )
-
-
-class ESPaginator(Paginator):
+    @param conn: elasticsearch.Elasticsearch with hosts/port
+    @returns: str e.g. "192.168.56.1:9200"
     """
-    Takes ES results automatically pads results
-    """
-    pass
+    start = conn.__repr__().index('[') + 1
+    end = conn.__repr__().index(']')
+    text = conn.__repr__()[start:end].replace("'", '"')
+    hostdata = json.loads(text)
+    return ':'.join([hostdata['host'], hostdata['port']])
+
+def es_search():
+    return Search(using=docstore.Docstore().es)
 
 
 class SearchResults(object):
@@ -202,49 +188,56 @@ class SearchResults(object):
     >>> q = {"fulltext":"minidoka"}
     >>> sr = search.run_search(request_data=q, request=None)
     """
-    query = {}
-    aggregations = None
-    objects = []
-    total = 0
-    limit = settings.MAX_SIZE
-    offset = 0
-    start = 0
-    stop = 0
-    prev_offset = 0
-    next_offset = 0
-    prev_api = u''
-    next_api = u''
-    page_size = 0
-    this_page = 0
-    prev_page = 0
-    next_page = 0
-    prev_html = u''
-    next_html = u''
 
-    def __init__(self, mappings, query={}, count=0, results=None, objects=[], limit=settings.DEFAULT_LIMIT, offset=0):
-        self.mappings = mappings
+    def __init__(self, params={}, query={}, count=0, results=None, objects=[], limit=DEFAULT_LIMIT, offset=0):
+        self.params = deepcopy(params)
         self.query = query
-        self.limit = int(limit)
-        self.offset = int(offset)
+        self.aggregations = None
+        self.objects = []
+        self.total = 0
+        try:
+            self.limit = int(limit)
+        except:
+            self.limit = settings.ELASTICSEARCH_MAX_SIZE
+        try:
+            self.offset = int(offset)
+        except:
+            self.offset = 0
+        self.start = 0
+        self.stop = 0
+        self.prev_offset = 0
+        self.next_offset = 0
+        self.prev_api = u''
+        self.next_api = u''
+        self.page_size = 0
+        self.this_page = 0
+        self.prev_page = 0
+        self.next_page = 0
+        self.prev_html = u''
+        self.next_html = u''
+        self.errors = []
         
         if results:
             # objects
             self.objects = [hit for hit in results]
             if results.hits.total:
-                self.total = int(results.hits.total)
+                self.total = results.hits.total.value
 
             # aggregations
             self.aggregations = {}
             if hasattr(results, 'aggregations'):
                 for field in results.aggregations.to_dict().keys():
-                    self.aggregations[field] = [
-                        {
-                            'key': bucket['key'],
-                            'doc_count': str(bucket['doc_count']),
-                        }
-                        for bucket in results.aggregations[field].buckets
-                        if bucket['key'] and bucket['doc_count']
-                    ]
+                    
+                    # nested aggregations
+                    if field in ['topics', 'facility']:
+                        field_ids = '{}_ids'.format(field)
+                        aggs = results.aggregations[field]
+                        self.aggregations[field] = aggs[field_ids].buckets
+                     
+                    # simple aggregations
+                    else:
+                        aggs = results.aggregations[field]
+                        self.aggregations[field] = aggs.buckets
 
         elif objects:
             # objects
@@ -274,34 +267,43 @@ class SearchResults(object):
         self.pad_after = range(self.page_next, self.total)
     
     def __repr__(self):
-        return u"<SearchResults '%s' [%s]>" % (
-            self.query, self.total
-        )
-
-    def _make_prevnext_url(self, query, request=None):
-        if request:
-            return urllib.parse.urlunsplit([
-                request.META['wsgi.url_scheme'],
-                request.META.get('HTTP_HOST'),
-                request.META['PATH_INFO'],
-                query,
-                None,
-            ])
-        return '?%s' % query
+        try:
+            q = self.params.dict()
+        except:
+            q = dict(self.params)
+        if self.total:
+            return u"<SearchResults [%s-%s/%s] %s>" % (
+                self.offset, self.offset + self.limit, self.total, q
+            )
+        return u"<SearchResults [%s] %s>" % (self.total, q)
     
-    def to_dict(self, request=None):
+    def to_dict(self, format_functions):
         """Express search results in API and Redis-friendly structure
+        
+        @param format_functions: dict
         returns: dict
         """
-        return self._dict({}, request=request)
+        if hasattr(self, 'params') and self.params:
+            params = deepcopy(self.params)
+        return self._dict(params, {}, format_functions)
     
-    def ordered_dict(self, request=None, pad=False):
+    def ordered_dict(self, format_functions, request, pad=False):
         """Express search results in API and Redis-friendly structure
+        
+        @param format_functions: dict
         returns: OrderedDict
         """
-        return self._dict(OrderedDict(), request=request, pad=pad)
+        if hasattr(self, 'params') and self.params:
+            params = deepcopy(self.params)
+        return self._dict(params, OrderedDict(), format_functions, request, pad)
     
-    def _dict(self, data, request=None, pad=False):
+    def _dict(self, params, data, format_functions, request=None, pad=False):
+        """
+        @param params: dict
+        @param data: dict
+        @param format_functions: dict
+        @param pad: bool
+        """
         data['total'] = self.total
         data['limit'] = self.limit
         data['offset'] = self.offset
@@ -309,124 +311,384 @@ class SearchResults(object):
         data['next_offset'] = self.next_offset
         data['page_size'] = self.page_size
         data['this_page'] = self.this_page
-        data['prev_api'] = self._make_prevnext_url(
-            u'limit=%s&offset=%s' % (self.limit, self.prev_offset),
-            request
-        )
-        data['next_api'] = self._make_prevnext_url(
-            u'limit=%s&offset=%s' % (self.limit, self.next_offset),
-            request
-        )
-        
+        data['num_this_page'] = len(self.objects)
+        if params.get('page'): params.pop('page')
+        if params.get('limit'): params.pop('limit')
+        if params.get('offset'): params.pop('offset')
+        qs = [key + '=' + str(val) for key,val in params.items()]
+        query_string = '&'.join(qs)
+        data['prev_api'] = ''
+        data['next_api'] = ''
         data['objects'] = []
+        data['query'] = self.query
+        data['aggregations'] = self.aggregations
+        
+        # pad before
         if pad:
             data['objects'] += [{'n':n} for n in range(0, self.page_start)]
+        # page
         for o in self.objects:
-            if isinstance(o, dict) or isinstance(o, OrderedDict):
-                data['objects'].append(o)
-            elif isinstance(o, Result):
-                data['objects'].append(
-                    self.mappings[o.meta.doc_type].dict_list(o, request)
+            format_function = format_functions[o.meta.index]
+            data['objects'].append(
+                format_function(
+                    document=o.to_dict(),
+                    request=request,
+                    listitem=True,
                 )
-            else:
-                data['objects'].append(
-                    o.to_dict_list(request=request)
-                )
+            )
+        # pad after
         if pad:
             data['objects'] += [{'n':n} for n in range(self.page_next, self.total)]
         
-        data['query'] = self.query
-        data['aggregations'] = self.aggregations
         return data
 
 
-def prep_query(text='', must=[], should=[], mustnot=[], aggs={}):
-    """Assembles a dict conforming to the Elasticsearch query DSL.
+# TODO move to models
+def format_object(oi, d, is_detail=False):
+    """Format detail or list objects for command-line
     
-    Elasticsearch query dicts
-    See https://www.elastic.co/guide/en/elasticsearch/guide/current/_most_important_queries.html
-    - {"match": {"fieldname": "value"}}
-    - {"multi_match": {
-        "query": "full text search",
-        "fields": ["fieldname1", "fieldname2"]
-      }}
-    - {"terms": {"fieldname": ["value1","value2"]}},
-    - {"range": {"fieldname.subfield": {"gt":20, "lte":31}}},
-    - {"exists": {"fieldname": "title"}}
-    - {"missing": {"fieldname": "title"}}
+    Certain fields are always included (id, title, etc and links).
+    Everything else is determined by what fields are in the result dict.
     
-    Elasticsearch aggregations
-    See https://www.elastic.co/guide/en/elasticsearch/guide/current/aggregations.html
-    aggs = {
-        'formats': {'terms': {'field': 'format'}},
-        'topics': {'terms': {'field': 'topics'}},
-    }
+    d is basically an elasticsearch_dsl.Hit, packaged by
+    search.SearchResults.
     
-    >>> from DDR import docstore,format_json
-    >>> t = 'posthuman'
-    >>> a = [{'terms':{'language':['eng','chi']}}, {'terms':{'creators.role':['distraction']}}]
-    >>> q = docstore.search_query(text=t, must=a)
-    >>> print(format_json(q))
-    >>> d = ['entity','segment']
-    >>> f = ['id','title']
-    >>> results = docstore.Docstore().search(doctypes=d, query=q, fields=f)
-    >>> for x in results['hits']['hits']:
-    ...     print x['_source']
+    @param oi: Identifier
+    @param d: dict
+    @param is_detail: boolean
+    """
+    try:
+        collection_id = oi.collection_id()
+    except:
+        collection_id = None
     
-    @param text: str Free-text search.
-    @param must: list of Elasticsearch query dicts (see above)
-    @param should:  list of Elasticsearch query dicts (see above)
-    @param mustnot: list of Elasticsearch query dicts (see above)
-    @param aggs: dict Elasticsearch aggregations subquery (see above)
+    data = OrderedDict()
+    data['id'] = d.pop('id')
+    data['model'] = oi.model
+    data['collection_id'] = collection_id
+    data['links'] = make_links(
+        oi, d, source='es', is_detail=is_detail
+    )
+    DETAIL_EXCLUDE = []
+    for key,val in d.items():
+        if key not in DETAIL_EXCLUDE:
+            data[key] = val
+    return data
+
+def make_links(oi, d, source='fs', is_detail=False):
+    """Make the 'links pod' at the top of detail or list objects.
+    
+    @param oi: Identifier
+    @param d: dict
+    @param request: None
+    @param source: str 'fs' (filesystem) or 'es' (elasticsearch)
+    @param is_detail: boolean
     @returns: dict
     """
-    assert isinstance(text, basestring)
-    assert isinstance(must, list)
-    assert isinstance(should, list)
-    assert isinstance(mustnot, list)
-    assert isinstance(aggs, dict)
-    body = {
-        'query': {},
-    }
-    if text or must or should or mustnot:
-        body['query']['bool'] = {}
-    if must:    body['query']['bool']['must'] = must
-    if should:  body['query']['bool']['should'] = should
-    if mustnot: body['query']['bool']['must_not'] = mustnot
-    if text:
-        if not body['query']['bool'].get('must'):
-            body['query']['bool']['must'] = []
-        body['query']['bool']['must'].append(
-            {
-                "match": {
-                    "_all": text
-                }
-            }
-        )
-    if not body['query']:
-        body['query'] = {"match_all": {}}
-    if aggs:
-        body['aggregations'] = aggs
-    return body
-
-def aggs_dict(aggregations):
-    """Simplify aggregations data in search results
+    assert source in ['fs', 'es']
+    try:
+        collection_id = oi.collection_id()
+        child_models = oi.child_models(stubs=False)
+    except:
+        collection_id = None
+        child_models = oi.child_models(stubs=True)
     
-    input
-    {
-    u'format': {u'buckets': [{u'doc_count': 2, u'key': u'ds'}], u'doc_count_error_upper_bound': 0, u'sum_other_doc_count': 0},
-    u'rights': {u'buckets': [{u'doc_count': 3, u'key': u'cc'}], u'doc_count_error_upper_bound': 0, u'sum_other_doc_count': 0},
-    }
-    output
-    {
-    u'format': {u'ds': 2},
-    u'rights': {u'cc': 3},
-    }
+    img_url = ''
+    if d.get('signature_id'):
+        img_url = identifier.Identifier(d['signature_id'])
+    elif d.get('access_rel'):
+        img_url = oi
+    elif oi.model in ['repository','organization']:
+        img_url = '%s%s/%s' % (
+            settings.MEDIA_URL,
+            oi.path_abs().replace(settings.MEDIA_ROOT, ''),
+            'logo.png'
+        )
+    
+    links = OrderedDict()
+    
+    if is_detail:
+        # objects above the collection level are stubs and do not have collection_id
+        # collections have collection_id but have to point up to parent stub
+        # API does not include stubs inside collections (roles)
+        if collection_id and (collection_id != oi.id):
+            parent_id = oi.parent_id(stubs=0)
+        else:
+            parent_id = oi.parent_id(stubs=1)
+        if parent_id:
+            links['parent'] = parent_id
+
+    links['img'] = img_url
+    
+    return links
+
+
+def sanitize_input(text):
+    """Escape special characters
+    
+    http://lucene.apache.org/core/old_versioned_docs/versions/2_9_1/queryparsersyntax.html
+    TODO Maybe elasticsearch-dsl or elasticsearch-py do this already
     """
-    return {
-        fieldname: {
-            bucket['key']: str(bucket['doc_count'])
-            for bucket in data['buckets']
+    if isinstance(text, bool):
+        return text
+    
+    text = re.sub(
+        '([{}])'.format(re.escape('\\+\-&|!(){}\[\]^~*?:\/')),
+        r"\\\1",
+        text
+    )
+    
+    # AND, OR, and NOT are used by lucene as logical operators.
+    ## We need to escape these.
+    # ...actually, we don't. We want these to be available.
+    #for word in ['AND', 'OR', 'NOT']:
+    #    escaped_word = "".join(["\\" + letter for letter in word])
+    #    text = re.sub(
+    #        r'\s*\b({})\b\s*'.format(word),
+    #        r" {} ".format(escaped_word),
+    #        text
+    #    )
+    
+    # Escape odd quotes
+    quote_count = text.count('"')
+    if quote_count % 2 == 1:
+        text = re.sub(r'(.*)"(.*)', r'\1\"\2', text)
+    return text
+
+class Searcher(object):
+    """Wrapper around elasticsearch_dsl.Search
+    
+    >>> s = Searcher(index)
+    >>> s.prep(request_data)
+    'ok'
+    >>> r = s.execute()
+    'ok'
+    >>> d = r.to_dict(request)
+    """
+    
+    def __init__(self, conn=docstore.Docstore().es, search=None):
+        """
+        @param conn: elasticsearch.Elasticsearch with hosts/port
+        @param index: str Elasticsearch index name
+        """
+        self.conn = conn
+        self.s = search
+        fields = []
+        params = {}
+        q = OrderedDict()
+        query = {}
+        sort_cleaned = None
+    
+    def __repr__(self):
+        return u"<Searcher '%s', %s>" % (
+            es_host_name(self.conn), self.params
+        )
+
+    def prepare(self, params={}, params_whitelist=SEARCH_PARAM_WHITELIST, search_models=SEARCH_MODELS, fields=SEARCH_INCLUDE_FIELDS, fields_nested=SEARCH_NESTED_FIELDS, fields_agg=SEARCH_AGG_FIELDS):
+        """Assemble elasticsearch_dsl.Search object
+        
+        @param params:           dict
+        @param params_whitelist: list Accept only these (SEARCH_PARAM_WHITELIST)
+        @param search_models:    list Limit to these ES doctypes (SEARCH_MODELS)
+        @param fields:           list Retrieve these fields (SEARCH_INCLUDE_FIELDS)
+        @param fields_nested:    list See SEARCH_NESTED_FIELDS
+        @param fields_agg:       dict See SEARCH_AGG_FIELDS
+        @returns: 
+        """
+
+        # gather inputs ------------------------------
+        
+        # self.params is a copy of the params arg as it was passed
+        # to the method.  It is used for informational purposes
+        # and is passed to SearchResults.
+        # Sanitize while copying.
+        self.params = {
+            key: sanitize_input(val)
+            for key,val in params.items()
         }
-        for fieldname,data in list(aggregations.items())
-    }
+        
+        # scrub fields not in whitelist
+        bad_fields = [
+            key for key in params.keys()
+            if key not in params_whitelist + ['page']
+        ]
+        for key in bad_fields:
+            params.pop(key)
+        
+        indices = search_models
+        if params.get('models'):
+            indices = ','.join([
+                docstore.Docstore().index_name(model) for model in models
+            ])
+        
+        s = Search(using=self.conn, index=indices)
+        
+        if params.get('match_all'):
+            s = s.query('match_all')
+        elif params.get('fulltext'):
+            fulltext = params.pop('fulltext')
+            # MultiMatch chokes on lists
+            if isinstance(fulltext, list) and (len(fulltext) == 1):
+                fulltext = fulltext[0]
+            # fulltext search
+            s = s.query(
+                QueryString(
+                    query=fulltext,
+                    fields=fields,
+                    analyze_wildcard=False,
+                    allow_leading_wildcard=False,
+                    default_operator='AND',
+                )
+            )
+
+        if params.get('parent'):
+            parent = params.pop('parent')
+            if isinstance(parent, list) and (len(parent) == 1):
+                parent = parent[0]
+            if parent:
+                parent = '%s*' % parent
+            s = s.query("wildcard", id=parent)
+        
+        # filters
+        for key,val in params.items():
+            
+            if key in fields_nested:
+                # Instead of nested search on topics.id or facility.id
+                # search on denormalized topics_id or facility_id fields.
+                fieldname = '%s_id' % key
+                s = s.filter('term', **{fieldname: val})
+    
+                ## search for *ALL* the topics (AND)
+                #for term_id in val:
+                #    s = s.filter(
+                #        Q('bool',
+                #          must=[
+                #              Q('nested',
+                #                path=key,
+                #                query=Q('term', **{'%s.id' % key: term_id})
+                #              )
+                #          ]
+                #        )
+                #    )
+                
+                ## search for *ANY* of the topics (OR)
+                #s = s.query(
+                #    Q('bool',
+                #      must=[
+                #          Q('nested',
+                #            path=key,
+                #            query=Q('terms', **{'%s.id' % key: val})
+                #          )
+                #      ]
+                #    )
+                #)
+    
+            elif (key in params_whitelist) and val:
+                s = s.filter('term', **{key: val})
+                # 'term' search is for single choice, not multiple choice fields(?)
+        
+        # aggregations
+        for fieldname,field in fields_agg.items():
+            
+            # nested aggregation (Elastic docs: https://goo.gl/xM8fPr)
+            if fieldname == 'topics':
+                s.aggs.bucket('topics', 'nested', path='topics') \
+                      .bucket('topics_ids', 'terms', field='topics.id', size=1000)
+            elif fieldname == 'facility':
+                s.aggs.bucket('facility', 'nested', path='facility') \
+                      .bucket('facility_ids', 'terms', field='facility.id', size=1000)
+                # result:
+                # results.aggregations['topics']['topic_ids']['buckets']
+                #   {u'key': u'69', u'doc_count': 9}
+                #   {u'key': u'68', u'doc_count': 2}
+                #   {u'key': u'62', u'doc_count': 1}
+            
+            # simple aggregations
+            else:
+                s.aggs.bucket(fieldname, 'terms', field=field)
+        
+        self.s = s
+    
+    def execute(self, limit, offset):
+        """Execute a query and return SearchResults
+        
+        @param limit: int
+        @param offset: int
+        @returns: SearchResults
+        """
+        if not self.s:
+            raise Exception('Searcher has no ES Search object.')
+        start,stop = start_stop(limit, offset)
+        response = self.s[start:stop].execute()
+        for n,hit in enumerate(response.hits):
+            hit.index = '%s %s/%s' % (n, int(offset)+n, response.hits.total)
+        return SearchResults(
+            params=self.params,
+            query=self.s.to_dict(),
+            results=response,
+            limit=limit,
+            offset=offset,
+        )
+
+
+def search(hosts, models=[], parent=None, filters=[], fulltext='', limit=10000, offset=0, page=None, aggregations=False):
+    """Fulltext search using Elasticsearch query_string syntax.
+    
+    Note: More approachable, higher-level function than DDR.docstore.search.
+    
+    Full-text search strings:
+        fulltext="seattle"
+        fulltext="fusa OR teruo"
+        fulltext="fusa AND teruo"
+        fulltext="+fusa -teruo"
+        fulltext="title:seattle"
+    
+    Note: Quoting inside strings is not (yet?) supported in the
+    command-line version.
+    
+    Specify parent object and doctype/model:
+        parent="ddr-densho-12"
+        parent="ddr-densho-1000-1-"
+        doctypes=['entity','segment']
+    
+    Filter on certain fields (filters may repeat):
+        filter=['topics:373,27']
+        filter=['topics:373', 'facility=12']
+    
+    @param hosts dict: settings.DOCSTORE_HOST
+    @param models list: Restrict to one or more models.
+    @param parent str: ID of parent object (partial OK).
+    @param filters list: Filter on certain fields (FIELD:VALUE,VALUE,...).
+    @param fulltext str: Fulltext search query.
+    @param limit int: Results page size.
+    @param offset int: Number of initial results to skip (use with limit).
+    @param page int: Which page of results to show.
+    """
+    if not models:
+        models = SEARCH_MODELS
+        
+    if filters:
+        data = {}
+        for f in filters:
+            field,v = f.split(':')
+            values = v.split(',')
+            data[field] = values
+        filters = data
+    else:
+        filters = {}
+        
+    if page and offset:
+        Exception("Error: Specify either offset OR page, not both.")
+    if page:
+        thispage = int(page)
+        offset = es_offset(limit, thispage)
+    
+    searcher = Searcher()
+    searcher.prepare(params={
+        'fulltext': fulltext,
+        'models': models,
+        'parent': parent,
+        'filters': filters,
+    })
+    results = searcher.execute(limit, offset)
+    return results

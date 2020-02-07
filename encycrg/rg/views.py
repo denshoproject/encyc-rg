@@ -81,62 +81,24 @@ def debug(request):
     return technical_500_response(request, Debug, Debug(DEBUG_TEXT), None)
 
 
-def _initial_char(text):
-    for char in text:
-        if char.isdigit():
-            return '1'
-        elif char.isalpha():
-            return char
-    return char
-
-def _group_articles_by_initial(articles):
-    initials = []
-    groups = {}
-    for article in articles:
-        initial = _initial_char(article['title_sort'])
-        initials.append(initial)
-        if not groups.get(initial):
-            groups[initial] = []
-        groups[initial].append(article)
-    initials = sorted(set(initials))
-    return initials, [
-        (initial, groups.pop(initial))
-        for initial in initials
-    ]
-
 def articles(request):
-    results = api._articles(request, limit=settings.MAX_SIZE)
-    initials,groups = _group_articles_by_initial(
-        results.to_dict()['objects']
-    )
+    initials,groups,total = models.Page.pages_by_initial()
     return render(request, 'rg/articles.html', {
-        'num_articles': results.total,
+        'num_articles': total,
         'initials': initials,
         'groups': groups,
         'fields': models.FACET_FIELDS,
         'api_url': _mkurl(request, reverse('rg-api-articles')),
     })
-    #api_url = _mkurl(request, reverse('rg-api-articles'))
-    #r = api.get_articles(request)
-    #paginator = Paginator(
-    #    r.ordered_dict(request=request, pad=True)['objects'],
-    #    r.page_size
-    #)
-    #page = paginator.page(r.this_page)
-    #return render(request, 'rg/articles.html', {
-    #    'paginator': paginator,
-    #    'page': page,
-    #    'api_url': api_url,
-    #})
 
 def wiki_article(request, url_title):
     return HttpResponsePermanentRedirect(reverse('rg-article', args=([url_title])))
 
 def article(request, url_title):
-    article_titles = api._article_titles(request, limit=settings.MAX_SIZE)
+    article_titles = models.Page.titles()
     article = None
     try:
-        article = api._article(request, url_title)
+        article = models.Page.get(url_title)
     except models.NotFoundError as err:
         # Bad title might just be an author link
         if '_' in url_title:
@@ -277,45 +239,53 @@ def browse_field(request, stub):
     if 'rg_' not in fieldname:
         fieldname = 'rg_%s' % fieldname
     api_url = _mkurl(request, reverse('rg-api-browse-field', args=([stub])))
-    r = api.browse_field(request, stub, format='json')
+    r = models.Page.browse_field(stub, request)
     return render(request, 'rg/browse-field.html', {
         'stub': stub,
         'fieldname': fieldname,
         'field_icon': models.FACET_FIELDS[fieldname]['icon'],
         'field_title': models.FACET_FIELDS[fieldname]['label'],
         'field_description': models.FACET_FIELDS[fieldname]['description'],
-        'query': r.data,
+        'query': r,
         'api_url': api_url,
     })
 
 def browse_field_value(request, stub, value):
     if stub not in models.MEDIATYPE_URLSTUBS:
         raise Http404
+    api_url = _mkurl(request, reverse(
+        'rg-api-browse-fieldvalue', args=([stub, value])
+    ))
     # trade the pretty urlstub for the actual mediatype fieldname
     fieldname = models.MEDIATYPE_URLSTUBS[stub]
-    api_url = _mkurl(request, reverse('rg-api-browse-fieldvalue', args=([stub, value])))
-    context = {
+    if fieldname == 'rg_rgmediatype':
+        context_value = models.MEDIATYPE_INFO[value]['label']
+    else:
+        context_value = value
+    thispage = int(request.GET.get('page', 1))
+    pagesize = settings.RESULTS_PER_PAGE
+    offset = models.search_offset(thispage, pagesize)
+    results = models.Page.browse_field_objects(stub, value, pagesize, offset)
+    paginator = Paginator(
+        results.ordered_dict(
+            format_functions=models.FORMATTERS,
+            request=request,
+            pad=True,
+        )['objects'],
+        results.page_size,
+    )
+    page = paginator.page(results.this_page)
+    return render(request, 'rg/browse-fieldvalue.html', {
         'api_url': api_url,
         'stub': stub,
         'fieldname': fieldname,
-        'value': value,
+        'value': context_value,
         'field_icon': models.FACET_FIELDS[fieldname]['icon'],
         'field_title': models.FACET_FIELDS[fieldname]['label'],
         'field_description': models.FACET_FIELDS[fieldname]['description'],
-    }
-    if fieldname == 'rg_rgmediatype':
-        context['value'] = models.MEDIATYPE_INFO[value]['label']
-
-    results = api._browse_field_value(request, stub, value)
-    if results.objects:
-        paginator = Paginator(
-            results.ordered_dict(request=request, pad=True)['objects'],
-            results.page_size,
-        )
-        context['paginator'] = paginator
-        context['page'] = paginator.page(results.this_page)
-    
-    return render(request, 'rg/browse-fieldvalue.html', context)
+        'paginator': paginator,
+        'page': page,
+    })
 
 
 def search_ui(request):
@@ -329,39 +299,70 @@ def search_ui(request):
     }
 
     if request.GET.get('fulltext'):
-
-        results = api._search(request)
-        form = forms.SearchForm(
-            search_results=results,
-            data=request.GET
-        )
-        context['results'] = results
-        context['search_form'] = form
-        context['search_performed'] = True
         
-        if results.objects:
-            paginator = Paginator(
-                results.ordered_dict(request=request, pad=True)['objects'],
-                results.page_size,
+        params = request.GET.copy()
+        params['published_rg'] = True  # only ResourceGuide items
+        searcher = search.Searcher()
+        searcher.prepare(
+            params=params,
+            params_whitelist=search.SEARCH_PARAM_WHITELIST,
+            search_models=search.SEARCH_MODELS,
+            fields=models.PAGE_SEARCH_FIELDS,
+            fields_nested={},
+            fields_agg=models.PAGE_AGG_FIELDS,
+        )
+        limit,offset = limit_offset(request)
+        results = searcher.execute(limit, offset)
+        paginator = Paginator(
+            [
+                models.Page.from_hit(hit).to_dict_list(request)
+                for hit in results.objects
+            ],
+            results.page_size,
+        )
+        page = paginator.page(results.this_page)
+        
+        form = forms.SearchForm(
+            data=request.GET.copy(),
+            search_results=results,
+        )
+        
+        context['results'] = results
+        context['paginator'] = paginator
+        context['page'] = page
+        context['search_form'] = form
+        
+        # list filters below fulltext field
+        filters = [
+            (
+                models.PAGE_BROWSABLE_FIELDS[key],  # pretty label
+                ', '.join(values)
             )
-            context['paginator'] = paginator
-            context['page'] = paginator.page(results.this_page)
-
+            for key,values in request.GET.lists()
+            if (key != 'fulltext') and (key in models.PAGE_BROWSABLE_FIELDS.keys())
+        ]
+        context['filters'] = filters
+        
     else:
         context['search_form'] = forms.SearchForm()
 
-    # list filters below fulltext field
-    filters = [
-        (
-            models.PAGE_BROWSABLE_FIELDS[key],  # pretty label
-            ', '.join(values)
-        )
-        for key,values in request.GET.lists()
-        if (key != 'fulltext') and (key in models.PAGE_BROWSABLE_FIELDS.keys())
-    ]
-    context['filters'] = filters
-    
     return render(request, 'rg/search.html', context)
+
+def limit_offset(request):
+    if request.GET.get('offset'):
+        # limit and offset args take precedence over page
+        limit = request.GET.get(
+            'limit', int(request.GET.get('limit', settings.RESULTS_PER_PAGE))
+        )
+        offset = request.GET.get('offset', int(request.GET.get('offset', 0)))
+    elif request.GET.get('page'):
+        limit = settings.RESULTS_PER_PAGE
+        thispage = int(request.GET['page'])
+        offset = search.es_offset(limit, thispage)
+    else:
+        limit = settings.RESULTS_PER_PAGE
+        offset = 0
+    return limit,offset
 
 
 def facets(request):
