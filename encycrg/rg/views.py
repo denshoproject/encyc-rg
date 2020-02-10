@@ -305,7 +305,7 @@ def search_ui(request):
         searcher = search.Searcher()
         searcher.prepare(
             params=params,
-            params_whitelist=search.SEARCH_PARAM_WHITELIST,
+            params_whitelist=models.PAGE_SEARCH_FIELDS,
             search_models=search.SEARCH_MODELS,
             fields=models.PAGE_SEARCH_FIELDS,
             fields_nested={},
