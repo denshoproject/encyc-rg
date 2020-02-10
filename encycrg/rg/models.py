@@ -310,17 +310,17 @@ PAGE_SEARCH_FIELDS = [
     #'rg_facility',
 ]
 PAGE_AGG_FIELDS = {
-    'media-type': 'rg_rgmediatype',
-    'interest-level': 'rg_interestlevel',
-    'reading-level': 'rg_readinglevel',
-    'genre': 'rg_genre',
-    'theme': 'rg_theme',
-    'pov': 'rg_pov',
-    'place': 'rg_geography',
-    'time': 'rg_chronology',
-    'availability': 'rg_availability',
-    'teaching-aids': 'rg_hasteachingaids',
-    'free-web-version': 'rg_freewebversion',
+    'rg_rgmediatype': 'rg_rgmediatype',
+    'rg_interestlevel': 'rg_interestlevel',
+    'rg_readinglevel': 'rg_readinglevel',
+    'rg_genre': 'rg_genre',
+    'rg_theme': 'rg_theme',
+    'rg_pov': 'rg_pov',
+    'rg_geography': 'rg_geography',
+    'rg_chronology': 'rg_chronology',
+    'rg_availability': 'rg_availability',
+    'rg_hasteachingaids': 'rg_hasteachingaids',
+    'rg_freewebversion': 'rg_freewebversion',
 }
 
 FACET_FIELDS = OrderedDict()
