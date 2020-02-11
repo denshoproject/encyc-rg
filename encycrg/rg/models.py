@@ -310,17 +310,17 @@ PAGE_SEARCH_FIELDS = [
     #'rg_facility',
 ]
 PAGE_AGG_FIELDS = {
-    'media-type': 'rg_rgmediatype',
-    'interest-level': 'rg_interestlevel',
-    'reading-level': 'rg_readinglevel',
-    'genre': 'rg_genre',
-    'theme': 'rg_theme',
-    'pov': 'rg_pov',
-    'place': 'rg_geography',
-    'time': 'rg_chronology',
-    'availability': 'rg_availability',
-    'teaching-aids': 'rg_hasteachingaids',
-    'free-web-version': 'rg_freewebversion',
+    'rg_rgmediatype': 'rg_rgmediatype',
+    'rg_interestlevel': 'rg_interestlevel',
+    'rg_readinglevel': 'rg_readinglevel',
+    'rg_genre': 'rg_genre',
+    'rg_theme': 'rg_theme',
+    'rg_pov': 'rg_pov',
+    'rg_geography': 'rg_geography',
+    'rg_chronology': 'rg_chronology',
+    'rg_availability': 'rg_availability',
+    'rg_hasteachingaids': 'rg_hasteachingaids',
+    'rg_freewebversion': 'rg_freewebversion',
 }
 
 FACET_FIELDS = OrderedDict()
@@ -897,16 +897,21 @@ class Page(repo_models.Page):
             raise err
     
     @staticmethod
-    def browse_field(stub, request=None):
+    def browse_field(field, request=None):
         """Get aggregations for specified field
         
-        TODO only get aggregations not documents
+        Get number of matches for each aggregations bucket for specified field.
+        Map the "field" (human-friendly fieldname from URI) to the "model_field"
+        (actual fieldnames used in models.Page).
         
-        @param stub: str Field name from URL stub
+        Example: For 'media-type' (rg_rgmediatype) return number of matches for
+        e.g. books, films, plays, short stories, etc.
+        
+        @param field: str Human-friendly field name from URI e.g. 'media-type'
         @param request
         @returns: list of aggregations with links, labels, etc
         """
-        fieldname = MEDIATYPE_URLSTUBS[stub]
+        model_field = MEDIATYPE_URLSTUBS[field]
         params={
             # only ResourceGuide items
             'published_rg': True,
@@ -915,29 +920,27 @@ class Page(repo_models.Page):
         searcher = search.Searcher()
         searcher.prepare(
             params=params,
-            params_whitelist=search.SEARCH_PARAM_WHITELIST,
+            params_whitelist=PAGE_SEARCH_FIELDS,
             search_models=search.SEARCH_MODELS,
-            fields=PAGE_LIST_FIELDS,
+            fields=PAGE_SEARCH_FIELDS,
             fields_nested={},
             fields_agg=PAGE_AGG_FIELDS,
         )
         response = searcher.execute(limit=search.DEFAULT_LIMIT, offset=0)
-        aggs = response.aggregations[stub]
-        # prep aggregations data
         # TODO sorting
         data = []
-        for t in aggs:
+        for t in response.aggregations[model_field]:
             term = t['key']
             item = OrderedDict()
             item['term'] = term
             item['json'] = api_reverse(
                 'rg-api-browse-fieldvalue',
-                args=([stub, term]),
+                args=([field, term]),
                 request=request
             )
             item['html'] = api_reverse(
                 'rg-browse-fieldvalue',
-                args=([stub, term]),
+                args=([field, term]),
                 request=request
             )
             if MEDIATYPE_INFO.get(term):
@@ -948,29 +951,33 @@ class Page(repo_models.Page):
             data.append(item)
         return data
     
-    def browse_field_objects(stub, value, limit=settings.DEFAULT_LIMIT, offset=0):
-        """TODO
+    def browse_field_objects(field, value, limit=settings.DEFAULT_LIMIT, offset=0):
+        """Return objects for specified field and aggregations bucket
         
-        @param stub: str Field name from URL stub e.g. 'media-type'.
+        Get objects for the specified aggregations bucket.
+        Example: Objects for field 'media-type' (model_field rg_rgmediatype)
+        aggregations bucket "short stories".
+        
+        @param field: str Human-friendly field name from URI e.g. 'media-type'
         @param value: str Value of field e.g. 'books'
         @param request
-        @returns: ???
+        @returns: search.SearchResults
         """
-        fieldname = MEDIATYPE_URLSTUBS[stub]
-        if fieldname not in PAGE_SEARCH_FIELDS:
-            raise Exception('Bad fieldname "%s".' % fieldname)
+        model_field = MEDIATYPE_URLSTUBS[field]
+        if model_field not in PAGE_SEARCH_FIELDS:
+            raise Exception('Bad model field "%s".' % model_field)
         params = {
             'published_rg': True, # only ResourceGuide items
-            fieldname: value,
+            model_field: value,
         }
         searcher = search.Searcher()
         searcher.prepare(
             params=params,
-            params_whitelist=search.SEARCH_PARAM_WHITELIST,
+            params_whitelist=PAGE_SEARCH_FIELDS,
             search_models=search.SEARCH_MODELS,
-            fields=PAGE_LIST_FIELDS,
+            fields=PAGE_SEARCH_FIELDS,
             fields_nested={},
-            fields_agg=PAGE_AGG_FIELDS,
+            fields_agg={},
         )
         return searcher.execute(limit, offset)
     
