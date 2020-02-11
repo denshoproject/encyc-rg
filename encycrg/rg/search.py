@@ -16,7 +16,7 @@ from django.conf import settings
 from . import docstore
 
 #SEARCH_LIST_FIELDS = models.all_list_fields()
-DEFAULT_LIMIT = 1000
+DEFAULT_LIMIT = 10000
 
 # whitelist of params recognized in URL query
 # TODO derive from ddr-defs/repo_models/
