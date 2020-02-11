@@ -175,7 +175,7 @@ def es_host_name(conn):
     end = conn.__repr__().index(']')
     text = conn.__repr__()[start:end].replace("'", '"')
     hostdata = json.loads(text)
-    return ':'.join([hostdata['host'], hostdata['port']])
+    return ':'.join([hostdata['host'], str(hostdata['port'])])
 
 def es_search():
     return Search(using=docstore.Docstore().es)
