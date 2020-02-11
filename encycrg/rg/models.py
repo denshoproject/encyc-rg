@@ -915,9 +915,9 @@ class Page(repo_models.Page):
         searcher = search.Searcher()
         searcher.prepare(
             params=params,
-            params_whitelist=search.SEARCH_PARAM_WHITELIST,
+            params_whitelist=PAGE_SEARCH_FIELDS,
             search_models=search.SEARCH_MODELS,
-            fields=PAGE_LIST_FIELDS,
+            fields=PAGE_SEARCH_FIELDS,
             fields_nested={},
             fields_agg=PAGE_AGG_FIELDS,
         )
@@ -966,9 +966,9 @@ class Page(repo_models.Page):
         searcher = search.Searcher()
         searcher.prepare(
             params=params,
-            params_whitelist=search.SEARCH_PARAM_WHITELIST,
+            params_whitelist=PAGE_SEARCH_FIELDS,
             search_models=search.SEARCH_MODELS,
-            fields=PAGE_LIST_FIELDS,
+            fields=PAGE_SEARCH_FIELDS,
             fields_nested={},
             fields_agg=PAGE_AGG_FIELDS,
         )
