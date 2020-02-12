@@ -89,11 +89,16 @@ def browse_field(request, stub, format=None):
 def browse_field_value(request, stub, value, format=None):
     """List of articles tagged with databox term.
     """
+    results = models.Page.browse_field_objects(
+        stub, value,
+        limit=request.GET.get('limit', settings.DEFAULT_LIMIT),
+        offset=request.GET.get('offset', 0),
+    )
     return Response(
-        models.Page.browse_field_objects(stub, value).ordered_dict(
+        results.ordered_dict(
             format_functions=models.FORMATTERS,
             request=request,
-            pad=True,
+            pad=False,
         )
     )
 
