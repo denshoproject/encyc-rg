@@ -89,14 +89,13 @@ def browse_field(request, stub, format=None):
 def browse_field_value(request, stub, value, format=None):
     """List of articles tagged with databox term.
     """
-    results = models.Page.browse_field_objects(stub, value).ordered_dict(
-        format_functions=models.FORMATTERS,
-        request=request,
-        pad=False,
+    return Response(
+        models.Page.browse_field_objects(stub, value).ordered_dict(
+            format_functions=models.FORMATTERS,
+            request=request,
+            pad=True,
+        )
     )
-    data['query'] = {}
-    data['aggregations'] = {}
-    return Response(data)
 
 @api_view(['GET'])
 def categories(request, format=None):
