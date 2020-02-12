@@ -258,8 +258,6 @@ PAGE_LIST_FIELDS = [
     'title',
     'title_sort',
     'description',
-    'published',
-    'modified',
     'categories',
     'rg_rgmediatype',
     'rg_interestlevel',
@@ -442,43 +440,14 @@ def format_page(document, request, listitem=False):
     d['title'] = document.pop('title')
     d['description'] = document.pop('description')
     # everything else
-    HIDDEN_FIELDS = [
-        'public',
-        'published',
-        'published_encyc',
-        'published_rg',
-        'modified',
-        'mw_api_url',
-        'title_sort',
-        'body',
-        'prev_page',
-        'next_page',
-        'categories',
-        'coordinates',
-        'source_ids',
-        'authors_data',
-        'databoxes',
-        'rg_rgmediatype',
-        'rg_title',
-        'rg_creators',
-        'rg_interestlevel',
-        'rg_readinglevel',
-        'rg_theme',
-        'rg_genre',
-        'rg_pov',
-        'rg_relatedevents',
-        'rg_availability',
-        'rg_freewebversion',
-        'rg_denshotopic',
-        'rg_geography',
-        'rg_facility',
-        'rg_chronology',
-        'rg_hasteachingaids',
-        'rg_warnings',
-    ]
-    for key in document.keys():
-        if key not in HIDDEN_FIELDS:
+    for key in PAGE_LIST_FIELDS:
+        if key in document.keys():
             d[key] = document[key]
+    mediatypes = document.get('rg_rgmediatype')
+    if mediatypes and MEDIATYPE_INFO.get(mediatypes[0]):
+        mediatype = mediatypes[0]
+        d['rg_rgmediatype_label'] = MEDIATYPE_INFO[mediatype]['label']
+        d['rg_rgmediatype_icon'] = MEDIATYPE_INFO[mediatype]['icon']
     return d
 
 FORMATTERS = {
