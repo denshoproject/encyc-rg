@@ -145,6 +145,27 @@ def start_stop(limit, offset):
     start = int(offset)
     stop = (start + int(limit))
     return start,stop
+
+def limit_offset(request):
+    """Get limit,offset values from request
+    
+    @param request
+    @returns: limit,offset
+    """
+    if request.GET.get('offset'):
+        # limit and offset args take precedence over page
+        limit = request.GET.get(
+            'limit', int(request.GET.get('limit', settings.RESULTS_PER_PAGE))
+        )
+        offset = request.GET.get('offset', int(request.GET.get('offset', 0)))
+    elif request.GET.get('page'):
+        limit = settings.RESULTS_PER_PAGE
+        thispage = int(request.GET['page'])
+        offset = es_offset(limit, thispage)
+    else:
+        limit = settings.RESULTS_PER_PAGE
+        offset = 0
+    return limit,offset
     
 def django_page(limit, offset):
     """Convert Elasticsearch limit/offset pagination to Django page

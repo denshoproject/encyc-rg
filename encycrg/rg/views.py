@@ -311,7 +311,7 @@ def search_ui(request):
             fields_nested={},
             fields_agg=models.PAGE_AGG_FIELDS,
         )
-        limit,offset = limit_offset(request)
+        limit,offset = search.limit_offset(request)
         results = searcher.execute(limit, offset)
         paginator = Paginator(
             results.ordered_dict(
@@ -348,22 +348,6 @@ def search_ui(request):
         context['search_form'] = forms.SearchForm()
 
     return render(request, 'rg/search.html', context)
-
-def limit_offset(request):
-    if request.GET.get('offset'):
-        # limit and offset args take precedence over page
-        limit = request.GET.get(
-            'limit', int(request.GET.get('limit', settings.RESULTS_PER_PAGE))
-        )
-        offset = request.GET.get('offset', int(request.GET.get('offset', 0)))
-    elif request.GET.get('page'):
-        limit = settings.RESULTS_PER_PAGE
-        thispage = int(request.GET['page'])
-        offset = search.es_offset(limit, thispage)
-    else:
-        limit = settings.RESULTS_PER_PAGE
-        offset = 0
-    return limit,offset
 
 
 def facets(request):
