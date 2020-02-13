@@ -25,7 +25,6 @@ def index(request, format=None):
     """
     data = OrderedDict()
     data['browse'] = reverse('rg-api-browse', request=request)
-    data['facets'] = reverse('rg-api-facets', request=request)
     data['articles'] = reverse('rg-api-articles', request=request)
     data['authors'] = reverse('rg-api-authors', request=request)
     data['sources'] = reverse('rg-api-sources', request=request)
@@ -109,58 +108,9 @@ def browse_facet_objects(request, stub, value, format=None):
     )
 
 @api_view(['GET'])
-def categories(request, format=None):
-    """CATEGORIES DOCS
-    """
-    return Response(
-        _categories(request)
-    )
-
-@api_view(['GET'])
-def category(request, category, format=None):
-    return Response(
-        _category(request, category).ordered_dict(request)
-    )
-
-@api_view(['GET'])
-def facets(request, format=None):
-    return Response(
-        _facets(request).ordered_dict(request)
-    )
-
-@api_view(['GET'])
-def facet(request, facet_id, format=None):
-    try:
-        return Response(
-            _facet(request, facet_id)
-        )
-    except models.NotFoundError:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-@api_view(['GET'])
-def terms(request, facet_id, format=None):
-    return Response(
-        _terms(request, facet_id).ordered_dict(request)
-    )
-
-@api_view(['GET'])
-def term(request, term_id, format=None):
-    try:
-        return Response(
-            _term(request, term_id)
-        )
-    except models.NotFoundError:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-@api_view(['GET'])
-def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
-    return Response(
-        _term_objects(request, term_id, limit=limit, offset=offset)
-    )
-
-@api_view(['GET'])
 def search_form(request, format=None):
-    """
+    """Search
+    
     @param request
     @param format
     @returns: OrderedDict from search.SearchResults
@@ -185,105 +135,3 @@ def search_form(request, format=None):
     # TODO aggregations are not JSON serializable
     data.pop('aggregations')
     return Response(data)
-
-
-# ----------------------------------------------------------------------
-
-def _categories(request):
-    fieldname = 'categories'
-    s = models.Page.search().query("match_all")
-    s.aggs.bucket(fieldname, search.A('terms', field=fieldname))
-    response = s.execute()
-    aggs = search.aggs_dict(response.aggregations.to_dict())[fieldname]
-    data = [
-        {
-            'term': term,
-            'count': aggs[term],
-            'api_url': reverse(
-                'rg-api-browse-fieldvalue',
-                args=([fieldname, term]),
-                request=request
-            ),
-            'url': reverse(
-                'rg-category',
-                args=([term]),
-                request=request
-            ),
-        }
-        for term in sorted(list(aggs.keys()))
-    ]
-    return data
-
-def _category(request, category, limit=None, offset=None):
-    """CATEGORY DOCS
-    """
-    s = models.Page.search().query("match_all")
-    s = s.query(
-        "match", categories=category
-    ).sort('title_sort')
-    if not limit:
-        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    if not offset:
-        offset = int(request.GET.get('offset', 0))
-    searcher = search.Searcher(mappings=MAPPINGS, fields=FIELDS, search=s)
-    return searcher.execute(limit, offset)
-
-def _facets(request, limit=None, offset=None):
-    if not limit:
-        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    if not offset:
-        offset = int(request.GET.get('offset', 0))
-    return search.SearchResults(
-        mappings=models.DOCTYPE_CLASS,
-        objects=models.Facet.facets(request),
-        limit=limit,
-        offset=offset,
-    )
-
-def _facet(request, facet_id):
-    facet = models.Facet.get(facet_id)
-    data = facet.dict_all(request)
-    data['links']['children'] = reverse(
-        'rg-api-terms',
-        args=([facet_id]),
-        request=request
-    )
-    return data
-
-def _terms(request, facet_id, limit=None, offset=None):
-    if not limit:
-        limit = int(request.GET.get('limit', settings.DEFAULT_LIMIT))
-    if not offset:
-        offset = int(request.GET.get('offset', 0))
-    return search.SearchResults(
-        mappings=MAPPINGS,
-        objects=models.FacetTerm.terms(request, facet_id),
-        limit=limit,
-        offset=offset,
-    )
-
-def _term(request, term_id):
-    term = models.FacetTerm.get(term_id)
-    data = term.dict_all(request)
-    data['links']['children'] = reverse(
-        'rg-api-term-objects',
-        args=([term_id]),
-        request=request
-    )
-    return data
-
-def _term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
-    try:
-        term = models.FacetTerm.get(term_id)
-    except models.NotFoundError:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    data = []
-    for item in term.encyc_urls:
-        d = OrderedDict()
-        d['id'] = item['url_title'].replace(u'/', u'').replace(u'%20', u' ')
-        d['doctype'] = 'articles'
-        d['links'] = {}
-        d['links']['json'] = reverse('rg-api-article', args=([item['url_title']]), request=request)
-        d['links']['html'] = reverse('rg-article', args=([item['url_title']]), request=request)
-        data.append(d)
-    return data
