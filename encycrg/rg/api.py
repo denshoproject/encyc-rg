@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from django.conf import settings
 
 from . import models
-from . import search
+from . import search as docstore_search
 
 MAPPINGS=models.DOCTYPE_CLASS
 FIELDS=models.SEARCH_LIST_FIELDS
@@ -108,25 +108,19 @@ def browse_facet_objects(request, stub, value, format=None):
     )
 
 @api_view(['GET'])
-def search_form(request, format=None):
-    """Search
-    
-    @param request
-    @param format
-    @returns: OrderedDict from search.SearchResults
-    """
+def search(request, format=None):
     params = request.GET.copy()
     params['published_rg'] = True  # only ResourceGuide items
-    searcher = search.Searcher()
+    searcher = docstore_search.Searcher()
     searcher.prepare(
         params=params,
         params_whitelist=models.PAGE_SEARCH_FIELDS,
-        search_models=search.SEARCH_MODELS,
+        search_models=docstore_search.SEARCH_MODELS,
         fields=models.PAGE_SEARCH_FIELDS,
         fields_nested={},
         fields_agg=models.PAGE_AGG_FIELDS,
     )
-    limit,offset = search.limit_offset(request)
+    limit,offset = docstore_search.limit_offset(request)
     data = searcher.execute(limit, offset).ordered_dict(
         request=request,
         format_functions=models.FORMATTERS,
