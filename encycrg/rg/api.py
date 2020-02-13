@@ -71,24 +71,30 @@ def source(request, url_title, format=None):
 
 @api_view(['GET'])
 def browse(request, format=None):
-    """INDEX DOCS
-    """
+    fields = []
+    for key,val in models.FACET_FIELDS.items():
+        stub = val['stub']
+        item = OrderedDict()
+        item['id'] = key
+        item['json'] = reverse('rg-api-browse-field', args=([stub]), request=request)
+        item['html'] = reverse('rg-browse-field', args=([stub]), request=request)
+        item['title'] = val['label']
+        item['description'] = val['description']
+        item['icon'] = val['icon']
+        item['stub'] = val['stub']
+        fields.append(item)
     return Response(
-        _browse(request)
+        fields
     )
 
 @api_view(['GET'])
-def browse_field(request, stub, format=None):
-    """List databox terms and counts
-    """
+def browse_facet(request, stub, format=None):
     return Response(
         models.Page.browse_field(stub, request)
     )
 
 @api_view(['GET'])
-def browse_field_value(request, stub, value, format=None):
-    """List of articles tagged with databox term.
-    """
+def browse_facet_objects(request, stub, value, format=None):
     results = models.Page.browse_field_objects(
         stub, value,
         limit=request.GET.get('limit', settings.DEFAULT_LIMIT),
@@ -154,31 +160,34 @@ def term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
 
 @api_view(['GET'])
 def search_form(request, format=None):
-    return Response(
-        _search(request).ordered_dict(request)
+    """
+    @param request
+    @param format
+    @returns: OrderedDict from search.SearchResults
+    """
+    params = request.GET.copy()
+    params['published_rg'] = True  # only ResourceGuide items
+    searcher = search.Searcher()
+    searcher.prepare(
+        params=params,
+        params_whitelist=models.PAGE_SEARCH_FIELDS,
+        search_models=search.SEARCH_MODELS,
+        fields=models.PAGE_SEARCH_FIELDS,
+        fields_nested={},
+        fields_agg=models.PAGE_AGG_FIELDS,
     )
+    limit,offset = search.limit_offset(request)
+    data = searcher.execute(limit, offset).ordered_dict(
+        request=request,
+        format_functions=models.FORMATTERS,
+        pad=False,
+    )
+    # TODO aggregations are not JSON serializable
+    data.pop('aggregations')
+    return Response(data)
 
 
 # ----------------------------------------------------------------------
-
-def _browse(request):
-    """List of API,UI links and labels for various browse fields
-    Use to generate list for browsing
-    @returns: list
-    """
-    fields = []
-    for key,val in models.FACET_FIELDS.items():
-        stub = val['stub']
-        item = OrderedDict()
-        item['id'] = key
-        item['json'] = reverse('rg-api-browse-field', args=([stub]), request=request)
-        item['html'] = reverse('rg-browse-field', args=([stub]), request=request)
-        item['title'] = val['label']
-        item['description'] = val['description']
-        item['icon'] = val['icon']
-        item['stub'] = val['stub']
-        fields.append(item)
-    return fields
 
 def _categories(request):
     fieldname = 'categories'
@@ -278,63 +287,3 @@ def _term_objects(request, term_id, limit=settings.DEFAULT_LIMIT, offset=0):
         d['links']['html'] = reverse('rg-article', args=([item['url_title']]), request=request)
         data.append(d)
     return data
-
-def _search(request):
-    """Search Page objects
-    
-    @param request: WSGIRequest
-    @returns: search.SearchResults
-    """
-    if hasattr(request, 'query_params'):
-        # api (rest_framework)
-        params = dict(request.query_params)
-    elif hasattr(request, 'GET'):
-        # web ui (regular Django)
-        params = dict(request.GET)
-    else:
-        params = {}
-        
-    # scrub params
-    bad_fields = [
-        key for key in params.keys()
-        if key not in models.PAGE_SEARCH_FIELDS + ['page']
-    ]
-    for key in bad_fields:
-        params.pop(key)
-        
-    if params.get('page'):
-        thispage = int(params.pop('page')[-1])
-    else:
-        thispage = 0
-    limit = settings.DEFAULT_LIMIT
-    offset = search.es_offset(limit, thispage)
-
-    s = models.Page.search()
-    
-    if params.get('fulltext'):
-        # MultiMatch chokes on lists
-        fulltext = params.pop('fulltext')
-        if isinstance(fulltext, list) and (len(fulltext) == 1):
-            fulltext = fulltext[0]
-        # fulltext search
-        s = s.query(
-            search.MultiMatch(
-                query=fulltext,
-                fields=['title', 'body']
-            )
-        )
-        
-    # filters
-    for key,val in params.items():
-        if key in models.PAGE_SEARCH_FIELDS:
-            s = s.filter('terms', **{key: val})
-    
-    # aggregations
-    for fieldname in models.PAGE_BROWSABLE_FIELDS.keys():
-        s.aggs.bucket(fieldname, 'terms', field=fieldname)
-    
-    return search.Searcher(
-        mappings=MAPPINGS,
-        fields=FIELDS,
-        search=s,
-    ).execute(limit, offset)

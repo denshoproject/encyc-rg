@@ -20,8 +20,8 @@ urlpatterns = [
 
     url(r"^api/1.0/browse/categories/(?P<category>[\w\W]+)/$", api.category, name='rg-api-category'),
     url(r"^api/1.0/browse/categories/$", api.categories, name='rg-api-categories'),
-    url(r"^api/1.0/browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/$", api.browse_field_value, name='rg-api-browse-fieldvalue'),
-    url(r"^api/1.0/browse/(?P<stub>[\w\W]+)/$", api.browse_field, name='rg-api-browse-field'),
+    url(r"^api/1.0/browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/$", api.browse_facet_objects, name='rg-api-browse-fieldvalue'),
+    url(r"^api/1.0/browse/(?P<stub>[\w\W]+)/$", api.browse_facet, name='rg-api-browse-field'),
     url(r"^api/1.0/browse/$", api.browse, name='rg-api-browse'),
     
     url(r"^api/1.0/articles/(?P<url_title>[\w\W]+)/$", api.article, name='rg-api-article'),
