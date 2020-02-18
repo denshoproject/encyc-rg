@@ -32,16 +32,34 @@ def index(request, format=None):
     return Response(data)
 
 @api_view(['GET'])
-def articles(request, format=None):
-    return Response(models.Page.pages())
+def articles(request, format=None, limit=settings.MAX_SIZE, offset=0):
+    data = models.Page.pages(limit=limit, offset=offset).ordered_dict(
+        format_functions=models.FORMATTERS,
+        request=request,
+        pad=False,
+    )
+    data.pop('aggregations') # TODO aggregations are not JSON serializable
+    return Response(data)
 
 @api_view(['GET'])
-def authors(request, format=None):
-    return Response(models.Author.authors())
+def authors(request, format=None, limit=settings.MAX_SIZE, offset=0):
+    data = models.Author.authors(limit=limit, offset=offset).ordered_dict(
+        format_functions=models.FORMATTERS,
+        request=request,
+        pad=False,
+    )
+    data.pop('aggregations') # TODO aggregations are not JSON serializable
+    return Response(data)
 
 @api_view(['GET'])
-def sources(request, format=None):
-    return Response(models.Source.sources())
+def sources(request, format=None, limit=settings.MAX_SIZE, offset=0):
+    data = models.Source.sources(limit=limit, offset=offset).ordered_dict(
+        format_functions=models.FORMATTERS,
+        request=request,
+        pad=False,
+    )
+    data.pop('aggregations') # TODO aggregations are not JSON serializable
+    return Response(data)
 
 @api_view(['GET'])
 def article(request, url_title, format=None):

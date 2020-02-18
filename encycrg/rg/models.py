@@ -191,37 +191,27 @@ class Author(repo_models.Author):
         @returns: list
         """
         return [
-            page
-            for page in Page.pages()
-            if page.url_title in self.article_titles
+            Page.from_hit(hit)
+            for hit in Page.pages().objects
+            if page['url_title'] in self.article_titles
         ]
 
     @staticmethod
-    def authors(limit=settings.MAX_SIZE, offset=0, num_columns=None):
+    def authors(limit=settings.MAX_SIZE, offset=0):
         """Returns list of published light Author objects.
         
-        @returns: list
+        @param limit: int
+        @param offset: int
+        @returns: SearchResults
         """
-        KEY = 'encyc-rg:authors:{}:{}'.format(limit, offset)
-        data = cache.get(KEY)
-        if not data:
-            searcher = search.Searcher()
-            searcher.prepare(
-                params={},
-                search_models=[docstore.Docstore().index_name('author')],
-                fields_nested=[],
-                fields_agg={},
-            )
-            data = sorted([
-                Author.from_hit(hit)
-                for hit in searcher.execute(limit, offset).objects
-            ])
-            if num_columns:
-                return _columnizer(data, num_columns)
-            cache.set(KEY, data, settings.CACHE_TIMEOUT)
-        if num_columns:
-            return _columnizer(data, num_columns)
-        return data
+        searcher = search.Searcher()
+        searcher.prepare(
+            params={},
+            search_models=[docstore.Docstore().index_name('author')],
+            fields_nested=[],
+            fields_agg={},
+        )
+        return searcher.execute(limit, offset)
 
     @staticmethod
     def from_hit(hit):
@@ -766,28 +756,22 @@ class Page(repo_models.Page):
         """Returns list of published light Page objects.
         
         @param only_rg: boolean Only return RG pages (rg_rgmediatype present)
-        @returns: list
+        @param limit: int
+        @param offset: int
+        @returns: SearchResults
         """
-        KEY = 'encyc-rg:pages:{}:{}'.format(limit, offset)
-        data = cache.get(KEY)
-        if not data:
-            params={
-                # only ResourceGuide items
-                'published_rg': True,
-            }
-            searcher = search.Searcher()
-            searcher.prepare(
-                params=params,
-                search_models=[docstore.Docstore().index_name('article')],
-                fields_nested=[],
-                fields_agg={},
-            )
-            data = sorted([
-                Page.from_hit(hit)
-                for hit in searcher.execute(limit, offset).objects
-            ])
-            cache.set(KEY, data, settings.CACHE_TIMEOUT)
-        return data
+        params={
+            # only ResourceGuide items
+            'published_rg': True,
+        }
+        searcher = search.Searcher()
+        searcher.prepare(
+            params=params,
+            search_models=[docstore.Docstore().index_name('article')],
+            fields_nested=[],
+            fields_agg={},
+        )
+        return searcher.execute(limit, offset)
     
     @staticmethod
     def from_hit(hit):
@@ -830,8 +814,8 @@ class Page(repo_models.Page):
     @staticmethod
     def titles():
         return [
-            page.url_title
-            for page in Page.pages()
+            hit['url_title']
+            for hit in Page.pages().objects
         ]
      
     @staticmethod
@@ -850,7 +834,8 @@ class Page(repo_models.Page):
         
         initials = []
         groups = {}
-        for n,page in enumerate(Page.pages()):
+        for n,hit in enumerate(Page.pages().objects):
+            page = Page.from_hit(hit)
             initial = _initial_char(page.title_sort)
             initials.append(initial)
             if not groups.get(initial):
@@ -874,7 +859,8 @@ class Page(repo_models.Page):
         data = cache.get(KEY)
         if not data:
             categories = {}
-            for page in Page.pages():
+            for hit in Page.pages().objects:
+                page = Page.from_hit(hit)
                 for category in page.categories:
                     # exclude internal editorial categories
                     if category not in settings.MEDIAWIKI_HIDDEN_CATEGORIES:
@@ -891,15 +877,13 @@ class Page(repo_models.Page):
         return data
 
     @staticmethod
-    def mediatypes(pages=None):
+    def mediatypes():
         KEY = u'encyc-rg:rgmediatypes'
         data = cache.get(KEY)
         if not data:
-            if not pages:
-                pages = Page.pages()
             mediatypes = []
-            for page in pages:
-                mediatypes += page.rg_rgmediatype
+            for hit in Page.pages().objects:
+                mediatypes += hit['rg_rgmediatype']
             data = set(mediatypes)
             cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
@@ -1237,24 +1221,18 @@ class Source(repo_models.Source):
     def sources(limit=settings.MAX_SIZE, offset=0):
         """Returns list of published light Source objects.
         
-        @returns: list
+        @param limit: int
+        @param offset: int
+        @returns: SearchResults
         """
-        KEY = u'encyc-rg:sources:{}:{}'.format(limit, offset)
-        data = cache.get(KEY)
-        if not data:
-            searcher = search.Searcher()
-            searcher.prepare(
-                params={},
-                search_models=[docstore.Docstore().index_name('source')],
-                fields_nested=[],
+        searcher = search.Searcher()
+        searcher.prepare(
+            params={},
+            search_models=[docstore.Docstore().index_name('source')],
+            fields_nested=[],
                 fields_agg={},
-            )
-            data = sorted([
-                Source.from_hit(hit)
-                for hit in searcher.execute(limit, offset).objects
-            ])
-            cache.set(KEY, data, settings.CACHE_TIMEOUT)
-        return data
+        )
+        return searcher.execute(limit, offset)
     
     @staticmethod
     def from_hit(hit):
