@@ -410,6 +410,39 @@ ACCORDION_SECTIONS = [
     ('related', 'Related_articles'),
 ]
 
+def format_author(document, request, listitem=False):
+    """Format Page object from SearchResults to OrderedDict for lists
+    
+    @param document
+    @param request
+    @param listitem
+    @returns: OrderedDict
+    """
+    doc_keys = document.keys()
+    
+    if document.get('_source'):
+        oid = document['_id']
+        model = document['_index']
+        document = document['_source']
+    oid = document['url_title']
+    if hasattr(document, 'model'):
+        model = document.pop('model')
+    else:
+        model = 'article'
+    d = OrderedDict()
+    d['id'] = oid
+    d['model'] = model
+    if document.get('index'): d['index'] = document.pop('index')
+    # links
+    d['links'] = OrderedDict()
+    d['links']['html'] = api_reverse('rg-author', args=[oid], request=request)
+    d['links']['json'] = api_reverse('rg-api-author', args=[oid], request=request)
+    # everything else
+    for key in AUTHOR_LIST_FIELDS:
+        if key in document.keys():
+            d[key] = document[key]
+    return d
+
 def format_page(document, request, listitem=False):
     """Format Page object from SearchResults to OrderedDict for lists
     
@@ -450,8 +483,43 @@ def format_page(document, request, listitem=False):
         d['rg_rgmediatype_icon'] = MEDIATYPE_INFO[mediatype]['icon']
     return d
 
+def format_source(document, request, listitem=False):
+    """Format Page object from SearchResults to OrderedDict for lists
+    
+    @param document
+    @param request
+    @param listitem
+    @returns: OrderedDict
+    """
+    doc_keys = document.keys()
+    
+    if document.get('_source'):
+        oid = document['_id']
+        model = document['_index']
+        document = document['_source']
+    oid = document['encyclopedia_id']
+    if hasattr(document, 'model'):
+        model = document.pop('model')
+    else:
+        model = 'source'
+    d = OrderedDict()
+    d['id'] = oid
+    d['model'] = model
+    if document.get('index'): d['index'] = document.pop('index')
+    # links
+    d['links'] = OrderedDict()
+    d['links']['html'] = api_reverse('rg-source', args=[oid], request=request)
+    d['links']['json'] = api_reverse('rg-api-source', args=[oid], request=request)
+    # everything else
+    for key in SOURCE_LIST_FIELDS:
+        if key in document.keys():
+            d[key] = document[key]
+    return d
+
 FORMATTERS = {
     'encycarticle': format_page,
+    'encycauthor': format_author,
+    'encycsource': format_source,
 }
 
 @python_2_unicode_compatible
