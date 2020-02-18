@@ -68,21 +68,27 @@ def article(request, url_title, format=None):
     try:
         article = models.Page.get(url_title)
         article.prepare()
-        return Response(article)
+        return Response(
+            article.dict_all(request)
+        )
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 def author(request, url_title, format=None):
     try:
-        return Response(models.Author.get(url_title))
+        return Response(
+            models.Author.get(url_title).dict_all(request)
+        )
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 def source(request, url_title, format=None):
     try:
-        return Response(models.Source.get(url_title))
+        return Response(
+            models.Source.get(url_title).dict_all(request)
+        )
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
