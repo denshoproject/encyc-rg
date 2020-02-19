@@ -139,6 +139,8 @@ def browse_facet_objects(request, stub, value, format=None):
 @api_view(['GET'])
 def search(request, format=None):
     params = request.GET.copy()
+    if not params.get('fulltext'):
+        return Response({})
     params['published_rg'] = True  # only ResourceGuide items
     searcher = docstore_search.Searcher()
     searcher.prepare(
