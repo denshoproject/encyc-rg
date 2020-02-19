@@ -35,9 +35,8 @@ from django.conf import settings
 from elasticsearch_dsl import Index
 from elasticsearch_dsl import DocType, String, Date, Nested, Boolean, analysis
 from elasticsearch_dsl import Search
-MAX_SIZE = 10000
 
-s = Search(doc_type='articles')[0:MAX_SIZE]
+s = Search(doc_type='articles')[0:settings.MAX_SIZE]
 s = s.sort('title_sort')
 s = s.fields([
     'url_title',
@@ -207,6 +206,7 @@ class Author(repo_models.Author):
         searcher.prepare(
             params={},
             search_models=[docstore.Docstore().index_name('author')],
+            sort=['title_sort'],
             fields_nested=[],
             fields_agg={},
         )
@@ -775,6 +775,7 @@ class Page(repo_models.Page):
         searcher.prepare(
             params=params,
             search_models=[docstore.Docstore().index_name('article')],
+            sort=['title_sort'],
             fields_nested=[],
             fields_agg={},
         )
@@ -954,8 +955,7 @@ class Page(repo_models.Page):
             fields_nested={},
             fields_agg=PAGE_AGG_FIELDS,
         )
-        response = searcher.execute(limit=search.DEFAULT_LIMIT, offset=0)
-        # TODO sorting
+        response = searcher.execute(limit=settings.PAGE_SIZE, offset=0)
         data = []
         for t in response.aggregations[model_field]:
             term = t['key']
@@ -977,9 +977,9 @@ class Page(repo_models.Page):
                 item['label'] = term
             item['count'] = t['doc_count']
             data.append(item)
-        return data
+        return sorted(data, key=lambda item: item['label'])
     
-    def browse_field_objects(field, value, limit=settings.DEFAULT_LIMIT, offset=0):
+    def browse_field_objects(field, value, limit=settings.PAGE_SIZE, offset=0):
         """Return objects for specified field and aggregations bucket
         
         Get objects for the specified aggregations bucket.
@@ -1236,8 +1236,9 @@ class Source(repo_models.Source):
         searcher.prepare(
             params={},
             search_models=[docstore.Docstore().index_name('source')],
+            sort=['encyclopedia_id'],
             fields_nested=[],
-                fields_agg={},
+            fields_agg={},
         )
         return searcher.execute(limit, offset)
     

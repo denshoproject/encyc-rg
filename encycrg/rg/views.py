@@ -14,6 +14,7 @@ from django.shortcuts import render
 from django.template.loader import get_template
 from django.urls import reverse
 from django.views import View
+from django.views.decorators.cache import cache_page
 from django.views.debug import technical_500_response
 
 from . import api
@@ -81,6 +82,7 @@ def debug(request):
     return technical_500_response(request, Debug, Debug(DEBUG_TEXT), None)
 
 
+@cache_page(settings.CACHE_TIMEOUT)
 def articles(request):
     initials,groups,total = models.Page.pages_by_initial()
     return render(request, 'rg/articles.html', {
@@ -94,6 +96,7 @@ def articles(request):
 def wiki_article(request, url_title):
     return HttpResponsePermanentRedirect(reverse('rg-article', args=([url_title])))
 
+@cache_page(settings.CACHE_TIMEOUT)
 def article(request, url_title):
     article_titles = models.Page.titles()
     article = None
@@ -131,6 +134,7 @@ def article(request, url_title):
     return HttpResponse(t.render(context, request))
 
 
+@cache_page(settings.CACHE_TIMEOUT)
 def authors(request):
     return render(request, 'rg/authors.html', {
         'results': api._authors(request, limit=settings.MAX_SIZE),
@@ -148,6 +152,7 @@ def author(request, url_title):
     })
 
 
+@cache_page(settings.CACHE_TIMEOUT)
 def sources(request):
     return render(request, 'rg/sources.html', {
         'sources': api._sources(request),
@@ -165,6 +170,7 @@ def source(request, url_title):
     })
 
 
+@cache_page(settings.CACHE_TIMEOUT)
 def browse(request):
     api_url = _mkurl(request, reverse('rg-api-browse'))
     r = api.browse(request, format='json')
@@ -173,6 +179,7 @@ def browse(request):
         'api_url': api_url,
     })
 
+@cache_page(settings.CACHE_TIMEOUT)
 def browse_field(request, stub):
     if stub not in models.MEDIATYPE_URLSTUBS:
         raise Http404
@@ -192,6 +199,7 @@ def browse_field(request, stub):
         'api_url': api_url,
     })
 
+@cache_page(settings.CACHE_TIMEOUT)
 def browse_field_value(request, stub, value):
     if stub not in models.MEDIATYPE_URLSTUBS:
         raise Http404

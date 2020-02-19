@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from django.conf import settings
+from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect
 
 from . import models
 from . import search as docstore_search
@@ -19,10 +20,13 @@ MAPPINGS=models.DOCTYPE_CLASS
 FIELDS=models.SEARCH_LIST_FIELDS
 
 
+
+def redirect(request):
+    return HttpResponsePermanentRedirect(reverse('rg-api-index'))
+
+
 @api_view(['GET'])
 def index(request, format=None):
-    """INDEX DOCS
-    """
     data = OrderedDict()
     data['browse'] = reverse('rg-api-browse', request=request)
     data['articles'] = reverse('rg-api-articles', request=request)
@@ -32,8 +36,11 @@ def index(request, format=None):
     return Response(data)
 
 @api_view(['GET'])
-def articles(request, format=None, limit=settings.MAX_SIZE, offset=0):
-    data = models.Page.pages(limit=limit, offset=offset).ordered_dict(
+def articles(request, format=None):
+    data = models.Page.pages(
+        limit=request.GET.get('limit', settings.PAGE_SIZE),
+        offset=request.GET.get('offset', 0),
+    ).ordered_dict(
         format_functions=models.FORMATTERS,
         request=request,
         pad=False,
@@ -42,8 +49,11 @@ def articles(request, format=None, limit=settings.MAX_SIZE, offset=0):
     return Response(data)
 
 @api_view(['GET'])
-def authors(request, format=None, limit=settings.MAX_SIZE, offset=0):
-    data = models.Author.authors(limit=limit, offset=offset).ordered_dict(
+def authors(request, format=None):
+    data = models.Author.authors(
+        limit=request.GET.get('limit', settings.PAGE_SIZE),
+        offset=request.GET.get('offset', 0),
+    ).ordered_dict(
         format_functions=models.FORMATTERS,
         request=request,
         pad=False,
@@ -52,8 +62,11 @@ def authors(request, format=None, limit=settings.MAX_SIZE, offset=0):
     return Response(data)
 
 @api_view(['GET'])
-def sources(request, format=None, limit=settings.MAX_SIZE, offset=0):
-    data = models.Source.sources(limit=limit, offset=offset).ordered_dict(
+def sources(request, format=None):
+    data = models.Source.sources(
+        limit=request.GET.get('limit', settings.PAGE_SIZE),
+        offset=request.GET.get('offset', 0),
+    ).ordered_dict(
         format_functions=models.FORMATTERS,
         request=request,
         pad=False,
@@ -63,8 +76,6 @@ def sources(request, format=None, limit=settings.MAX_SIZE, offset=0):
 
 @api_view(['GET'])
 def article(request, url_title, format=None):
-    """DOCUMENTATION GOES HERE.
-    """
     try:
         article = models.Page.get(url_title)
         article.prepare()
@@ -120,7 +131,7 @@ def browse_facet(request, stub, format=None):
 def browse_facet_objects(request, stub, value, format=None):
     results = models.Page.browse_field_objects(
         stub, value,
-        limit=request.GET.get('limit', settings.DEFAULT_LIMIT),
+        limit=request.GET.get('limit', settings.PAGE_SIZE),
         offset=request.GET.get('offset', 0),
     )
     return Response(
@@ -134,6 +145,8 @@ def browse_facet_objects(request, stub, value, format=None):
 @api_view(['GET'])
 def search(request, format=None):
     params = request.GET.copy()
+    if not params.get('fulltext'):
+        return Response({})
     params['published_rg'] = True  # only ResourceGuide items
     searcher = docstore_search.Searcher()
     searcher.prepare(

@@ -16,7 +16,6 @@ from django.conf import settings
 from . import docstore
 
 #SEARCH_LIST_FIELDS = models.all_list_fields()
-DEFAULT_LIMIT = 10000
 
 # whitelist of params recognized in URL query
 # TODO derive from ddr-defs/repo_models/
@@ -210,7 +209,7 @@ class SearchResults(object):
     >>> sr = search.run_search(request_data=q, request=None)
     """
 
-    def __init__(self, params={}, query={}, count=0, results=None, objects=[], limit=DEFAULT_LIMIT, offset=0):
+    def __init__(self, params={}, query={}, count=0, results=None, objects=[], limit=settings.PAGE_SIZE, offset=0):
         self.params = deepcopy(params)
         self.query = query
         self.aggregations = None
@@ -219,7 +218,7 @@ class SearchResults(object):
         try:
             self.limit = int(limit)
         except:
-            self.limit = settings.ELASTICSEARCH_MAX_SIZE
+            self.limit = settings.MAX_SIZE
         try:
             self.offset = int(offset)
         except:
@@ -541,12 +540,13 @@ class Searcher(object):
             es_host_name(self.conn), self.params
         )
 
-    def prepare(self, params={}, params_whitelist=SEARCH_PARAM_WHITELIST, search_models=SEARCH_MODELS, fields=SEARCH_INCLUDE_FIELDS, fields_nested=SEARCH_NESTED_FIELDS, fields_agg=SEARCH_AGG_FIELDS):
+    def prepare(self, params={}, params_whitelist=SEARCH_PARAM_WHITELIST, search_models=SEARCH_MODELS, sort=[], fields=SEARCH_INCLUDE_FIELDS, fields_nested=SEARCH_NESTED_FIELDS, fields_agg=SEARCH_AGG_FIELDS):
         """Assemble elasticsearch_dsl.Search object
         
         @param params:           dict
         @param params_whitelist: list Accept only these (SEARCH_PARAM_WHITELIST)
         @param search_models:    list Limit to these ES doctypes (SEARCH_MODELS)
+        @param sort:             list of legal Elasticsearch DSL sort arguments
         @param fields:           list Retrieve these fields (SEARCH_INCLUDE_FIELDS)
         @param fields_nested:    list See SEARCH_NESTED_FIELDS
         @param fields_agg:       dict See SEARCH_AGG_FIELDS
@@ -605,7 +605,7 @@ class Searcher(object):
             if parent:
                 parent = '%s*' % parent
             s = s.query("wildcard", id=parent)
-        
+
         # filters
         for key,val in params.items():
             
@@ -643,6 +643,10 @@ class Searcher(object):
             elif (key in params_whitelist) and val:
                 s = s.filter('term', **{key: val})
                 # 'term' search is for single choice, not multiple choice fields(?)
+        
+        # sorting
+        if sort:
+            s = s.sort(*sort)
         
         # aggregations
         for fieldname,field in fields_agg.items():

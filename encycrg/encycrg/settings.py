@@ -73,7 +73,9 @@ if r.status_code != 200:
     print('FATAL: Could not connect to Elasticsearch - %s' % DOCSTORE_BASE)
     sys.exit(1)
 
-DEFAULT_LIMIT = 25
+# Page size for browse and search results
+PAGE_SIZE = 25
+# Maximum page size; used when returning entire sets
 MAX_SIZE = 10000
 
 BASE_TEMPLATE = 'rg/base2.html'
@@ -176,7 +178,7 @@ CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_SECONDS = config.get('encycrg', 'cache_timeout')
 CACHE_MIDDLEWARE_KEY_PREFIX = 'encycrg'
 # low-level caching
-CACHE_TIMEOUT = config.get('encycrg', 'cache_timeout')
+CACHE_TIMEOUT = int(config.get('encycrg', 'cache_timeout'))
 
 # ElasticSearch
 ELASTICSEARCH_MAX_SIZE = 10000

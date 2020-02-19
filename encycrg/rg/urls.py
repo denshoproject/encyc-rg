@@ -11,22 +11,22 @@ from . import views
 
 urlpatterns = [
     url(r'^debug/', views.debug, name='rg-debug'),
+    
+    url(r"^api/3.0/browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/$", api.browse_facet_objects, name='rg-api-browse-fieldvalue'),
+    url(r"^api/3.0/browse/(?P<stub>[\w\W]+)/$", api.browse_facet, name='rg-api-browse-field'),
+    url(r"^api/3.0/browse/$", api.browse, name='rg-api-browse'),
+    url(r"^api/3.0/articles/(?P<url_title>[\w\W]+)/$", api.article, name='rg-api-article'),
+    url(r"^api/3.0/authors/(?P<url_title>[\w\W]+)/$", api.author, name='rg-api-author'),
+    url(r"^api/3.0/sources/(?P<url_title>[\w\W]+)/$", api.source, name='rg-api-source'),
+    url(r"^api/3.0/articles/$", api.articles, name='rg-api-articles'),
+    url(r"^api/3.0/authors/$", api.authors, name='rg-api-authors'),
+    url(r"^api/3.0/sources/$", api.sources, name='rg-api-sources'),
+    url(r'^api/3.0/search/help/$', TemplateView.as_view(template_name="rg/api/search-help.html"), name='rg-api-search-help'),
+    url(r"^api/3.0/search/$", api.search, name='rg-api-search'),
+    url(r'^api/3.0/$', api.index, name='rg-api-index'),
 
-    url(r"^api/1.0/browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/$", api.browse_facet_objects, name='rg-api-browse-fieldvalue'),
-    url(r"^api/1.0/browse/(?P<stub>[\w\W]+)/$", api.browse_facet, name='rg-api-browse-field'),
-    url(r"^api/1.0/browse/$", api.browse, name='rg-api-browse'),
-    
-    url(r"^api/1.0/articles/(?P<url_title>[\w\W]+)/$", api.article, name='rg-api-article'),
-    url(r"^api/1.0/authors/(?P<url_title>[\w\W]+)/$", api.author, name='rg-api-author'),
-    url(r"^api/1.0/sources/(?P<url_title>[\w\W]+)/$", api.source, name='rg-api-source'),
-    url(r"^api/1.0/articles/$", api.articles, name='rg-api-articles'),
-    url(r"^api/1.0/authors/$", api.authors, name='rg-api-authors'),
-    url(r"^api/1.0/sources/$", api.sources, name='rg-api-sources'),
-    
-    url(r'^api/1.0/search/help/$', TemplateView.as_view(template_name="rg/api/search-help.html"), name='rg-api-search-help'),
-    url(r"^api/1.0/search/$", api.search, name='rg-api-search'),
-    
-    url(r'^api/1.0/$', api.index, name='rg-api-index'),
+    url(r"^api/1.0/", api.redirect, name='rg-api-old-redirect'),
+    url(r"^api/", api.redirect, name='rg-api-old-redirect'),
     
     url(r"^browse/title/$", views.articles, name='rg-articles'),
     url(r"^browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/$", views.browse_field_value, name='rg-browse-fieldvalue'),
