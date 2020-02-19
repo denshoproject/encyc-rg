@@ -956,7 +956,6 @@ class Page(repo_models.Page):
             fields_agg=PAGE_AGG_FIELDS,
         )
         response = searcher.execute(limit=settings.PAGE_SIZE, offset=0)
-        # TODO sorting
         data = []
         for t in response.aggregations[model_field]:
             term = t['key']
@@ -978,7 +977,7 @@ class Page(repo_models.Page):
                 item['label'] = term
             item['count'] = t['doc_count']
             data.append(item)
-        return data
+        return sorted(data, key=lambda item: item['label'])
     
     def browse_field_objects(field, value, limit=settings.PAGE_SIZE, offset=0):
         """Return objects for specified field and aggregations bucket
