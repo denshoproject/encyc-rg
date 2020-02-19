@@ -176,11 +176,11 @@ class Author(repo_models.Author):
         setval(self, data, 'body')
         # overwrite
         data['articles'] = [
-            {
-                'json': api_reverse('rg-api-article', args=([url_title]), request=request),
-                'html': api_reverse('rg-article', args=([url_title]), request=request),
-                'title': url_title,
-            }
+            OrderedDict([
+                ('title', url_title),
+                ('json', api_reverse('rg-api-article', args=([url_title]), request=request)),
+                ('html', api_reverse('rg-article', args=([url_title]), request=request)),
+            ])
             for url_title in self.article_titles
         ]
         return data
@@ -714,19 +714,19 @@ class Page(repo_models.Page):
                 data['databoxes'][key] = json.loads(databox_text)
         #'ddr_topic_terms': topic_term_ids,
         data['sources'] = [
-            {
-                'json': api_reverse('rg-api-source', args=([source_id]), request=request),
-                'html': api_reverse('rg-source', args=([source_id]), request=request),
-                'id': source_id,
-            }
+            OrderedDict([
+                ('id', source_id),
+                ('json', api_reverse('rg-api-source', args=([source_id]), request=request)),
+                ('html', api_reverse('rg-source', args=([source_id]), request=request)),
+            ])
             for source_id in self.source_ids
         ]
         data['authors'] = [
-            {
-                'json': api_reverse('rg-api-author', args=([author_titles]), request=request),
-                'html': api_reverse('rg-author', args=([author_titles]), request=request),
-                'title': author_titles,
-            }
+            OrderedDict([
+                ('title', author_titles),
+                ('json', api_reverse('rg-api-author', args=([author_titles]), request=request)),
+                ('html', api_reverse('rg-author', args=([author_titles]), request=request)),
+            ])
             for author_titles in self.authors_data['display']
         ]
         return data
