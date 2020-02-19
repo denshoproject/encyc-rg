@@ -621,7 +621,11 @@ class Page(repo_models.Page):
         data['description'] = self.description
         
         def setval(self, data, fieldname, is_list=False):
-            data[fieldname] = hitvalue(self, fieldname, is_list)
+            value = hitvalue(self, fieldname, is_list)
+            if value:
+                if isinstance(value, dsl.utils.AttrList):
+                    value = [x for x in value]
+                data[fieldname] = value
 
         setval(self, data, 'rg_rgmediatype', is_list=1)
         if self.rg_rgmediatype and MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
@@ -641,7 +645,11 @@ class Page(repo_models.Page):
         @returns: OrderedDict
         """
         def setval(self, data, fieldname, is_list=False):
-            data[fieldname] = hitvalue(self, fieldname, is_list)
+            value = hitvalue(self, fieldname, is_list)
+            if value:
+                if isinstance(value, dsl.utils.AttrList):
+                    value = [x for x in value]
+                data[fieldname] = value
         
         # basic data from list
         data = self.to_dict_list(request)
