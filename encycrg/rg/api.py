@@ -120,7 +120,7 @@ def browse_facet(request, stub, format=None):
 def browse_facet_objects(request, stub, value, format=None):
     results = models.Page.browse_field_objects(
         stub, value,
-        limit=request.GET.get('limit', settings.DEFAULT_LIMIT),
+        limit=request.GET.get('limit', settings.PAGE_SIZE),
         offset=request.GET.get('offset', 0),
     )
     return Response(

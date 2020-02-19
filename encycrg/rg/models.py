@@ -35,9 +35,8 @@ from django.conf import settings
 from elasticsearch_dsl import Index
 from elasticsearch_dsl import DocType, String, Date, Nested, Boolean, analysis
 from elasticsearch_dsl import Search
-MAX_SIZE = 10000
 
-s = Search(doc_type='articles')[0:MAX_SIZE]
+s = Search(doc_type='articles')[0:settings.MAX_SIZE]
 s = s.sort('title_sort')
 s = s.fields([
     'url_title',
@@ -954,7 +953,7 @@ class Page(repo_models.Page):
             fields_nested={},
             fields_agg=PAGE_AGG_FIELDS,
         )
-        response = searcher.execute(limit=search.DEFAULT_LIMIT, offset=0)
+        response = searcher.execute(limit=settings.PAGE_SIZE, offset=0)
         # TODO sorting
         data = []
         for t in response.aggregations[model_field]:
@@ -979,7 +978,7 @@ class Page(repo_models.Page):
             data.append(item)
         return data
     
-    def browse_field_objects(field, value, limit=settings.DEFAULT_LIMIT, offset=0):
+    def browse_field_objects(field, value, limit=settings.PAGE_SIZE, offset=0):
         """Return objects for specified field and aggregations bucket
         
         Get objects for the specified aggregations bucket.

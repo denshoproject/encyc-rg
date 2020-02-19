@@ -16,7 +16,6 @@ from django.conf import settings
 from . import docstore
 
 #SEARCH_LIST_FIELDS = models.all_list_fields()
-DEFAULT_LIMIT = 10000
 
 # whitelist of params recognized in URL query
 # TODO derive from ddr-defs/repo_models/
@@ -210,7 +209,7 @@ class SearchResults(object):
     >>> sr = search.run_search(request_data=q, request=None)
     """
 
-    def __init__(self, params={}, query={}, count=0, results=None, objects=[], limit=DEFAULT_LIMIT, offset=0):
+    def __init__(self, params={}, query={}, count=0, results=None, objects=[], limit=settings.PAGE_SIZE, offset=0):
         self.params = deepcopy(params)
         self.query = query
         self.aggregations = None
@@ -219,7 +218,7 @@ class SearchResults(object):
         try:
             self.limit = int(limit)
         except:
-            self.limit = settings.ELASTICSEARCH_MAX_SIZE
+            self.limit = settings.MAX_SIZE
         try:
             self.offset = int(offset)
         except:

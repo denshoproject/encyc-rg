@@ -15,9 +15,6 @@ from .repo_models import MODEL_REPO_MODELS
 
 INDEX_PREFIX = 'encyc'
 
-MAX_SIZE = 10000
-DEFAULT_PAGE_SIZE = 20
-
 SUCCESS_STATUSES = [200, 201]
 
 
@@ -145,7 +142,7 @@ class Docstore():
             body=query,
         )
 
-    def search(self, doctypes=[], query={}, sort=[], fields=[], from_=0, size=MAX_SIZE):
+    def search(self, doctypes=[], query={}, sort=[], fields=[], from_=0, size=settings.MAX_SIZE):
         """Executes a query, get a list of zero or more hits.
         
         The "query" arg must be a dict that conforms to the Elasticsearch query DSL.

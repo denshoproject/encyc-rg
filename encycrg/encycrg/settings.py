@@ -73,7 +73,9 @@ if r.status_code != 200:
     print('FATAL: Could not connect to Elasticsearch - %s' % DOCSTORE_BASE)
     sys.exit(1)
 
-DEFAULT_LIMIT = 25
+# Page size for browse and search results
+PAGE_SIZE = 25
+# Maximum page size; used when returning entire sets
 MAX_SIZE = 10000
 
 BASE_TEMPLATE = 'rg/base2.html'
