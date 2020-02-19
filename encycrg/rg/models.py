@@ -206,6 +206,7 @@ class Author(repo_models.Author):
         searcher.prepare(
             params={},
             search_models=[docstore.Docstore().index_name('author')],
+            sort=['title_sort'],
             fields_nested=[],
             fields_agg={},
         )
@@ -774,6 +775,7 @@ class Page(repo_models.Page):
         searcher.prepare(
             params=params,
             search_models=[docstore.Docstore().index_name('article')],
+            sort=['title_sort'],
             fields_nested=[],
             fields_agg={},
         )
@@ -1235,8 +1237,9 @@ class Source(repo_models.Source):
         searcher.prepare(
             params={},
             search_models=[docstore.Docstore().index_name('source')],
+            sort=['encyclopedia_id'],
             fields_nested=[],
-                fields_agg={},
+            fields_agg={},
         )
         return searcher.execute(limit, offset)
     
