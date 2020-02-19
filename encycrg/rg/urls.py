@@ -24,6 +24,9 @@ urlpatterns = [
     url(r'^api/3.0/search/help/$', TemplateView.as_view(template_name="rg/api/search-help.html"), name='rg-api-search-help'),
     url(r"^api/3.0/search/$", api.search, name='rg-api-search'),
     url(r'^api/3.0/$', api.index, name='rg-api-index'),
+
+    url(r"^api/1.0/", api.redirect, name='rg-api-old-redirect'),
+    url(r"^api/", api.redirect, name='rg-api-old-redirect'),
     
     url(r"^browse/title/$", views.articles, name='rg-articles'),
     url(r"^browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/$", views.browse_field_value, name='rg-browse-fieldvalue'),
