@@ -701,8 +701,8 @@ class Page(repo_models.Page):
         # overwrite
         data['categories'] = [
             {
-                'json': api_reverse('rg-api-category', args=([category]), request=request),
-                'html': api_reverse('rg-category', args=([category]), request=request),
+                #'json': api_reverse('rg-api-category', args=([category]), request=request),
+                #'html': api_reverse('rg-category', args=([category]), request=request),
                 'title': category,
             }
             for category in self.categories
