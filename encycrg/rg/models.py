@@ -166,7 +166,6 @@ class Author(repo_models.Author):
         
         # basic data from list
         data = self.to_dict_list(request)
-        data['articles'] = []
         # fill in
         setval(self, data, 'title')
         setval(self, data, 'title_sort')
@@ -176,11 +175,11 @@ class Author(repo_models.Author):
         setval(self, data, 'body')
         # overwrite
         data['articles'] = [
-            {
-                'json': api_reverse('rg-api-article', args=([url_title]), request=request),
-                'html': api_reverse('rg-article', args=([url_title]), request=request),
-                'title': url_title,
-            }
+            OrderedDict([
+                ('title', url_title),
+                ('json', api_reverse('rg-api-article', args=([url_title]), request=request)),
+                ('html', api_reverse('rg-article', args=([url_title]), request=request)),
+            ])
             for url_title in self.article_titles
         ]
         return data
@@ -191,37 +190,27 @@ class Author(repo_models.Author):
         @returns: list
         """
         return [
-            page
-            for page in Page.pages()
-            if page.url_title in self.article_titles
+            Page.from_hit(hit)
+            for hit in Page.pages().objects
+            if page['url_title'] in self.article_titles
         ]
 
     @staticmethod
-    def authors(limit=settings.MAX_SIZE, offset=0, num_columns=None):
+    def authors(limit=settings.MAX_SIZE, offset=0):
         """Returns list of published light Author objects.
         
-        @returns: list
+        @param limit: int
+        @param offset: int
+        @returns: SearchResults
         """
-        KEY = 'encyc-rg:authors:{}:{}'.format(limit, offset)
-        data = cache.get(KEY)
-        if not data:
-            searcher = search.Searcher()
-            searcher.prepare(
-                params={},
-                search_models=[docstore.Docstore().index_name('author')],
-                fields_nested=[],
-                fields_agg={},
-            )
-            data = sorted([
-                Author.from_hit(hit)
-                for hit in searcher.execute(limit, offset).objects
-            ])
-            if num_columns:
-                return _columnizer(data, num_columns)
-            cache.set(KEY, data, settings.CACHE_TIMEOUT)
-        if num_columns:
-            return _columnizer(data, num_columns)
-        return data
+        searcher = search.Searcher()
+        searcher.prepare(
+            params={},
+            search_models=[docstore.Docstore().index_name('author')],
+            fields_nested=[],
+            fields_agg={},
+        )
+        return searcher.execute(limit, offset)
 
     @staticmethod
     def from_hit(hit):
@@ -258,8 +247,6 @@ PAGE_LIST_FIELDS = [
     'title',
     'title_sort',
     'description',
-    'published',
-    'modified',
     'categories',
     'rg_rgmediatype',
     'rg_interestlevel',
@@ -412,6 +399,39 @@ ACCORDION_SECTIONS = [
     ('related', 'Related_articles'),
 ]
 
+def format_author(document, request, listitem=False):
+    """Format Page object from SearchResults to OrderedDict for lists
+    
+    @param document
+    @param request
+    @param listitem
+    @returns: OrderedDict
+    """
+    doc_keys = document.keys()
+    
+    if document.get('_source'):
+        oid = document['_id']
+        model = document['_index']
+        document = document['_source']
+    oid = document['url_title']
+    if hasattr(document, 'model'):
+        model = document.pop('model')
+    else:
+        model = 'article'
+    d = OrderedDict()
+    d['id'] = oid
+    d['model'] = model
+    if document.get('index'): d['index'] = document.pop('index')
+    # links
+    d['links'] = OrderedDict()
+    d['links']['html'] = api_reverse('rg-author', args=[oid], request=request)
+    d['links']['json'] = api_reverse('rg-api-author', args=[oid], request=request)
+    # everything else
+    for key in AUTHOR_LIST_FIELDS:
+        if key in document.keys():
+            d[key] = document[key]
+    return d
+
 def format_page(document, request, listitem=False):
     """Format Page object from SearchResults to OrderedDict for lists
     
@@ -442,47 +462,53 @@ def format_page(document, request, listitem=False):
     d['title'] = document.pop('title')
     d['description'] = document.pop('description')
     # everything else
-    HIDDEN_FIELDS = [
-        'public',
-        'published',
-        'published_encyc',
-        'published_rg',
-        'modified',
-        'mw_api_url',
-        'title_sort',
-        'body',
-        'prev_page',
-        'next_page',
-        'categories',
-        'coordinates',
-        'source_ids',
-        'authors_data',
-        'databoxes',
-        'rg_rgmediatype',
-        'rg_title',
-        'rg_creators',
-        'rg_interestlevel',
-        'rg_readinglevel',
-        'rg_theme',
-        'rg_genre',
-        'rg_pov',
-        'rg_relatedevents',
-        'rg_availability',
-        'rg_freewebversion',
-        'rg_denshotopic',
-        'rg_geography',
-        'rg_facility',
-        'rg_chronology',
-        'rg_hasteachingaids',
-        'rg_warnings',
-    ]
-    for key in document.keys():
-        if key not in HIDDEN_FIELDS:
+    for key in PAGE_LIST_FIELDS:
+        if key in document.keys():
+            d[key] = document[key]
+    mediatypes = document.get('rg_rgmediatype')
+    if mediatypes and MEDIATYPE_INFO.get(mediatypes[0]):
+        mediatype = mediatypes[0]
+        d['rg_rgmediatype_label'] = MEDIATYPE_INFO[mediatype]['label']
+        d['rg_rgmediatype_icon'] = MEDIATYPE_INFO[mediatype]['icon']
+    return d
+
+def format_source(document, request, listitem=False):
+    """Format Page object from SearchResults to OrderedDict for lists
+    
+    @param document
+    @param request
+    @param listitem
+    @returns: OrderedDict
+    """
+    doc_keys = document.keys()
+    
+    if document.get('_source'):
+        oid = document['_id']
+        model = document['_index']
+        document = document['_source']
+    oid = document['encyclopedia_id']
+    if hasattr(document, 'model'):
+        model = document.pop('model')
+    else:
+        model = 'source'
+    d = OrderedDict()
+    d['id'] = oid
+    d['model'] = model
+    if document.get('index'): d['index'] = document.pop('index')
+    # links
+    d['links'] = OrderedDict()
+    d['links']['html'] = api_reverse('rg-source', args=[oid], request=request)
+    d['links']['json'] = api_reverse('rg-api-source', args=[oid], request=request)
+    # everything else
+    for key in SOURCE_LIST_FIELDS:
+        if key in document.keys():
             d[key] = document[key]
     return d
 
 FORMATTERS = {
     'encycarticle': format_page,
+    'encycauthor': format_author,
+    'encycsource': format_source,
 }
 
 @python_2_unicode_compatible
@@ -594,7 +620,11 @@ class Page(repo_models.Page):
         data['description'] = self.description
         
         def setval(self, data, fieldname, is_list=False):
-            data[fieldname] = hitvalue(self, fieldname, is_list)
+            value = hitvalue(self, fieldname, is_list)
+            if value:
+                if isinstance(value, dsl.utils.AttrList):
+                    value = [x for x in value]
+                data[fieldname] = value
 
         setval(self, data, 'rg_rgmediatype', is_list=1)
         if self.rg_rgmediatype and MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
@@ -614,7 +644,11 @@ class Page(repo_models.Page):
         @returns: OrderedDict
         """
         def setval(self, data, fieldname, is_list=False):
-            data[fieldname] = hitvalue(self, fieldname, is_list)
+            value = hitvalue(self, fieldname, is_list)
+            if value:
+                if isinstance(value, dsl.utils.AttrList):
+                    value = [x for x in value]
+                data[fieldname] = value
         
         # basic data from list
         data = self.to_dict_list(request)
@@ -667,8 +701,8 @@ class Page(repo_models.Page):
         # overwrite
         data['categories'] = [
             {
-                'json': api_reverse('rg-api-category', args=([category]), request=request),
-                'html': api_reverse('rg-category', args=([category]), request=request),
+                #'json': api_reverse('rg-api-category', args=([category]), request=request),
+                #'html': api_reverse('rg-category', args=([category]), request=request),
                 'title': category,
             }
             for category in self.categories
@@ -679,19 +713,19 @@ class Page(repo_models.Page):
                 data['databoxes'][key] = json.loads(databox_text)
         #'ddr_topic_terms': topic_term_ids,
         data['sources'] = [
-            {
-                'json': api_reverse('rg-api-source', args=([source_id]), request=request),
-                'html': api_reverse('rg-source', args=([source_id]), request=request),
-                'id': source_id,
-            }
+            OrderedDict([
+                ('id', source_id),
+                ('json', api_reverse('rg-api-source', args=([source_id]), request=request)),
+                ('html', api_reverse('rg-source', args=([source_id]), request=request)),
+            ])
             for source_id in self.source_ids
         ]
         data['authors'] = [
-            {
-                'json': api_reverse('rg-api-author', args=([author_titles]), request=request),
-                'html': api_reverse('rg-author', args=([author_titles]), request=request),
-                'title': author_titles,
-            }
+            OrderedDict([
+                ('title', author_titles),
+                ('json', api_reverse('rg-api-author', args=([author_titles]), request=request)),
+                ('html', api_reverse('rg-author', args=([author_titles]), request=request)),
+            ])
             for author_titles in self.authors_data['display']
         ]
         return data
@@ -729,28 +763,22 @@ class Page(repo_models.Page):
         """Returns list of published light Page objects.
         
         @param only_rg: boolean Only return RG pages (rg_rgmediatype present)
-        @returns: list
+        @param limit: int
+        @param offset: int
+        @returns: SearchResults
         """
-        KEY = 'encyc-rg:pages:{}:{}'.format(limit, offset)
-        data = cache.get(KEY)
-        if not data:
-            params={
-                # only ResourceGuide items
-                'published_rg': True,
-            }
-            searcher = search.Searcher()
-            searcher.prepare(
-                params=params,
-                search_models=[docstore.Docstore().index_name('article')],
-                fields_nested=[],
-                fields_agg={},
-            )
-            data = sorted([
-                Page.from_hit(hit)
-                for hit in searcher.execute(limit, offset).objects
-            ])
-            cache.set(KEY, data, settings.CACHE_TIMEOUT)
-        return data
+        params={
+            # only ResourceGuide items
+            'published_rg': True,
+        }
+        searcher = search.Searcher()
+        searcher.prepare(
+            params=params,
+            search_models=[docstore.Docstore().index_name('article')],
+            fields_nested=[],
+            fields_agg={},
+        )
+        return searcher.execute(limit, offset)
     
     @staticmethod
     def from_hit(hit):
@@ -793,8 +821,8 @@ class Page(repo_models.Page):
     @staticmethod
     def titles():
         return [
-            page.url_title
-            for page in Page.pages()
+            hit['url_title']
+            for hit in Page.pages().objects
         ]
      
     @staticmethod
@@ -813,7 +841,8 @@ class Page(repo_models.Page):
         
         initials = []
         groups = {}
-        for n,page in enumerate(Page.pages()):
+        for n,hit in enumerate(Page.pages().objects):
+            page = Page.from_hit(hit)
             initial = _initial_char(page.title_sort)
             initials.append(initial)
             if not groups.get(initial):
@@ -837,7 +866,8 @@ class Page(repo_models.Page):
         data = cache.get(KEY)
         if not data:
             categories = {}
-            for page in Page.pages():
+            for hit in Page.pages().objects:
+                page = Page.from_hit(hit)
                 for category in page.categories:
                     # exclude internal editorial categories
                     if category not in settings.MEDIAWIKI_HIDDEN_CATEGORIES:
@@ -854,15 +884,13 @@ class Page(repo_models.Page):
         return data
 
     @staticmethod
-    def mediatypes(pages=None):
+    def mediatypes():
         KEY = u'encyc-rg:rgmediatypes'
         data = cache.get(KEY)
         if not data:
-            if not pages:
-                pages = Page.pages()
             mediatypes = []
-            for page in pages:
-                mediatypes += page.rg_rgmediatype
+            for hit in Page.pages().objects:
+                mediatypes += hit['rg_rgmediatype']
             data = set(mediatypes)
             cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
@@ -1200,24 +1228,18 @@ class Source(repo_models.Source):
     def sources(limit=settings.MAX_SIZE, offset=0):
         """Returns list of published light Source objects.
         
-        @returns: list
+        @param limit: int
+        @param offset: int
+        @returns: SearchResults
         """
-        KEY = u'encyc-rg:sources:{}:{}'.format(limit, offset)
-        data = cache.get(KEY)
-        if not data:
-            searcher = search.Searcher()
-            searcher.prepare(
-                params={},
-                search_models=[docstore.Docstore().index_name('source')],
-                fields_nested=[],
+        searcher = search.Searcher()
+        searcher.prepare(
+            params={},
+            search_models=[docstore.Docstore().index_name('source')],
+            fields_nested=[],
                 fields_agg={},
-            )
-            data = sorted([
-                Source.from_hit(hit)
-                for hit in searcher.execute(limit, offset).objects
-            ])
-            cache.set(KEY, data, settings.CACHE_TIMEOUT)
-        return data
+        )
+        return searcher.execute(limit, offset)
     
     @staticmethod
     def from_hit(hit):
@@ -1317,284 +1339,3 @@ DOCTYPE_CLASS['source'] = Source
 DOCTYPE_CLASS['sources'] = Source
 
 SEARCH_LIST_FIELDS = AUTHOR_LIST_FIELDS + PAGE_LIST_FIELDS + SOURCE_LIST_FIELDS
-
-
-TERM_TITLES = {}  # values set later
-
-FACILITY_TYPES = {}
-
-@python_2_unicode_compatible
-class FacetTerm(repo_models.FacetTerm):
-    
-    @staticmethod
-    def terms(request=None, facet_id=None, limit=settings.DEFAULT_LIMIT, offset=0):
-        params={}
-        if facet_id:
-            params['facet_id'] = facet_id
-        searcher = search.Searcher()
-        searcher.prepare(
-            params=params,
-            search_models=[docstore.Docstore().index_name('facetterm')],
-            fields_nested=[],
-            fields_agg={},
-        )
-        results = searcher.execute(docstore.MAX_SIZE, 0)
-        objects = results.objects
-        data = sorted([FacetTerm.from_hit(hit) for hit in objects])
-        return data
-    
-    @staticmethod
-    def from_hit(hit):
-        """Creates a Source object from a elasticsearch_dsl.response.hit.Hit.
-        """
-        obj = FacetTerm(
-            meta={'id': hit.id}
-        )
-        _set_attr(obj, hit, 'id')
-        _set_attr(obj, hit, 'facet')
-        _set_attr(obj, hit, 'term_id')
-        if obj.id and not obj.facet:
-            obj.facet = obj.id.split('-')[0]
-            obj.facet_id = obj.facet
-        _set_attr(obj, hit, 'links_html')
-        _set_attr(obj, hit, 'links_json')
-        _set_attr(obj, hit, 'links_children')
-        _set_attr(obj, hit, 'title')
-        _set_attr(obj, hit, 'description')
-        # topics
-        _set_attr(obj, hit, 'path')
-        _set_attr(obj, hit, 'parent_id')
-        _set_attr(obj, hit, 'ancestors')
-        _set_attr(obj, hit, 'siblings')
-        _set_attr(obj, hit, 'children')
-        _set_attr(obj, hit, 'weight')
-        _set_attr(obj, hit, 'encyc_urls')
-        # facility
-        _set_attr(obj, hit, 'type')
-        _set_attr(obj, hit, 'elinks')
-        _set_attr(obj, hit, 'location_geopoint')
-        return obj
-    
-    def to_dict_list(self, request=None):
-        data = OrderedDict()
-        data['id'] = self.id
-        data['facet_id'] = self.facet_id
-        data['term_id'] = self.facet_id
-        data['doctype'] = u'facetterms'
-        data['links'] = {}
-        data['links']['html'] = api_reverse(
-            'rg-term',
-            args=([self.id]),
-            request=request,
-        )
-        data['links']['json'] = api_reverse(
-            'rg-api-term',
-            args=([self.id]),
-            request=request,
-        )
-        data['path'] = self.path
-        data['title'] = self.title
-        data['type'] = self.type
-        return data
-
-    def dict_all(self, request=None):
-        """Return a dict with all FacetTerm fields
-        
-        NOTE: we assume that TERM_TITLES is populated when this is called.
-        
-        @param request: django.http.request.HttpRequest
-        @returns: OrderedDict
-        """
-        data = OrderedDict()
-        data['id'] = self.id
-        data['facet_id'] = self.facet_id
-        data['term_id'] = self.facet_id
-        data['doctype'] = u'facetterms'
-        data['links'] = {}
-        data['links']['html'] = api_reverse(
-            'rg-term',
-            args=([self.id]),
-            request=request,
-        )
-        data['links']['json'] = api_reverse(
-            'rg-api-term',
-            args=([self.id]),
-            request=request,
-        )
-        data['title'] = self.title
-        if self.facet_id == u'topics':
-            data['_title'] = self._title
-            data['description'] = self.description
-            data['path'] = self.path
-
-            def term_listitem(facet_id, tid, request=None):
-                term_id = '-'.join([facet_id, str(tid)])
-                item = TERM_TITLES.get(term_id)
-                if item:
-                    title = item['title']
-                    path = item['path']
-                else:
-                    title = term_id
-                    path = ''
-                d = OrderedDict()
-                d['id'] = term_id
-                d['json'] = api_reverse('rg-api-term', args=([u'%s-%s' % (facet_id, tid)]), request=request)
-                d['html'] = api_reverse('rg-term', args=([u'%s-%s' % (facet_id, tid)]), request=request)
-                d['path'] = path
-                d['title'] = title
-                return d
-            
-            if self.parent_id:
-                data['parent_id'] = api_reverse('rg-api-term', args=([u'%s-%s' % (self.facet_id, self.parent_id)]), request=request)
-                data['parent'] = term_listitem(self.facet_id, self.parent_id, request)
-            else:
-                data['parent_id'] = u''
-                data['parent'] = None
-            data['ancestors'] = [
-                term_listitem(self.facet_id, tid, request)
-                for tid in self.ancestors
-            ]
-            data['children'] = [
-                term_listitem(self.facet_id, tid, request)
-                for tid in self.children
-            ]
-            data['siblings'] = [
-                term_listitem(self.facet_id, tid, request)
-                for tid in self.siblings
-            ]
-            data['weight'] = self.weight
-        elif self.facet_id == u'facility':
-            data['type'] = self.type
-            data['locations'] = []
-            for n,loc in enumerate(self.locations):
-                data['locations'].append( {} )
-                data['locations'][n]['label'] = loc.label
-                data['locations'][n]['geopoint'] = {}
-                data['locations'][n]['geopoint']['lat'] = loc.geopoint.lat
-                data['locations'][n]['geopoint']['lng'] = loc.geopoint.lng
-        data['encyc_urls'] = []
-        for n,item in enumerate(self.encyc_urls):
-            d = OrderedDict()
-            d['id'] = item.title.replace(u'/', u'').replace(u'%20', u' ')
-            d['doctype'] = 'articles'
-            d['links'] = {}
-            d['links']['json'] = api_reverse('rg-api-article', args=([item.url_title]), request=request)
-            d['links']['html'] = api_reverse('rg-article', args=([item.url_title]), request=request)
-            data['encyc_urls'].append(d)
-        return data
-
-TERM_TITLES = {
-    term.id: {
-        'id': term.id,
-        'title': term.title,
-        'path': term.path,
-    }
-    for term in FacetTerm.terms(request=None)
-}
-
-def facility_types():
-    types = {}
-    for term in FacetTerm.terms(request=None, facet_id='facility'):
-        if types.get(term.type):
-            types[term.type]['count'] += 1
-        else:
-            types[term.type] = term.dict_all()
-            types[term.type]['count'] = 1
-    return types
-
-def facility_type(type_id):
-    return [
-        term
-        for term in FacetTerm.terms(request=None, facet_id='facility')
-        if term.type == type_id
-    ]
-
-
-
-
-@python_2_unicode_compatible
-class Facet(repo_models.Facet):
-    
-    def absolute_url(self):
-        return reverse('rg-facet', args=([self.id]))
-
-    @staticmethod
-    def facets(limit=settings.DEFAULT_LIMIT, offset=0):
-        searcher = search.Searcher()
-        searcher.prepare(
-            params={},
-            search_models=[docstore.Docstore().index_name('facet')],
-            fields_nested=[],
-            fields_agg={},
-        )
-        data = sorted([
-            Facet.from_hit(hit)
-            for hit in searcher.execute(limit, offset).objects
-        ])
-        return data
-    
-    @staticmethod
-    def from_hit(hit):
-        """Creates a Source object from a elasticsearch_dsl.response.hit.Hit.
-        """
-        obj = Facet(
-            meta={'id': hit.id}
-        )
-        _set_attr(obj, hit, 'id')
-        _set_attr(obj, hit, 'links_html')
-        _set_attr(obj, hit, 'links_json')
-        _set_attr(obj, hit, 'links_children')
-        _set_attr(obj, hit, 'title')
-        _set_attr(obj, hit, 'description')
-        return obj
-
-    @staticmethod
-    def dict_list(hit, request):
-        data = OrderedDict()
-        data['id'] = hit.id
-        data['title'] = hit.title
-        data['description'] = hit.description
-        return data
-
-    def to_dict_list(self, request=None):
-        data = OrderedDict()
-        data['id'] = self.id
-        data['doctype'] = u'facet'
-        data['title'] = self.title
-        data['description'] = self.description
-        data['links'] = {}
-        data['links']['html'] = api_reverse(
-            'rg-facet',
-            args=([self.id]),
-            request=request,
-        )
-        data['links']['json'] = api_reverse(
-            'rg-api-facet',
-            args=([self.id]),
-            request=request,
-        )
-        return data
-
-    def dict_all(self, request=None):
-        """Return a dict with all Facet fields
-        
-        @param request: django.http.request.HttpRequest
-        @returns: OrderedDict
-        """
-        data = OrderedDict()
-        data['id'] = self.id
-        data['doctype'] = u'facet'
-        data['links'] = {}
-        data['links']['html'] = api_reverse(
-            'rg-facet',
-            args=([self.id]),
-            request=request,
-        )
-        data['links']['json'] = api_reverse(
-            'rg-api-facet',
-            args=([self.id]),
-            request=request,
-        )
-        data['title'] = self.title
-        data['description'] = self.description
-        return data

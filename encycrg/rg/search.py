@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 import os
 import re
-from urllib.parse import urlparse, urljoin
+from urllib.parse import quote, urlunsplit
 
 from elasticsearch_dsl import Index, Search, A, Q
 from elasticsearch_dsl.query import Match, MultiMatch, QueryString
@@ -145,6 +145,27 @@ def start_stop(limit, offset):
     start = int(offset)
     stop = (start + int(limit))
     return start,stop
+
+def limit_offset(request):
+    """Get limit,offset values from request
+    
+    @param request
+    @returns: limit,offset
+    """
+    if request.GET.get('offset'):
+        # limit and offset args take precedence over page
+        limit = request.GET.get(
+            'limit', int(request.GET.get('limit', settings.RESULTS_PER_PAGE))
+        )
+        offset = request.GET.get('offset', int(request.GET.get('offset', 0)))
+    elif request.GET.get('page'):
+        limit = settings.RESULTS_PER_PAGE
+        thispage = int(request.GET['page'])
+        offset = es_offset(limit, thispage)
+    else:
+        limit = settings.RESULTS_PER_PAGE
+        offset = 0
+    return limit,offset
     
 def django_page(limit, offset):
     """Convert Elasticsearch limit/offset pagination to Django page
@@ -276,6 +297,22 @@ class SearchResults(object):
                 self.offset, self.offset + self.limit, self.total, q
             )
         return u"<SearchResults [%s] %s>" % (self.total, q)
+
+    def _make_prevnext_url(self, query, request):
+        if request:
+            # some rg_* browse values withspaces e.g. "short stories"
+            # are not properly quoted
+            path_info = request.path_info
+            if ' ' in path_info:
+                path_info = path_info.replace(' ', '%20')
+            return urlunsplit([
+                request.scheme,
+                request.META.get('HTTP_HOST', 'testserver'),
+                path_info,
+                query,
+                None,
+            ])
+        return '?%s' % quote(query)
     
     def to_dict(self, format_functions):
         """Express search results in API and Redis-friendly structure
@@ -283,9 +320,9 @@ class SearchResults(object):
         @param format_functions: dict
         returns: dict
         """
-        if hasattr(self, 'params') and self.params:
-            params = deepcopy(self.params)
-        return self._dict(params, {}, format_functions)
+        return self._dict(
+            deepcopy(self.params), {}, format_functions
+        )
     
     def ordered_dict(self, format_functions, request, pad=False):
         """Express search results in API and Redis-friendly structure
@@ -293,9 +330,9 @@ class SearchResults(object):
         @param format_functions: dict
         returns: OrderedDict
         """
-        if hasattr(self, 'params') and self.params:
-            params = deepcopy(self.params)
-        return self._dict(params, OrderedDict(), format_functions, request, pad)
+        return self._dict(
+            deepcopy(self.params), OrderedDict(), format_functions, request, pad
+        )
     
     def _dict(self, params, data, format_functions, request=None, pad=False):
         """
@@ -315,8 +352,12 @@ class SearchResults(object):
         if params.get('page'): params.pop('page')
         if params.get('limit'): params.pop('limit')
         if params.get('offset'): params.pop('offset')
-        qs = [key + '=' + str(val) for key,val in params.items()]
-        query_string = '&'.join(qs)
+        if request.META.get('QUERY_STRING'):
+            query_string = '&'.join(
+                [key + '=' + str(val) for key,val in params.items()]
+            )
+        else:
+            query_string = ''
         data['prev_api'] = ''
         data['next_api'] = ''
         data['objects'] = []
@@ -339,6 +380,22 @@ class SearchResults(object):
         # pad after
         if pad:
             data['objects'] += [{'n':n} for n in range(self.page_next, self.total)]
+        
+        # API prev/next
+        if self.prev_offset != None:
+            data['prev_api'] = self._make_prevnext_url(
+                u'limit=%s&offset=%s' % (
+                    self.limit, self.prev_offset
+                ),
+                request
+            )
+        if self.next_offset != None:
+            data['next_api'] = self._make_prevnext_url(
+                u'limit=%s&offset=%s' % (
+                    self.limit, self.next_offset
+                ),
+                request
+            )
         
         return data
 

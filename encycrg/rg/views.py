@@ -165,64 +165,6 @@ def source(request, url_title):
     })
 
 
-def categories(request):
-    api_url = _mkurl(request, reverse('rg-api-categories'))
-    return render(request, 'rg/categories.html', {
-        'categories': api._categories(request),
-        'api_url': api_url,
-    })
-
-def category(request, url_title):
-    api_url = _mkurl(request, reverse('rg-api-category', args=([url_title])))
-    return render(request, 'rg/category.html', {
-        'url_title': url_title,
-        'results': api._category(request, category=url_title, limit=settings.MAX_SIZE),
-        'api_url': api_url,
-    })
-
-
-def facilities(request):
-    facet_id = 'facility'
-    return render(request, 'rg/facilities.html', {
-        'facility_types': models.facility_types(),
-    })
-
-def facility_type(request, type_id):
-    return render(request, 'rg/facility-type.html', {
-        'terms': models.facility_type(type_id),
-        'type_id': type_id,
-    })
-
-def facility(request, term_id):
-    api_url = _mkurl(request, reverse('rg-api-term', args=([term_id])))
-    r = api.term(request, term_id, format='json')
-    template = 'rg/term-%s.html' % r.data['facet_id']
-    return render(request, template, {
-        'term': r.data,
-        'api_url': api_url,
-    })
-
-
-def topics(request):
-    facet_id = 'topics'
-    api_url = _mkurl(request, reverse('rg-api-terms', args=([facet_id])))
-    r = api.terms(request, facet_id, format='json')
-    return render(request, 'rg/topics.html', {
-        'facet_id': facet_id,
-        'query': r.data,
-        'api_url': api_url,
-    })
-
-def topic(request, term_id):
-    api_url = _mkurl(request, reverse('rg-api-term', args=([term_id])))
-    r = api.term(request, term_id, format='json')
-    template = 'rg/term-%s.html' % r.data['facet_id']
-    return render(request, template, {
-        'term': r.data,
-        'api_url': api_url,
-    })
-
-
 def browse(request):
     api_url = _mkurl(request, reverse('rg-api-browse'))
     r = api.browse(request, format='json')
@@ -311,7 +253,7 @@ def search_ui(request):
             fields_nested={},
             fields_agg=models.PAGE_AGG_FIELDS,
         )
-        limit,offset = limit_offset(request)
+        limit,offset = search.limit_offset(request)
         results = searcher.execute(limit, offset)
         paginator = Paginator(
             results.ordered_dict(
@@ -348,46 +290,3 @@ def search_ui(request):
         context['search_form'] = forms.SearchForm()
 
     return render(request, 'rg/search.html', context)
-
-def limit_offset(request):
-    if request.GET.get('offset'):
-        # limit and offset args take precedence over page
-        limit = request.GET.get(
-            'limit', int(request.GET.get('limit', settings.RESULTS_PER_PAGE))
-        )
-        offset = request.GET.get('offset', int(request.GET.get('offset', 0)))
-    elif request.GET.get('page'):
-        limit = settings.RESULTS_PER_PAGE
-        thispage = int(request.GET['page'])
-        offset = search.es_offset(limit, thispage)
-    else:
-        limit = settings.RESULTS_PER_PAGE
-        offset = 0
-    return limit,offset
-
-
-def facets(request):
-    api_url = _mkurl(request, reverse('rg-api-facets'))
-    r = api.facets(request, format='json')
-    return render(request, 'rg/facets.html', {
-        'facets': r.data,
-        'api_url': api_url,
-    })
-
-def facet(request, facet_id):
-    api_url = _mkurl(request, reverse('rg-api-terms', args=([facet_id])))
-    r = api.facets(request, facet_id, format='json')
-    return render(request, 'rg/facet.html', {
-        'facet_id': facet_id,
-        'query': r.data,
-        'api_url': api_url,
-    })
-
-def term(request, term_id):
-    api_url = _mkurl(request, reverse('rg-api-term', args=([term_id])))
-    r = api.term(request, term_id, format='json')
-    template = 'rg/term-%s.html' % r.data['facet_id']
-    return render(request, template, {
-        'term': r.data,
-        'api_url': api_url,
-    })
