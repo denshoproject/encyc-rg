@@ -2,14 +2,14 @@
 from __future__ import unicode_literals
 import logging
 logger = logging.getLogger(__name__)
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlunparse
 
 from elasticsearch.exceptions import NotFoundError, TransportError
 
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
-from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect
+from django.http import HttpResponsePermanentRedirect
 from django.shortcuts import render
 from django.template.loader import get_template
 from django.urls import reverse
@@ -21,9 +21,6 @@ from . import api
 from . import forms
 from . import models
 from . import search
-
-MAPPINGS=models.DOCTYPE_CLASS
-FIELDS=models.SEARCH_LIST_FIELDS
 
 def load_templates(default):
     logger.info('loading templates')

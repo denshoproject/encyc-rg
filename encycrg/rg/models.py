@@ -8,7 +8,7 @@ import json
 import logging
 logger = logging.getLogger(__name__)
 import os
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
@@ -229,14 +229,6 @@ class Author(repo_models.Author):
         _set_attr(obj, hit, 'body')
         _set_attr(obj, hit, 'article_titles')
         return obj
-
-    def scrub(self):
-        """Removes internal editorial markers.
-        Must be run on a full (non-list) Page object.
-        TODO Should this happen upon import from MediaWiki?
-        """
-        if hasattr(self,'body') and self.body:
-            self.body = str(remove_status_markers(BeautifulSoup(self.body)))
 
 DOCTYPE_CLASS['author'] = Author
 DOCTYPE_CLASS['authors'] = Author
@@ -516,9 +508,6 @@ class Page(repo_models.Page):
     
     def absolute_url(self):
         return reverse('rg-article', args=([self.title]))
-    
-    def encyclopedia_url(self):
-        return os.path.join(settings.ENCYCLOPEDIA_URL, self.title)
 
     @staticmethod
     def get(title):
@@ -580,7 +569,6 @@ class Page(repo_models.Page):
         @returns: OrderedDict
         """
         data = OrderedDict()
-        hit_dict = hit.__dict__
         data['id'] = hit.url_title
         data['doctype'] = hit.meta.doc_type
         data['links'] = {}
@@ -745,9 +733,6 @@ class Page(repo_models.Page):
                 objects.append(author)
         return objects
 
-    def first_letter(self):
-        return self.title_sort[0]
-
     @staticmethod
     def search():
         """RG-only Page Search
@@ -759,10 +744,9 @@ class Page(repo_models.Page):
         return s
     
     @staticmethod
-    def pages(only_rg=True, limit=settings.MAX_SIZE, offset=0):
+    def pages(limit=settings.MAX_SIZE, offset=0):
         """Returns list of published light Page objects.
         
-        @param only_rg: boolean Only return RG pages (rg_rgmediatype present)
         @param limit: int
         @param offset: int
         @returns: SearchResults
@@ -856,33 +840,6 @@ class Page(repo_models.Page):
         ]
         total = n + 1
         return initials,groups,total
-    
-    @staticmethod
-    def pages_by_category():
-        """Returns list of (category, Pages) tuples, alphabetical by category
-        
-        @returns: list
-        """
-        KEY = u'encyc-rg:pages_by_category'
-        data = cache.get(KEY)
-        if not data:
-            categories = {}
-            for hit in Page.pages().objects:
-                page = Page.from_hit(hit)
-                for category in page.categories:
-                    # exclude internal editorial categories
-                    if category not in settings.MEDIAWIKI_HIDDEN_CATEGORIES:
-                        if category not in list(categories.keys()):
-                            categories[category] = []
-                        # pages already sorted so category lists will be sorted
-                        if page not in categories[category]:
-                            categories[category].append(page)
-            data = [
-                (key,categories[key])
-                for key in sorted(categories.keys())
-            ]
-            cache.set(KEY, data, settings.CACHE_TIMEOUT)
-        return data
 
     @staticmethod
     def mediatypes():
@@ -903,15 +860,6 @@ class Page(repo_models.Page):
     def mediatype_icon(self):
         if self.rg_rgmediatype and MEDIATYPE_INFO.get(self.rg_rgmediatype[0]):
             return MEDIATYPE_INFO[self.rg_rgmediatype[0]]['icon']
-
-    def scrub(self):
-        """remove internal editorial markers.
-        
-        Must be run on a full (non-list) Page object.
-        TODO Should this happen upon import from MediaWiki?
-        """
-        if hasattr(self,'body') and self.body:
-            self.body = str(remove_status_markers(BeautifulSoup(self.body)))
     
     def sources(self):
         """Returns list of published light Source objects for this Page.
@@ -1082,13 +1030,6 @@ class Source(repo_models.Source):
     
     def encyc_url(self):
         return '/'.join([settings.ENCYCLOPEDIA_URL, 'sources', self.encyclopedia_id])
-    
-    #def streaming_url(self):
-    #    return os.path.join(settings.SOURCES_MEDIA_URL, self.streaming_path)
-    
-    def transcript_url(self):
-        if self.transcript_path():
-            return os.path.join(settings.SOURCES_MEDIA_URL, self.transcript_path())
 
     @staticmethod
     def get(title):
@@ -1189,33 +1130,6 @@ class Source(repo_models.Source):
         setval(self, data, 'img_path')
         return data
     
-    def original_path(self):
-        if self.original_url:
-            return os.path.join(
-                settings.SOURCES_MEDIA_BUCKET,
-                os.path.basename(self.original_url)
-            )
-        return None
-
-    def rtmp_path(self):
-        return self.streaming_url
-    
-    def streaming_path(self):
-        if self.streaming_url:
-            return os.path.join(
-                settings.SOURCES_MEDIA_BUCKET,
-                os.path.basename(self.streaming_url)
-            )
-        return None
-    
-    def transcript_path(self):
-        if self.transcript:
-            return os.path.join(
-                settings.SOURCES_MEDIA_BUCKET,
-                os.path.basename(self.transcript)
-            )
-        return None
-    
     def article(self):
         if self.headword:
             try:
@@ -1285,56 +1199,6 @@ class Source(repo_models.Source):
         _set_attr(obj, hit, 'img_path')
         return obj
 
-
-@python_2_unicode_compatible
-class Citation(object):
-    """Represents a citation for a MediaWiki page.
-    IMPORTANT: not a Django model object!
-    """
-    url_title = None
-    url = None
-    page_url = None
-    cite_url = None
-    href = None
-    status_code = None
-    error = None
-    title = None
-    lastmod = None
-    retrieved = None
-    authors = []
-    authors_apa = ''
-    authors_bibtex = ''
-    authors_chicago = ''
-    authors_cse = ''
-    authors_mhra = ''
-    authors_mla = ''
-    
-    def __repr__(self):
-        return u"<Citation '%s'>" % self.url_title
-    
-    def __str__(self):
-        return self.url_title
-    
-    def __init__(self, page, request):
-        self.uri = page.absolute_url()
-        self.href = u'http://%s%s' % (request.META['HTTP_HOST'], self.uri)
-        if getattr(page, 'title', None):
-            self.title = page.title
-        elif getattr(page, 'caption', None):
-            self.title = page.caption
-        if getattr(page, 'lastmod', None):
-            self.lastmod = page.lastmod
-        elif getattr(page, 'modified', None):
-            self.lastmod = page.modified
-        if getattr(page, 'authors_data', None):
-            self.authors = page.authors_data
-            self.authors_apa = citations.format_authors_apa(self.authors['parsed'])
-            self.authors_bibtex = citations.format_authors_bibtex(self.authors['parsed'])
-            self.authors_chicago = citations.format_authors_chicago(self.authors['parsed'])
-            self.authors_cse = citations.format_authors_cse(self.authors['parsed'])
-            self.authors_mhra = citations.format_authors_mhra(self.authors['parsed'])
-            self.authors_mla = citations.format_authors_mla(self.authors['parsed'])
-        self.retrieved = datetime.now()
 
 DOCTYPE_CLASS['source'] = Source
 DOCTYPE_CLASS['sources'] = Source
