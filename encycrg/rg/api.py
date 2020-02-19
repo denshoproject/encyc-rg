@@ -21,8 +21,6 @@ FIELDS=models.SEARCH_LIST_FIELDS
 
 @api_view(['GET'])
 def index(request, format=None):
-    """INDEX DOCS
-    """
     data = OrderedDict()
     data['browse'] = reverse('rg-api-browse', request=request)
     data['articles'] = reverse('rg-api-articles', request=request)
@@ -72,8 +70,6 @@ def sources(request, format=None):
 
 @api_view(['GET'])
 def article(request, url_title, format=None):
-    """DOCUMENTATION GOES HERE.
-    """
     try:
         article = models.Page.get(url_title)
         article.prepare()
