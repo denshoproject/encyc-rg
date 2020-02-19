@@ -44,6 +44,21 @@ class APIView(TestCase):
             reverse('rg-api-browse-fieldvalue', args=['genre', 'Art'])
         ).status_code == 200
 
+    def test_search_index(self):
+        data = {}
+        response = self.client.get(reverse('rg-api-search'), data)
+        assert response.status_code == 200
+
+    def test_search_fulltext(self):
+        data = {'fulltext': 'camp'}
+        response = self.client.get(reverse('rg-api-search'), data)
+        assert response.status_code == 200
+
+    def test_search_fulltext_filter(self):
+        data = {'fulltext': 'camp', 'rg_rgmediatype': 'books'}
+        response = self.client.get(reverse('rg-api-search'), data)
+        assert response.status_code == 200
+
 
 class WikiPageTitles(TestCase):
     """Test that characters in MediaWiki titles are matched correctly
@@ -89,3 +104,18 @@ class WikiPageTitles(TestCase):
         assert self.client.get(
             reverse('rg-browse-fieldvalue', args=['genre', 'Art'])
         ).status_code == 200
+
+    def test_search_index(self):
+        data = {}
+        response = self.client.get(reverse('rg-search'), data)
+        assert response.status_code == 200
+
+    def test_search_fulltext(self):
+        data = {'fulltext': 'camp'}
+        response = self.client.get(reverse('rg-search'), data)
+        assert response.status_code == 200
+
+    def test_search_fulltext_filter(self):
+        data = {'fulltext': 'camp', 'rg_rgmediatype': 'books'}
+        response = self.client.get(reverse('rg-search'), data)
+        assert response.status_code == 200
