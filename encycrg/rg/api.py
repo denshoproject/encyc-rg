@@ -32,8 +32,11 @@ def index(request, format=None):
     return Response(data)
 
 @api_view(['GET'])
-def articles(request, format=None, limit=settings.MAX_SIZE, offset=0):
-    data = models.Page.pages(limit=limit, offset=offset).ordered_dict(
+def articles(request, format=None):
+    data = models.Page.pages(
+        limit=request.GET.get('limit', settings.PAGE_SIZE),
+        offset=request.GET.get('offset', 0),
+    ).ordered_dict(
         format_functions=models.FORMATTERS,
         request=request,
         pad=False,
@@ -42,8 +45,11 @@ def articles(request, format=None, limit=settings.MAX_SIZE, offset=0):
     return Response(data)
 
 @api_view(['GET'])
-def authors(request, format=None, limit=settings.MAX_SIZE, offset=0):
-    data = models.Author.authors(limit=limit, offset=offset).ordered_dict(
+def authors(request, format=None):
+    data = models.Author.authors(
+        limit=request.GET.get('limit', settings.PAGE_SIZE),
+        offset=request.GET.get('offset', 0),
+    ).ordered_dict(
         format_functions=models.FORMATTERS,
         request=request,
         pad=False,
@@ -52,8 +58,11 @@ def authors(request, format=None, limit=settings.MAX_SIZE, offset=0):
     return Response(data)
 
 @api_view(['GET'])
-def sources(request, format=None, limit=settings.MAX_SIZE, offset=0):
-    data = models.Source.sources(limit=limit, offset=offset).ordered_dict(
+def sources(request, format=None):
+    data = models.Source.sources(
+        limit=request.GET.get('limit', settings.PAGE_SIZE),
+        offset=request.GET.get('offset', 0),
+    ).ordered_dict(
         format_functions=models.FORMATTERS,
         request=request,
         pad=False,
