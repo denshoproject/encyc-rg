@@ -166,7 +166,6 @@ class Author(repo_models.Author):
         
         # basic data from list
         data = self.to_dict_list(request)
-        data['articles'] = []
         # fill in
         setval(self, data, 'title')
         setval(self, data, 'title_sort')
