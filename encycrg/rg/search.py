@@ -320,9 +320,9 @@ class SearchResults(object):
         @param format_functions: dict
         returns: dict
         """
-        if hasattr(self, 'params') and self.params:
-            params = deepcopy(self.params)
-        return self._dict(params, {}, format_functions)
+        return self._dict(
+            deepcopy(self.params), {}, format_functions
+        )
     
     def ordered_dict(self, format_functions, request, pad=False):
         """Express search results in API and Redis-friendly structure
@@ -330,9 +330,9 @@ class SearchResults(object):
         @param format_functions: dict
         returns: OrderedDict
         """
-        if hasattr(self, 'params') and self.params:
-            params = deepcopy(self.params)
-        return self._dict(params, OrderedDict(), format_functions, request, pad)
+        return self._dict(
+            deepcopy(self.params), OrderedDict(), format_functions, request, pad
+        )
     
     def _dict(self, params, data, format_functions, request=None, pad=False):
         """
