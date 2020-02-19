@@ -458,7 +458,6 @@ deb-stretch:
 	README.rst=$(DEB_BASE)   \
 	requirements.txt=$(DEB_BASE)  \
 	VERSION=$(DEB_BASE)  \
-	conf/settings.py=$(DEB_BASE)/encycrg/encycrg   \
 	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
 
 secret-key:
