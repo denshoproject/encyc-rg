@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from future.utils import python_2_unicode_compatible
-from builtins import str
-from builtins import object
+
 from collections import OrderedDict
 import json
 import logging
@@ -89,7 +86,6 @@ AUTHOR_LIST_FIELDS = [
     'modified',
 ]
 
-@python_2_unicode_compatible
 class Author(repo_models.Author):
 
     def absolute_url(self):
@@ -503,7 +499,6 @@ FORMATTERS = {
     'encycsource': format_source,
 }
 
-@python_2_unicode_compatible
 class Page(repo_models.Page):
     
     def absolute_url(self):
@@ -1016,7 +1011,6 @@ SOURCE_LIST_FIELDS = [
     'img_path',
 ]
 
-@python_2_unicode_compatible
 class Source(repo_models.Source):
     
     def absolute_url(self):
