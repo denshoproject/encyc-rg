@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals
 from collections import OrderedDict
 import json
 
@@ -8,17 +7,12 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from django.conf import settings
-from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect
+from django.http import HttpResponsePermanentRedirect
 
 from . import models
 from . import search as docstore_search
-
-MAPPINGS=models.DOCTYPE_CLASS
-FIELDS=models.SEARCH_LIST_FIELDS
-
 
 
 def redirect(request):

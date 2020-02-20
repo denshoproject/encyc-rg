@@ -267,11 +267,8 @@ syncdb:
 	chmod -R 755 $(LOGS_BASE)
 
 test-encyc-rg:
-	@echo ""
-	@echo "test-encyc-rg ----------------------------------------------------------"
 	source $(VIRTUALENV)/bin/activate; \
-	cd $(INSTALLDIR); \
-	pytest --disable-warnings --rootdir=$(INSTALLDIR) encycrg/
+	cd $(INSTALLDIR); python encycrg/manage.py test rg
 
 shell:
 	source $(VIRTUALENV)/bin/activate; \
