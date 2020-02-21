@@ -746,13 +746,9 @@ class Page(repo_models.Page):
         @param offset: int
         @returns: SearchResults
         """
-        params={
-            # only ResourceGuide items
-            'published_rg': True,
-        }
         searcher = search.Searcher()
         searcher.prepare(
-            params=params,
+            params={},
             search_models=[docstore.Docstore().index_name('article')],
             sort=['title_sort'],
             fields_nested=[],
@@ -884,14 +880,10 @@ class Page(repo_models.Page):
         @returns: list of aggregations with links, labels, etc
         """
         model_field = MEDIATYPE_URLSTUBS[field]
-        params={
-            # only ResourceGuide items
-            'published_rg': True,
-        }
         # TODO don't get all the records just the aggregations
         searcher = search.Searcher()
         searcher.prepare(
-            params=params,
+            params={},
             params_whitelist=PAGE_SEARCH_FIELDS,
             search_models=search.SEARCH_MODELS,
             fields=PAGE_SEARCH_FIELDS,
@@ -938,7 +930,6 @@ class Page(repo_models.Page):
         if model_field not in PAGE_SEARCH_FIELDS:
             raise Exception('Bad model field "%s".' % model_field)
         params = {
-            'published_rg': True, # only ResourceGuide items
             model_field: value,
         }
         searcher = search.Searcher()

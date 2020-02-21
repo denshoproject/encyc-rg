@@ -248,7 +248,6 @@ def search_ui(request):
     searcher = search.Searcher()
     if request.GET.get('fulltext'):
         params = request.GET.copy()
-        params['published_rg'] = True  # only ResourceGuide items
         searcher.prepare(
             params=params,
             params_whitelist=models.PAGE_SEARCH_FIELDS,
