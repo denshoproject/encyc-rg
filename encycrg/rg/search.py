@@ -379,11 +379,10 @@ def sanitize_input(text):
     if isinstance(text, bool):
         return text
     
-    text = re.sub(
-        '([{}])'.format(re.escape('\\+\-&|!(){}\[\]^~*?:\/')),
-        r"\\\1",
-        text
-    )
+    BAD_SEARCH_CHARS = r'!+/:[\]^{}~'
+    for c in BAD_SEARCH_CHARS:
+        text = text.replace(c, '')
+    text = text.replace('  ', ' ')
     
     # AND, OR, and NOT are used by lucene as logical operators.
     ## We need to escape these.
@@ -412,6 +411,7 @@ class Searcher(object):
     'ok'
     >>> d = r.to_dict(request)
     """
+    params = {}
     
     def __init__(self, conn=docstore.Docstore().es, search=None):
         """
@@ -449,10 +449,12 @@ class Searcher(object):
         # to the method.  It is used for informational purposes
         # and is passed to SearchResults.
         # Sanitize while copying.
-        self.params = {
-            key: sanitize_input(val)
-            for key,val in params.items()
-        }
+        if params:
+            self.params = {
+                key: sanitize_input(val)
+                for key,val in params.items()
+            }
+        params = deepcopy(self.params)
         
         # scrub fields not in whitelist
         bad_fields = [

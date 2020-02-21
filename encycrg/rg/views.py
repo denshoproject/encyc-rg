@@ -245,11 +245,10 @@ def search_ui(request):
         'fields': models.FACET_FIELDS,
     }
 
+    searcher = search.Searcher()
     if request.GET.get('fulltext'):
-        
         params = request.GET.copy()
         params['published_rg'] = True  # only ResourceGuide items
-        searcher = search.Searcher()
         searcher.prepare(
             params=params,
             params_whitelist=models.PAGE_SEARCH_FIELDS,
@@ -258,6 +257,9 @@ def search_ui(request):
             fields_nested={},
             fields_agg=models.PAGE_AGG_FIELDS,
         )
+        context['search_performed'] = True
+    
+    if searcher.params.get('fulltext'):
         limit,offset = search.limit_offset(request)
         results = searcher.execute(limit, offset)
         paginator = Paginator(
@@ -292,6 +294,9 @@ def search_ui(request):
         context['filters'] = filters
         
     else:
-        context['search_form'] = forms.SearchForm()
+        form = forms.SearchForm(
+            data=request.GET.copy(),
+        )
+        context['search_form'] = form
 
     return render(request, 'rg/search.html', context)
