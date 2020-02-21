@@ -138,25 +138,25 @@ def browse_facet_objects(request, stub, value, format=None):
 
 @api_view(['GET'])
 def search(request, format=None):
-    params = request.GET.copy()
-    if not params.get('fulltext'):
-        return Response({})
-    params['published_rg'] = True  # only ResourceGuide items
     searcher = docstore_search.Searcher()
-    searcher.prepare(
-        params=params,
-        params_whitelist=models.PAGE_SEARCH_FIELDS,
-        search_models=docstore_search.SEARCH_MODELS,
-        fields=models.PAGE_SEARCH_FIELDS,
-        fields_nested={},
-        fields_agg=models.PAGE_AGG_FIELDS,
-    )
-    limit,offset = docstore_search.limit_offset(request)
-    data = searcher.execute(limit, offset).ordered_dict(
-        request=request,
-        format_functions=models.FORMATTERS,
-        pad=False,
-    )
-    # TODO aggregations are not JSON serializable
-    data.pop('aggregations')
-    return Response(data)
+    if request.GET.get('fulltext'):
+        params = request.GET.copy()
+        searcher.prepare(
+            params=params,
+            params_whitelist=models.PAGE_SEARCH_FIELDS,
+            search_models=docstore_search.SEARCH_MODELS,
+            fields=models.PAGE_SEARCH_FIELDS,
+            fields_nested={},
+            fields_agg=models.PAGE_AGG_FIELDS,
+        )
+    if searcher.params.get('fulltext'):
+        limit,offset = docstore_search.limit_offset(request)
+        data = searcher.execute(limit, offset).ordered_dict(
+            request=request,
+            format_functions=models.FORMATTERS,
+            pad=False,
+        )
+        # TODO aggregations are not JSON serializable
+        data.pop('aggregations')
+        return Response(data)
+    return Response({})
