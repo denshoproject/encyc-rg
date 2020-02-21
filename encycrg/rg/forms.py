@@ -8,22 +8,7 @@ from django.conf import settings
 from . import models
 
 
-class SearchFormBasic(forms.Form):
-    fulltext = forms.CharField(
-        max_length=255,
-        required=False,
-        widget=forms.TextInput(
-            attrs={
-                'id': 'id_query',
-                'class': 'form-control',
-                'placeholder': 'Search...',
-            }
-        )
-    )
-
-
 class SearchForm(forms.Form):
-    field_order = models.PAGE_SEARCH_FIELDS
     search_results = None
     
     def __init__( self, *args, **kwargs ):

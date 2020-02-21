@@ -28,7 +28,6 @@ CONF_BASE=/etc/encyc
 CONF_PRODUCTION=$(CONF_BASE)/encycrg.cfg
 CONF_LOCAL=$(CONF_BASE)/encycrg-local.cfg
 CONF_SECRET=$(CONF_BASE)/encycrg-secret-key.txt
-CONF_DJANGO=$(INSTALLDIR)/encycrg/encycrg/settings.py
 
 SQLITE_BASE=/var/lib/$(PROJECT)
 LOGS_BASE=/var/log/$(PROJECT)
@@ -45,13 +44,14 @@ ifeq ($(DEBIAN_CODENAME), stretch)
 	OPENJDK_PKG=openjdk-8-jre
 endif
 
-ELASTICSEARCH=elasticsearch-2.4.4.deb
-# wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-2.4.4.deb
+ELASTICSEARCH=elasticsearch-2.4.6.deb
 
 SUPERVISOR_GUNICORN_CONF=/etc/supervisor/conf.d/$(APP).conf
 SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
 NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
 NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
+
+ASSETS=encyc-rg-assets.tgz
 
 DEB_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
 DEB_ARCH=amd64
@@ -83,7 +83,7 @@ help:
 	@echo ""
 	@echo "syncdb  - Initialize or update Django app's database tables."
 	@echo ""
-	@echo "update  - Updates encyc-rg and re-copies config files."
+	@echo "test    - Run unit tests"
 	@echo ""
 	@echo "reload  - Reloads supervisord and nginx configs"
 	@echo ""
@@ -112,11 +112,9 @@ help-all:
 	@echo "install-daemons - install-nginx install-redis install-elasticsearch"
 	@echo "install-app     - install-encyc-rg"
 	@echo "install-static  - "
-	@echo "update  - Do an update"
 	@echo "restart - Restart servers"
 	@echo "status  - Server status"
 	@echo "install-configs - "
-	@echo "update-app - "
 	@echo "uninstall - "
 	@echo "clean - "
 
@@ -142,7 +140,7 @@ get: get-app apt-update
 
 install: install-prep install-app install-static install-configs
 
-update: update-app
+test: test-app
 
 uninstall: uninstall-app
 
@@ -232,7 +230,7 @@ get-app: get-encyc-rg
 
 install-app: install-encyc-rg
 
-update-app: update-encyc-rg install-configs
+test-app: test-encyc-rg
 
 uninstall-app: uninstall-encyc-rg
 
@@ -268,12 +266,17 @@ syncdb:
 	chown -R $(USER).root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 
-update-encyc-rg:
-	@echo ""
-	@echo "encyc-rg --------------------------------------------------------------"
-	git fetch && git pull
+test-encyc-rg:
 	source $(VIRTUALENV)/bin/activate; \
-	pip3 install -U -r $(REQUIREMENTS)
+	cd $(INSTALLDIR); python encycrg/manage.py test rg
+
+shell:
+	source $(VIRTUALENV)/bin/activate; \
+	cd $(INSTALLDIR); python encycrg/manage.py shell
+
+runserver:
+	source $(VIRTUALENV)/bin/activate; \
+	cd $(INSTALLDIR); python encycrg/manage.py runserver 0.0.0.0:8081
 
 uninstall-encyc-rg:
 	cd $(INSTALLDIR)/encycrg
@@ -301,13 +304,13 @@ branch:
 
 install-static:
 	@echo ""
-	@echo "installing static files ---------------------------------------------"
-	-mkdir $(MEDIA_BASE)
-	-mkdir $(STATIC_ROOT)
-	-mkdir $(STATIC_ROOT)/css
-	chown -R $(USER).root $(MEDIA_BASE)
+	@echo "install static ---------------------------------------------------------"
+	-mkdir -p $(MEDIA_BASE)
+	chown -R root.root $(MEDIA_BASE)
 	chmod -R 755 $(MEDIA_BASE)
-	-cp $(INSTALLDIR)/static/css/style.css $(STATIC_ROOT)/css/
+	wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
+	tar xzvf /tmp/$(ASSETS) -C /tmp/
+	cp -R /tmp/encyc-rg-assets/* $(STATIC_ROOT)
 
 clean-static:
 	-rm -Rf $(INSTALLDIR)/static/
@@ -326,12 +329,12 @@ install-configs:
 	python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)])' > $(CONF_SECRET)
 	chown encyc.root $(CONF_SECRET)
 	chmod 640 $(CONF_SECRET)
-	cp $(INSTALLDIR)/conf/settings.py $(CONF_DJANGO)
-	chown root.root $(CONF_DJANGO)
-	chmod 644 $(CONF_DJANGO)
+	cp $(INSTALLDIR)/conf/encycrg.conf $(NGINX_CONF)
+	chown root.root $(NGINX_CONF)
+	chmod 644 $(NGINX_CONF)
+	-ln -s $(NGINX_CONF) $(NGINX_CONF_LINK)
 
 uninstall-configs:
-	-rm $(CONF_DJANGO)
 	-rm $(CONF_SECRET)
 
 install-daemons-configs:
@@ -452,7 +455,6 @@ deb-stretch:
 	README.rst=$(DEB_BASE)   \
 	requirements.txt=$(DEB_BASE)  \
 	VERSION=$(DEB_BASE)  \
-	conf/settings.py=$(DEB_BASE)/encycrg/encycrg   \
 	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
 
 secret-key:

@@ -55,21 +55,17 @@ ALLOWED_HOSTS = [
 
 # Elasticsearch
 DOCSTORE_PROTOCOL = 'http'
-DOCSTORE_HOSTS = [{
-    'host':config.get('elasticsearch', 'docstore_host').split(':')[0],
-    'port':config.get('elasticsearch', 'docstore_host').split(':')[1],
-}]
-DOCSTORE_INDEX = config.get('elasticsearch', 'docstore_index')
+DOCSTORE_HOST = config.get('elasticsearch','docstore_host')
+DOCSTORE_TIMEOUT = int(config.get('elasticsearch','docstore_timeout'))
 
 # quit if can't connect to ES
-DOCSTORE_BASE = '%s://%s:%s/%s' % (
+DOCSTORE_BASE = '%s://%s/' % (
     DOCSTORE_PROTOCOL,
-    DOCSTORE_HOSTS[0]['host'],
-    str(DOCSTORE_HOSTS[0]['port']),
-    DOCSTORE_INDEX,
+    DOCSTORE_HOST,
 )
 try:
     r = requests.get(DOCSTORE_BASE, timeout=3)
+    print('Connected to Elasticsearch - %s' % DOCSTORE_BASE)
 except:
     print('FATAL: Could not connect to Elasticsearch - %s' % DOCSTORE_BASE)
     sys.exit(1)
@@ -77,7 +73,9 @@ if r.status_code != 200:
     print('FATAL: Could not connect to Elasticsearch - %s' % DOCSTORE_BASE)
     sys.exit(1)
 
-DEFAULT_LIMIT = 25
+# Page size for browse and search results
+PAGE_SIZE = 25
+# Maximum page size; used when returning entire sets
 MAX_SIZE = 10000
 
 BASE_TEMPLATE = 'rg/base2.html'
@@ -143,7 +141,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
-    'PAGE_SIZE': 20,
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
@@ -180,7 +177,7 @@ CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_SECONDS = config.get('encycrg', 'cache_timeout')
 CACHE_MIDDLEWARE_KEY_PREFIX = 'encycrg'
 # low-level caching
-CACHE_TIMEOUT = config.get('encycrg', 'cache_timeout')
+CACHE_TIMEOUT = int(config.get('encycrg', 'cache_timeout'))
 
 # ElasticSearch
 ELASTICSEARCH_MAX_SIZE = 10000
