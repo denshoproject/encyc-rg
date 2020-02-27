@@ -371,7 +371,7 @@ MEDIATYPE_INFO = {
     'albums': {'label': 'Albums', 'icon': 'fa-music'},
     'articles': {'label': 'Articles', 'icon': 'fa-newspaper-o'},
     'books': {'label': 'Books', 'icon': 'fa-book'},
-    'curriculum': {'label': 'Curriculum', 'icon': 'fa-tasks'},
+    'curricula': {'label': 'Curricula', 'icon': 'fa-tasks'},
     'essays': {'label': 'Essays', 'icon': 'fa-edit'},
     'exhibitions': {'label': 'Museum Exhibitions', 'icon': 'fa-university'},
     'films': {'label': 'Films and Video', 'icon': 'fa-film'},
