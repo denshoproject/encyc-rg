@@ -312,18 +312,6 @@ window.cookieconsent.initialise({
             <div class="col-sm-5 col-sm-push-7 col-xs-12" style="text-align: right;">
 
       <a href="{{ api_url }}" style="padding-right: 20px;">API</a>
-<!-- 
-{{ docstore_host }}
-
-{{ git_commit }}
-{{ git_branch }}
-v{{ version }}
-{{ packages }}
-
-served by {{ pid }}
-on {{ host }}
-at {{ time|date:"Y-m-d" }}T{{ time|time:"H:i:s(T)" }}
--->
             </div>
             <div class="col-sm-7 col-sm-pull-5 col-xs-12">
               <div class="copyRightText">
@@ -360,6 +348,13 @@ at {{ time|date:"Y-m-d" }}T{{ time|time:"H:i:s(T)" }}
   <script src="{{ static_url }}plugins/velocity/velocity.min.js"></script>
   <script src="{{ static_url }}plugins/smoothscroll/SmoothScroll.js"></script>
   <script src="{{ static_url }}js/custom.js"></script>
+
+<!--
+{{ time }}
+{{ host }} {{ pid }}
+{{ git_commit }} {{ git_branch }} {{ version }} {{ packages }}
+{{ docstore_host }}
+-->
 
 </body><!-- .body-wrapper -->
 </html>

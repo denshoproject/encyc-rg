@@ -25,7 +25,7 @@ import requests
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 with open(os.path.join(BASE_DIR, '..', 'VERSION'), 'r') as f:
-    VERSION = f.read()
+    VERSION = f.read().strip()
 
 CONFIG_FILES = [
     '/etc/encyc/encycrg.cfg',
@@ -43,6 +43,56 @@ SECRET_KEY = config.get('security', 'secret_key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config.getboolean('debug', 'debug')
 GITPKG_DEBUG = config.getboolean('debug', 'gitpkg_debug')
+
+if GITPKG_DEBUG:
+    # report Git branch and commit
+    # This branch is the one with the leading '* '.
+    #try:
+    GIT_BRANCH = [
+        b.decode().replace('*','').strip()
+        for b in subprocess.check_output(['git', 'branch']).splitlines()
+        if '*' in b.decode()
+       ][0]
+    #except:
+    #    GIT_BRANCH = 'unknown'
+    #try:
+        # $ git log --pretty=oneline
+        # a21740293f... COMMIT MESSAGE
+    
+    GIT_COMMIT = subprocess.check_output([
+        'git','log','--pretty=oneline','-1'
+       ]).decode().strip().split(' ')[0]
+    #except:
+    #    GIT_COMMIT = 'unknown'
+     
+    def package_debs(package, apt_cache_dir='/var/cache/apt/archives'):
+        """
+        @param package: str Package name
+        @param apt_cache_dir: str Absolute path
+        @returns: list of .deb files matching package and version
+        """
+        cmd = 'dpkg --status %s' % package
+        try:
+            dpkg_raw = subprocess.check_output(cmd.split(' ')).decode()
+        except subprocess.CalledProcessError:
+            return ''
+        data = {}
+        for line in dpkg_raw.splitlines():
+            if line and isinstance(line, basestring) and (':' in line):
+                key,val = line.split(':', 1)
+                data[key.strip().lower()] = val.strip()
+        pkg_paths = [
+            path for path in os.listdir(apt_cache_dir)
+            if (package in path) and data.get('version') and (data['version'] in path)
+        ]
+        return pkg_paths
+    
+    PACKAGES = package_debs('front-%s' % GIT_BRANCH)
+
+else:
+    GIT_BRANCH = []
+    GIT_COMMIT = ''
+    PACKAGES = []
 
 LOG_LEVEL = config.get('debug', 'log_level')
 
