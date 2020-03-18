@@ -30,7 +30,7 @@ class APIView(TestCase):
 
     def test_author(self):
         assert self.client.get(
-            reverse('rg-api-author', args=['Kaori Akiyama'])
+            reverse('rg-api-author', args=['Brian Niiya'])
         ).status_code == 200
 
     def test_sources(self):
@@ -41,10 +41,10 @@ class APIView(TestCase):
         response = self.client.get(reverse('rg-api-sources'), data)
         assert response.status_code == 200
 
-    #def test_source(self):
-    #    assert self.client.get(
-    #        reverse('rg-api-source', args=['en-littletokyousa-1'])
-    #    ).status_code == 200
+    def test_source(self):
+        assert self.client.get(
+            reverse('rg-api-source', args=['en-littletokyousa-1'])
+        ).status_code == 200
 
     def test_browse(self):
         assert self.client.get(reverse('rg-api-browse')).status_code == 200
@@ -108,7 +108,7 @@ class WikiPageTitles(TestCase):
 
     #def test_author(self):
     #    assert self.client.get(
-    #        reverse('rg-author', args=['Kaori Akiyama'])
+    #        reverse('rg-author', args=['Brian Niiya'])
     #    ).status_code == 200
 
     #def test_sources(self):
