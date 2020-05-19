@@ -88,6 +88,23 @@
            <div class="accordionCommon hello" id="articleExtraInfo">
                <div class="panel-group" id="articleAccordian">
 
+                   {% if article.findatia %}
+                   <!-- begin rg_SectionFindAtIA -->
+                   <div class="panel panel-default">
+                       <a class="panel-heading accordion-toggle bg-color-1" data-toggle="collapse" data-parent="#articleAccordian" href="#collapse-findatia">
+                           <span><i class="fa fa-university" style="padding-right: 5px;"></i> Borrow/Download from Internet Archive</span>
+                           <span class="iconBlock"><i class="fa fa-chevron-down"></i></span>
+                       </a>
+                       <div id="collapse-findatia" class="panel-collapse collapse">
+                           <div class="panel-body">
+                               {{ article.findatia|safe }}
+                           </div>
+                       </div>
+                   </div> 
+                   <!-- end rg_SectionRelatedArticles -->
+
+                   {% endif %}
+
                    {% if article.databoxes|length > 1 %}
                    <!-- begin rg_SectionMediaDetails -->
                    <div class="panel panel-default">
