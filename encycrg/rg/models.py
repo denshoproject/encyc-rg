@@ -385,6 +385,7 @@ ACCORDION_SECTIONS = [
     ('reviews', 'Reviews'),
     ('footnotes', 'Footnotes'),
     ('related', 'Related_articles'),
+    ('findatia', 'Find_in_the_Digital_Library_of_Japanese_American_Incarceration')
 ]
 
 def format_author(document, request, listitem=False):
@@ -548,6 +549,7 @@ class Page(repo_models.Page):
         #   <div class="section" id="Reviews">
         #   <div class="section" id="Footnotes">
         #   <div class="section" id="Related_articles">
+        #   <div class="section" id="Find_in_the_Digital_Library_of_Japanese_American_Incarceration">
         for fieldname,sectionid in ACCORDION_SECTIONS:
             if soup.find(id=sectionid):
                 tag = soup.find(id=sectionid).extract()
