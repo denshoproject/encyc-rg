@@ -19,9 +19,6 @@ markdown
 redis                              # MIT      y
 
 bpython
-curtsies
-greenlet
-pygments
 
 coverage
 pytest
@@ -29,7 +26,3 @@ pytest-cov
 pytest-django
 pytest-testmon
 pytest-xdist
-
-caniusepython3
-future
-pylint
