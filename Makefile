@@ -316,6 +316,7 @@ install-static:
 	chmod -R 755 $(MEDIA_BASE)
 	wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
 	tar xzvf /tmp/$(ASSETS) -C /tmp/
+	-mkdir -p $(STATIC_ROOT)
 	cp -R /tmp/encyc-rg-assets/* $(STATIC_ROOT)
 
 clean-static:
