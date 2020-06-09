@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.conf.urls import url
+from django.urls import path, re_path
 from django.views.generic import TemplateView
 
 from rest_framework.urlpatterns import format_suffix_patterns
@@ -9,44 +9,44 @@ from . import api
 from . import views
 
 urlpatterns = [
-    url(r'^debug/', views.debug, name='rg-debug'),
+    path('debug/', views.debug, name='rg-debug'),
     
-    url(r"^api/3.0/browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/$", api.browse_facet_objects, name='rg-api-browse-fieldvalue'),
-    url(r"^api/3.0/browse/(?P<stub>[\w\W]+)/$", api.browse_facet, name='rg-api-browse-field'),
-    url(r"^api/3.0/browse/$", api.browse, name='rg-api-browse'),
-    url(r"^api/3.0/articles/(?P<url_title>[\w\W]+)/$", api.article, name='rg-api-article'),
-    url(r"^api/3.0/authors/(?P<url_title>[\w\W]+)/$", api.author, name='rg-api-author'),
-    url(r"^api/3.0/sources/(?P<url_title>[\w\W]+)/$", api.source, name='rg-api-source'),
-    url(r"^api/3.0/articles/$", api.articles, name='rg-api-articles'),
-    url(r"^api/3.0/authors/$", api.authors, name='rg-api-authors'),
-    url(r"^api/3.0/sources/$", api.sources, name='rg-api-sources'),
-    url(r'^api/3.0/search/help/$', TemplateView.as_view(template_name="rg/api/search-help.html"), name='rg-api-search-help'),
-    url(r"^api/3.0/search/$", api.search, name='rg-api-search'),
-    url(r'^api/3.0/$', api.index, name='rg-api-index'),
+    re_path(r'^api/3.0/browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/', api.browse_facet_objects, name='rg-api-browse-fieldvalue'),
+    re_path(r'^api/3.0/browse/(?P<stub>[\w\W]+)/', api.browse_facet, name='rg-api-browse-field'),
+    path('api/3.0/browse/', api.browse, name='rg-api-browse'),
+    re_path(r'^api/3.0/articles/(?P<url_title>[\w\W]+)/', api.article, name='rg-api-article'),
+    re_path(r'^api/3.0/authors/(?P<url_title>[\w\W]+)/', api.author, name='rg-api-author'),
+    re_path(r'^api/3.0/sources/(?P<url_title>[\w\W]+)/', api.source, name='rg-api-source'),
+    path('api/3.0/articles/', api.articles, name='rg-api-articles'),
+    path('api/3.0/authors/', api.authors, name='rg-api-authors'),
+    path('api/3.0/sources/', api.sources, name='rg-api-sources'),
+    path('api/3.0/search/help/', TemplateView.as_view(template_name="rg/api/search-help.html"), name='rg-api-search-help'),
+    path('api/3.0/search/', api.search, name='rg-api-search'),
+    path('api/3.0/', api.index, name='rg-api-index'),
 
-    url(r"^api/1.0/", api.redirect, name='rg-api-old-redirect'),
-    url(r"^api/", api.redirect, name='rg-api-old-redirect'),
+    path('api/1.0/', api.redirect, name='rg-api-old-redirect'),
+    path('api/', api.redirect, name='rg-api-old-redirect'),
     
-    url(r"^browse/title/$", views.articles, name='rg-articles'),
-    url(r"^browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/$", views.browse_field_value, name='rg-browse-fieldvalue'),
-    url(r"^browse/(?P<stub>[\w\W]+)/$", views.browse_field, name='rg-browse-field'),
-    url(r"^browse/$", views.browse, name='rg-browse'),
+    path('browse/title/', views.articles, name='rg-articles'),
+    re_path(r'^browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/', views.browse_field_value, name='rg-browse-fieldvalue'),
+    re_path(r'^browse/(?P<stub>[\w\W]+)/', views.browse_field, name='rg-browse-field'),
+    path('browse/', views.browse, name='rg-browse'),
     
-    url(r"^search/$", views.search_ui, name='rg-search'),
+    path('search/', views.search_ui, name='rg-search'),
     
-    url(r"^authors/(?P<url_title>[\w\W]+)/$", views.author, name='rg-author'),
-    url(r"^sources/(?P<url_title>[\w\W]+)/$", views.source, name='rg-source'),
+    re_path(r'^authors/(?P<url_title>[\w\W]+)/', views.author, name='rg-author'),
+    re_path(r'^sources/(?P<url_title>[\w\W]+)/', views.source, name='rg-source'),
     
-    url(r"^authors/$", views.authors, name='rg-authors'),
-    url(r"^sources/$", views.sources, name='rg-sources'),
+    path('authors/', views.authors, name='rg-authors'),
+    path('sources/', views.sources, name='rg-sources'),
     
-    url(r'^about/$', TemplateView.as_view(template_name="rg/about.html"), name='rg-about'),
-    url(r'^terms/$', TemplateView.as_view(template_name="rg/terms-of-use.html"), name='rg-terms'),
+    path('about/', TemplateView.as_view(template_name="rg/about.html"), name='rg-about'),
+    path('terms/', TemplateView.as_view(template_name="rg/terms-of-use.html"), name='rg-terms'),
     
-    url(r"^wiki/(?P<url_title>[\w\W]+)/$", views.wiki_article, name='rg-wiki-article'),
-    url(r"^(?P<url_title>[\w\W ,.:\(\)-/]+)/$", views.article, name='rg-article'),
+    re_path(r'^wiki/(?P<url_title>[\w\W]+)/', views.wiki_article, name='rg-wiki-article'),
+    re_path(r'^(?P<url_title>[\w\W ,.:\(\)-/]+)/', views.article, name='rg-article'),
     
-    url(r'^$', views.index, name='rg-index'),
+    path('', views.index, name='rg-index'),
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)
 
