@@ -6,7 +6,7 @@
                                    # LICENSE  Python3
                                    
 beautifulsoup4                     # MIT      y
-django>=2.0.0,<2.1                 # MIT      y
+django>=2.1.0,<2.2                 # MIT      y
 django-bootstrap-pagination        # MIT      ???
 django-redis                       # BSD      y
 django-redis-cache
