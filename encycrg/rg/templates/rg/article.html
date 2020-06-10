@@ -371,7 +371,7 @@
                   Free On Web
                 </div>
                 <div class="col-md-5 col-sm-5 col-xs-5">
-                  {% if article.rg_freewebversion == 'Yes' %}
+                  {% if article.rg_freewebversion.0 == 'Yes' %}
                   <i class="fa fa-check"></i>
                   {% else %}
                   <i class="fa fa-remove"></i>
@@ -383,7 +383,7 @@
                   Teacher Guide
                 </div>
                 <div class="col-md-5 col-sm-5 col-xs-5">
-                  {% if article.rg_hasteachingaids == 'Yes' %}
+                  {% if article.rg_hasteachingaids.0 == 'Yes' %}
                   <i class="fa fa-check"></i>
                   {% else %}
                   <i class="fa fa-remove"></i>
