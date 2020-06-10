@@ -12,6 +12,7 @@ django-redis                       # BSD      y
 django-redis-cache
 django-redis-sessions
 djangorestframework                # BSD      y
+drf-yasg>=1.17.0,<1.18             # BSD      y
 elasticsearch>=7.0.0,<8.0.0        # Apache   y
 elasticsearch-dsl>=7.0.0,<8.0.0    # Apache   y
 gunicorn                           # MIT      y

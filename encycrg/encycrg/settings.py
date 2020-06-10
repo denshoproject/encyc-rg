@@ -177,6 +177,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     #
     'bootstrap_pagination',
+    'drf_yasg',
     'rest_framework',
     #
     'encycrg',

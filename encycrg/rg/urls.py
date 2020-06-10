@@ -3,13 +3,43 @@
 from django.urls import path, re_path
 from django.views.generic import TemplateView
 
+from drf_yasg import views as yasg_views
+from drf_yasg import openapi
+from rest_framework import permissions
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from . import api
 from . import views
 
+schema_view = yasg_views.get_schema_view(
+   openapi.Info(
+      title="Densho Resouce Guide API",
+      default_version='3.0',
+      description="Densho Resource Guide to Media on the Japanese American Removal and Incarceration",
+      terms_of_service="http://resourceguide.densho.org/terms/",
+      contact=openapi.Contact(email="info@densho.org"),
+      #license=openapi.License(name="TBD"),
+   ),
+   #validators=['flex', 'ssv'],
+   public=True,
+   permission_classes=(permissions.AllowAny,),
+)
+
 urlpatterns = [
     path('debug/', views.debug, name='rg-debug'),
+    
+    path('api/swagger.json',
+         schema_view.without_ui(cache_timeout=0), name='schema-json'
+    ),
+    path('api/swagger.yaml',
+         schema_view.without_ui(cache_timeout=0), name='schema-yaml'
+    ),
+    path('api/swagger/',
+         schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'
+    ),
+    path('api/redoc/',
+         schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'
+    ),
     
     re_path(r'^api/3.0/browse/(?P<stub>[\w\W]+)/(?P<value>[\w\W]+)/', api.browse_facet_objects, name='rg-api-browse-fieldvalue'),
     re_path(r'^api/3.0/browse/(?P<stub>[\w\W]+)/', api.browse_facet, name='rg-api-browse-field'),

@@ -315,9 +315,9 @@ branch:
 	cd $(INSTALLDIR)/encycrg; python ./bin/git-checkout-branch.py $(BRANCH)
 
 
-install-static: get-app-assets install-app-assets install-restframework
+install-static: get-app-assets install-app-assets install-restframework install-swagger
 
-clean-static: clean-app-assets clean-restframework
+clean-static: clean-app-assets clean-restframework clean-swagger
 
 get-app-assets:
 	@echo ""
@@ -342,8 +342,16 @@ install-restframework:
 	@echo "rest-framework assets ---------------------------------------------------"
 	cp -R $(VIRTUALENV)/lib/$(PYTHON_VERSION)/site-packages/rest_framework/static/rest_framework/ $(STATIC_ROOT)/
 
+install-swagger:
+	@echo ""
+	@echo "rest-swagger assets -----------------------------------------------------"
+	cp -R $(VIRTUALENV)/lib/$(PYTHON_VERSION)/site-packages/drf_yasg/static/drf-yasg/ $(STATIC_ROOT)/
+
 clean-restframework:
 	-rm -Rf $(STATIC_ROOT)/rest_framework/
+
+clean-swagger:
+	-rm -Rf $(STATIC_ROOT)/drf_yasg/
 
 
 install-configs:
