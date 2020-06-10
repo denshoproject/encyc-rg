@@ -13,6 +13,13 @@ DEBIAN_RELEASE := $(shell lsb_release -sr)
 # Sortable major version tag e.g. deb8
 DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
 
+ifeq ($(DEBIAN_CODENAME), stretch)
+	PYTHON_VERSION=python3.5
+endif
+ifeq ($(DEBIAN_CODENAME), buster)
+	PYTHON_VERSION=python3.7
+endif
+
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
 INSTALL_BASE=/opt
