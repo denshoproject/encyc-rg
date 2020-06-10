@@ -52,21 +52,25 @@ def index(request):
         'api_url': api_url,
     })
 
-class Error400(View):
-    def get(self, request, *args, **kwargs):
-        return render(request, 'rg/400.html', {})
+def handler400(request, exception):
+    response = render(request, "rg/404.html", context={})
+    response.status_code = 400
+    return response
 
-class Error403(View):
-    def get(self, request, *args, **kwargs):
-        return render(request, 'rg/403.html', {})
+def handler403(request, exception):
+    response = render(request, "rg/404.html", context={})
+    response.status_code = 403
+    return response
 
-class Error404(View):
-    def get(self, request, *args, **kwargs):
-        return render(request, 'rg/404.html', {})
+def handler404(request, exception):
+    response = render(request, "rg/404.html", context={})
+    response.status_code = 404
+    return response
 
-class Error500(View):
-    def get(self, request, *args, **kwargs):
-        return render(request, 'rg/500.html', {})
+def handler500(request):
+    response = render(request, "rg/500.html", context={})
+    response.status_code = 500
+    return response
 
 DEBUG_TEXT = """
 Scroll down to view request metadata and application settings.

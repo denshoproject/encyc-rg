@@ -13,6 +13,13 @@ DEBIAN_RELEASE := $(shell lsb_release -sr)
 # Sortable major version tag e.g. deb8
 DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
 
+ifeq ($(DEBIAN_CODENAME), stretch)
+	PYTHON_VERSION=python3.5
+endif
+ifeq ($(DEBIAN_CODENAME), buster)
+	PYTHON_VERSION=python3.7
+endif
+
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
 INSTALL_BASE=/opt
@@ -308,18 +315,43 @@ branch:
 	cd $(INSTALLDIR)/encycrg; python ./bin/git-checkout-branch.py $(BRANCH)
 
 
-install-static:
+install-static: get-app-assets install-app-assets install-restframework install-swagger
+
+clean-static: clean-app-assets clean-restframework clean-swagger
+
+get-app-assets:
 	@echo ""
-	@echo "install static ---------------------------------------------------------"
+	@echo "get assets -------------------------------------------------------------"
+	wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
+
+install-app-assets:
+	@echo ""
+	@echo "install assets ---------------------------------------------------------"
 	-mkdir -p $(MEDIA_BASE)
 	chown -R root.root $(MEDIA_BASE)
 	chmod -R 755 $(MEDIA_BASE)
-	wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
 	tar xzvf /tmp/$(ASSETS) -C /tmp/
+	-mkdir -p $(STATIC_ROOT)
 	cp -R /tmp/encyc-rg-assets/* $(STATIC_ROOT)
 
-clean-static:
-	-rm -Rf $(INSTALLDIR)/static/
+clean-app-assets:
+	-rm -Rf $(STATIC_ROOT)/
+
+install-restframework:
+	@echo ""
+	@echo "rest-framework assets ---------------------------------------------------"
+	cp -R $(VIRTUALENV)/lib/$(PYTHON_VERSION)/site-packages/rest_framework/static/rest_framework/ $(STATIC_ROOT)/
+
+install-swagger:
+	@echo ""
+	@echo "rest-swagger assets -----------------------------------------------------"
+	cp -R $(VIRTUALENV)/lib/$(PYTHON_VERSION)/site-packages/drf_yasg/static/drf-yasg/ $(STATIC_ROOT)/
+
+clean-restframework:
+	-rm -Rf $(STATIC_ROOT)/rest_framework/
+
+clean-swagger:
+	-rm -Rf $(STATIC_ROOT)/drf_yasg/
 
 
 install-configs:
