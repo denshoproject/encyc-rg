@@ -308,18 +308,26 @@ branch:
 	cd $(INSTALLDIR)/encycrg; python ./bin/git-checkout-branch.py $(BRANCH)
 
 
-install-static:
+install-static: get-app-assets install-app-assets
+
+clean-static: clean-app-assets
+
+get-app-assets:
 	@echo ""
-	@echo "install static ---------------------------------------------------------"
+	@echo "get assets -------------------------------------------------------------"
+	wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
+
+install-app-assets:
+	@echo ""
+	@echo "install assets ---------------------------------------------------------"
 	-mkdir -p $(MEDIA_BASE)
 	chown -R root.root $(MEDIA_BASE)
 	chmod -R 755 $(MEDIA_BASE)
-	wget -nc -P /tmp http://$(PACKAGE_SERVER)/$(ASSETS)
 	tar xzvf /tmp/$(ASSETS) -C /tmp/
 	-mkdir -p $(STATIC_ROOT)
 	cp -R /tmp/encyc-rg-assets/* $(STATIC_ROOT)
 
-clean-static:
+clean-app-assets:
 	-rm -Rf $(INSTALLDIR)/static/
 
 
