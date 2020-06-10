@@ -315,9 +315,9 @@ branch:
 	cd $(INSTALLDIR)/encycrg; python ./bin/git-checkout-branch.py $(BRANCH)
 
 
-install-static: get-app-assets install-app-assets
+install-static: get-app-assets install-app-assets install-restframework
 
-clean-static: clean-app-assets
+clean-static: clean-app-assets clean-restframework
 
 get-app-assets:
 	@echo ""
@@ -335,7 +335,15 @@ install-app-assets:
 	cp -R /tmp/encyc-rg-assets/* $(STATIC_ROOT)
 
 clean-app-assets:
-	-rm -Rf $(INSTALLDIR)/static/
+	-rm -Rf $(STATIC_ROOT)/
+
+install-restframework:
+	@echo ""
+	@echo "rest-framework assets ---------------------------------------------------"
+	cp -R $(VIRTUALENV)/lib/$(PYTHON_VERSION)/site-packages/rest_framework/static/rest_framework/ $(STATIC_ROOT)/
+
+clean-restframework:
+	-rm -Rf $(STATIC_ROOT)/rest_framework/
 
 
 install-configs:
