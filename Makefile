@@ -13,9 +13,6 @@ DEBIAN_RELEASE := $(shell lsb_release -sr)
 # Sortable major version tag e.g. deb8
 DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
 
-ifeq ($(DEBIAN_CODENAME), stretch)
-	PYTHON_VERSION=python3.5
-endif
 ifeq ($(DEBIAN_CODENAME), buster)
 	PYTHON_VERSION=python3.7
 endif
@@ -44,12 +41,6 @@ MEDIA_ROOT=$(MEDIA_BASE)/media
 STATIC_ROOT=$(MEDIA_BASE)/static
 
 OPENJDK_PKG=
-ifeq ($(DEBIAN_RELEASE), jessie)
-	OPENJDK_PKG=openjdk-7-jre
-endif
-ifeq ($(DEBIAN_CODENAME), stretch)
-	OPENJDK_PKG=openjdk-8-jre
-endif
 ifeq ($(DEBIAN_CODENAME), buster)
 	OPENJDK_PKG=openjdk-11-jre
 endif
@@ -65,16 +56,10 @@ ASSETS=encyc-rg-assets.tgz
 
 DEB_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
 DEB_ARCH=amd64
-DEB_NAME_JESSIE=$(APP)-$(DEB_BRANCH)
-DEB_NAME_STRETCH=$(APP)-$(DEB_BRANCH)
 DEB_NAME_BUSTER=$(APP)-$(DEB_BRANCH)
 # Application version, separator (~), Debian release tag e.g. deb8
 # Release tag used because sortable and follows Debian project usage.
-DEB_VERSION_JESSIE=$(APP_VERSION)~deb8
-DEB_VERSION_STRETCH=$(APP_VERSION)~deb9
-DEB_VERSION_BUSTER=$(APP_VERSION)~deb9
-DEB_FILE_JESSIE=$(DEB_NAME_JESSIE)_$(DEB_VERSION_JESSIE)_$(DEB_ARCH).deb
-DEB_FILE_STRETCH=$(DEB_NAME_STRETCH)_$(DEB_VERSION_STRETCH)_$(DEB_ARCH).deb
+DEB_VERSION_BUSTER=$(APP_VERSION)~deb10
 DEB_FILE_BUSTER=$(DEB_NAME_BUSTER)_$(DEB_VERSION_BUSTER)_$(DEB_ARCH).deb
 DEB_VENDOR=Densho.org
 DEB_MAINTAINER=<geoffrey.jost@densho.org>
@@ -461,43 +446,7 @@ install-fpm:
 # http://fpm.readthedocs.io/en/latest/
 # https://stackoverflow.com/questions/32094205/set-a-custom-install-directory-when-making-a-deb-package-with-fpm
 # https://brejoc.com/tag/fpm/
-deb: deb-stretch
-
-deb-stretch:
-	@echo ""
-	@echo "FPM packaging (stretch) -------------------------------------------------"
-	-rm -Rf $(DEB_FILE_STRETCH)
-	virtualenv --python=python3 --relocatable $(VIRTUALENV)  # Make venv relocatable
-	fpm   \
-	--verbose   \
-	--input-type dir   \
-	--output-type deb   \
-	--name $(DEB_NAME_STRETCH)   \
-	--version $(DEB_VERSION_STRETCH)   \
-	--package $(DEB_FILE_STRETCH)   \
-	--url "$(GIT_SOURCE_URL)"   \
-	--vendor "$(DEB_VENDOR)"   \
-	--maintainer "$(DEB_MAINTAINER)"   \
-	--description "$(DEB_DESCRIPTION)"   \
-	--depends "python3"   \
-	--depends "imagemagick"   \
-	--depends "sqlite3"   \
-	--depends "supervisor"   \
-	--chdir $(INSTALLDIR)   \
-	.git=$(DEB_BASE)   \
-	.gitignore=$(DEB_BASE)   \
-	conf=$(DEB_BASE)   \
-	COPYRIGHT=$(DEB_BASE)   \
-	encycrg=$(DEB_BASE)   \
-	static=$(MEDIA_BASE)   \
-	venv=$(DEB_BASE)   \
-	INSTALL=$(DEB_BASE)   \
-	LICENSE=$(DEB_BASE)   \
-	Makefile=$(DEB_BASE)   \
-	README.rst=$(DEB_BASE)   \
-	requirements.txt=$(DEB_BASE)  \
-	VERSION=$(DEB_BASE)  \
-	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
+deb: deb-buster
 
 deb-buster:
 	@echo ""
