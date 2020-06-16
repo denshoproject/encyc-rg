@@ -6,12 +6,13 @@
                                    # LICENSE  Python3
                                    
 beautifulsoup4                     # MIT      y
-django>=1.11,<2.0                  # MIT      y
+django>=3.0.0,<3.1                 # MIT      y
 django-bootstrap-pagination        # MIT      ???
 django-redis<4.12                  # BSD      y
 django-redis-cache
 django-redis-sessions
-djangorestframework                # BSD      y
+djangorestframework>=3.11.0,<3.12  # BSD      y
+drf-yasg>=1.17.0,<1.18             # BSD      y
 elasticsearch>=7.0.0,<8.0.0        # Apache   y
 elasticsearch-dsl>=7.0.0,<8.0.0    # Apache   y
 gunicorn                           # MIT      y
@@ -19,9 +20,6 @@ markdown
 redis                              # MIT      y
 
 bpython
-curtsies
-greenlet
-pygments
 
 coverage
 pytest
@@ -29,7 +27,3 @@ pytest-cov
 pytest-django
 pytest-testmon
 pytest-xdist
-
-caniusepython3
-future
-pylint
