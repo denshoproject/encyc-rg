@@ -541,8 +541,11 @@ class Page(repo_models.Page):
             a['href'] = urljoin(settings.ENCYCLOPEDIA_URL, a['href'])
         
         # rm underscores from internal links
+        # append trailing slashes to internal links
         for a in soup.find_all('a', class_='rg'):
             a['href'] = a['href'].replace('_', ' ')
+            if a['href'][-1] != '/':
+                a['href'] += '/'
         
         # rm sections from soup, to separate blocks of HTML
         #   <div class="section" id="For_More_Information">
