@@ -221,7 +221,7 @@ CACHES = {
 
 # whole-site caching
 CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_SECONDS = config.get('encycrg', 'cache_timeout')
+CACHE_MIDDLEWARE_SECONDS = int(config.get('encycrg', 'cache_timeout'))
 CACHE_MIDDLEWARE_KEY_PREFIX = 'encycrg'
 # low-level caching
 CACHE_TIMEOUT = int(config.get('encycrg', 'cache_timeout'))
