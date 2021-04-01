@@ -215,6 +215,8 @@ remove-elasticsearch:
 install-virtualenv:
 	apt-get --assume-yes install python3-pip python3-venv
 	python3 -m venv $(VIRTUALENV)
+	source $(VIRTUALENV)/bin/activate; \
+	pip3 install -U --cache-dir=$(PIP_CACHE_DIR) pip
 
 install-setuptools: install-virtualenv
 	@echo ""
