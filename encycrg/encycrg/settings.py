@@ -103,6 +103,8 @@ ALLOWED_HOSTS = [
 DOCSTORE_PROTOCOL = 'http'
 DOCSTORE_HOST = config.get('elasticsearch','docstore_host')
 DOCSTORE_TIMEOUT = int(config.get('elasticsearch','docstore_timeout'))
+ELASTICSEARCH_USERNAME = 'elastic'
+ELASTICSEARCH_PASSWORD = config.get('elasticsearch', 'elasticsearch_password')
 
 # quit if can't connect to ES
 DOCSTORE_BASE = '%s://%s/' % (
@@ -110,7 +112,11 @@ DOCSTORE_BASE = '%s://%s/' % (
     DOCSTORE_HOST,
 )
 try:
-    r = requests.get(DOCSTORE_BASE, timeout=3)
+    r = requests.get(
+        DOCSTORE_BASE,
+        auth=(ELASTICSEARCH_USERNAME,ELASTICSEARCH_PASSWORD),
+        timeout=3
+    )
     print('Connected to Elasticsearch - %s' % DOCSTORE_BASE)
 except:
     print('FATAL: Could not connect to Elasticsearch - %s' % DOCSTORE_BASE)

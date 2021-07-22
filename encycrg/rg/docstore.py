@@ -11,14 +11,22 @@ from .repo_models import ELASTICSEARCH_CLASSES_BY_MODEL
 INDEX_PREFIX = 'encyc'
 
 
+def get_elasticsearch():
+    return Elasticsearch(
+        settings.DOCSTORE_HOST,
+        http_auth=(
+            settings.ELASTICSEARCH_USERNAME, settings.ELASTICSEARCH_PASSWORD
+        ),
+        #scheme="https",
+        #port=443,
+    )
+
+
 class Docstore():
 
-    def __init__(self, hosts=settings.DOCSTORE_HOST, connection=None):
-        self.hosts = hosts
-        if connection:
-            self.es = connection
-        else:
-            self.es = Elasticsearch(hosts, timeout=settings.DOCSTORE_TIMEOUT)
+    def __init__(self):
+        self.hosts = settings.DOCSTORE_HOST
+        self.es = get_elasticsearch()
     
     def index_name(self, model):
         return '{}{}'.format(INDEX_PREFIX, model)
