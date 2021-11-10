@@ -386,9 +386,11 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/encyc/rg.log',
+            'level': LOG_LEVEL,
+            'class': 'logging.handlers.WatchedFileHandler',
+            'filename': '/var/log/encyc/encycrg.log',
+            'filters': [],
+            'formatter': 'verbose',
         },
     },
     'loggers': {
