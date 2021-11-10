@@ -1,14 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-1762741-14"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'UA-1762741-14');
-  </script>
 
   <!-- SITE TITTLE -->
   <meta charset="utf-8">
@@ -425,5 +417,15 @@ at {{ time|date:"Y-m-d" }}T{{ time|time:"H:i:s(T)" }}
 <script src="{{ static_url }}plugins/velocity/velocity.min.js"></script>
 <script src="{{ static_url }}plugins/smoothscroll/SmoothScroll.js"></script>
 <script src="{{ static_url }}js/custom.js"></script>
+
+  {% if google_analytics_id %}<!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ google_analytics_id }}');
+  </script>{% endif %}
+
 </body>
 </html>
