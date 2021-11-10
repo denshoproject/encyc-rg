@@ -22,9 +22,13 @@ endif
 
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
+SRC_REPO_ASSETS=https://github.com/denshoproject/encyc-rg-assets.git
+
 INSTALL_BASE=/opt
 INSTALLDIR=$(INSTALL_BASE)/encyc-rg
 DOWNLOADS_DIR=/tmp/$(APP)-install
+INSTALL_RG=/opt/encyc-rg
+INSTALL_ASSETS=/opt/encyc-rg-assets
 REQUIREMENTS=$(INSTALLDIR)/requirements.txt
 PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 
@@ -59,6 +63,12 @@ NGINX_CONF=/etc/nginx/sites-available/$(APP).conf
 NGINX_CONF_LINK=/etc/nginx/sites-enabled/$(APP).conf
 
 ASSETS=encyc-rg-assets.tgz
+
+TGZ_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
+TGZ_FILE=$(APP)_$(APP_VERSION)
+TGZ_DIR=$(INSTALL_RG)/$(TGZ_FILE)
+TGZ_APP=$(TGZ_DIR)/encyc-rg
+TGZ_ASSETS=$(TGZ_DIR)/encyc-rg/encyc-rg-assets
 
 DEB_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
 DEB_ARCH=amd64
@@ -445,6 +455,25 @@ status:
 git-status:
 	@echo "------------------------------------------------------------------------"
 	cd $(INSTALLDIR) && git status
+
+
+tgz-local:
+	rm -Rf $(TGZ_DIR)
+	git clone $(INSTALL_APP) $(TGZ_APP)
+	git clone $(INSTALL_ASSETS) $(TGZ_ASSETS)
+	cd $(TGZ_APP); git checkout develop; git checkout master
+	cd $(TGZ_ASSETS); git checkout develop; git checkout master
+	tar czf $(TGZ_FILE).tgz $(TGZ_FILE)
+	rm -Rf $(TGZ_DIR)
+
+tgz:
+	rm -Rf $(TGZ_DIR)
+	git clone $(GIT_SOURCE_URL) $(TGZ_APP)
+	git clone $(SRC_REPO_ASSETS) $(TGZ_ASSETS)
+	cd $(TGZ_APP); git checkout develop; git checkout master
+	cd $(TGZ_ASSETS); git checkout develop; git checkout master
+	tar czf $(TGZ_FILE).tgz $(TGZ_FILE)
+	rm -Rf $(TGZ_DIR)
 
 
 # http://fpm.readthedocs.io/en/latest/
