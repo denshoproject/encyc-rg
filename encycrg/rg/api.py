@@ -97,8 +97,7 @@ def source(request, url_title, format=None):
     except models.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-@api_view(['GET'])
-def browse(request, format=None):
+def _browse(request):
     fields = []
     for key,val in models.FACET_FIELDS.items():
         stub = val['stub']
@@ -111,8 +110,12 @@ def browse(request, format=None):
         item['icon'] = val['icon']
         item['stub'] = val['stub']
         fields.append(item)
+    return fields
+
+@api_view(['GET'])
+def browse(request, format=None):
     return Response(
-        fields
+        _browse(request)
     )
 
 @api_view(['GET'])
