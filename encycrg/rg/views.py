@@ -174,9 +174,9 @@ def source(request, url_title):
 @cache_page(settings.CACHE_TIMEOUT)
 def browse(request):
     api_url = _mkurl(request, reverse('rg-api-browse'))
-    r = api.browse(request, format='json')
+    r = api._browse(request)
     return render(request, 'rg/browse.html', {
-        'databox_fields': r.data,
+        'databox_fields': r,
         'api_url': api_url,
     })
 
