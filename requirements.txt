@@ -4,20 +4,16 @@
 # sudo apt-get install python2.7, supervisor, imagemagick
 
                                    # LICENSE  Python3
-                                   
-beautifulsoup4                     # MIT      y
-django>=3.0.0,<3.1                 # MIT      y
-django-bootstrap-pagination        # MIT      ???
-django-redis<4.12                  # BSD      y
-django-redis-cache
-django-redis-sessions
-djangorestframework>=3.11.0,<3.12  # BSD      y
-drf-yasg>=1.17.0,<1.18             # BSD      y
+beautifulsoup4>=4.10.0,<4.11       # MIT      y
+django>=4.0.0,<4.1                 # MIT
+django-bootstrap-pagination==1.6.4 # MIT
+djangorestframework>=3.13.1,<3.14  # BSD      y
+drf-yasg>=1.20.0,<1.21             # BSD      y
 elasticsearch>=7.0.0,<8.0.0        # Apache   y
 elasticsearch-dsl>=7.0.0,<8.0.0    # Apache   y
-gunicorn                           # MIT      y
+gunicorn>=20.1.0,<20.2             # MIT
 markdown
-redis                              # MIT      y
+redis>=4.1.3,<4.2                  # MIT
 
 bpython
 
