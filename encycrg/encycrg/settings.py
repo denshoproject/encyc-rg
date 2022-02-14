@@ -226,8 +226,8 @@ REDIS_DB_SORL = 4
 
 CACHES = {
     'default': {
-        'BACKEND': 'redis_cache.RedisCache',
-        "LOCATION": "%s:%s" % (REDIS_HOST, REDIS_PORT),
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CACHE}",
     },
 }
 
