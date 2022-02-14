@@ -104,6 +104,18 @@ DOCSTORE_PROTOCOL = 'http'
 DOCSTORE_HOST = config.get('elasticsearch','docstore_host')
 DOCSTORE_TIMEOUT = int(config.get('elasticsearch','docstore_timeout'))
 
+ELASTICSEARCH_GREEN = [
+    g for g in config['elasticsearch'].get('docstore_green','').split(',') if g
+]
+ELASTICSEARCH_BLUE  = [
+    b for b in config['elasticsearch'].get('docstore_blue', '').split(',') if b
+]
+ENCYCRG_CLUSTER = '¯\_(ツ)_/¯'
+if DOCSTORE_HOST.split(':')[0] in ELASTICSEARCH_GREEN:
+    ENCYCRG_CLUSTER = 'green'
+elif DOCSTORE_HOST.split(':')[0] in ELASTICSEARCH_BLUE:
+    ENCYCRG_CLUSTER = 'blue'
+
 # quit if can't connect to ES
 DOCSTORE_BASE = '%s://%s/' % (
     DOCSTORE_PROTOCOL,
