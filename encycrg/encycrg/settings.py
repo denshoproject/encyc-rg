@@ -100,8 +100,10 @@ ALLOWED_HOSTS = [
 ]
 
 # Elasticsearch
-DOCSTORE_PROTOCOL = 'http'
 DOCSTORE_HOST = config.get('elasticsearch','docstore_host')
+DOCSTORE_SSL_CERTFILE = config.get('elasticsearch', 'docstore_ssl_certfile')
+DOCSTORE_USERNAME = 'elastic'
+DOCSTORE_PASSWORD = config.get('elasticsearch', 'docstore_password')
 DOCSTORE_TIMEOUT = int(config.get('elasticsearch','docstore_timeout'))
 
 ELASTICSEARCH_GREEN = [
@@ -115,21 +117,6 @@ if DOCSTORE_HOST.split(':')[0] in ELASTICSEARCH_GREEN:
     ENCYCRG_CLUSTER = 'green'
 elif DOCSTORE_HOST.split(':')[0] in ELASTICSEARCH_BLUE:
     ENCYCRG_CLUSTER = 'blue'
-
-# quit if can't connect to ES
-DOCSTORE_BASE = '%s://%s/' % (
-    DOCSTORE_PROTOCOL,
-    DOCSTORE_HOST,
-)
-try:
-    r = requests.get(DOCSTORE_BASE, timeout=3)
-    print('Connected to Elasticsearch - %s' % DOCSTORE_BASE)
-except:
-    print('FATAL: Could not connect to Elasticsearch - %s' % DOCSTORE_BASE)
-    sys.exit(1)
-if r.status_code != 200:
-    print('FATAL: Could not connect to Elasticsearch - %s' % DOCSTORE_BASE)
-    sys.exit(1)
 
 # Page size for browse and search results
 PAGE_SIZE = 25
