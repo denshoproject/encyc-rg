@@ -11,8 +11,9 @@ from rest_framework.response import Response
 from django.conf import settings
 from django.http import HttpResponsePermanentRedirect
 
+from elastictools import docstore
+from elastictools import search as docstore_search
 from . import models
-from . import search as docstore_search
 
 
 def redirect(request):
@@ -141,19 +142,20 @@ def browse_facet_objects(request, stub, value, format=None):
 
 @api_view(['GET'])
 def search(request, format=None):
-    searcher = docstore_search.Searcher()
+    searcher = docstore_search.Searcher(models.DOCSTORE)
     if request.GET.get('fulltext'):
         params = request.GET.copy()
         searcher.prepare(
             params=params,
             params_whitelist=models.PAGE_SEARCH_FIELDS,
-            search_models=docstore_search.SEARCH_MODELS,
+            search_models=models.SEARCH_MODELS,
+            sort=[],
             fields=models.PAGE_SEARCH_FIELDS,
             fields_nested={},
             fields_agg=models.PAGE_AGG_FIELDS,
         )
     if searcher.params.get('fulltext'):
-        limit,offset = docstore_search.limit_offset(request)
+        limit,offset = docstore_search.limit_offset(request, settings.RESULTS_PER_PAGE)
         data = searcher.execute(limit, offset).ordered_dict(
             request=request,
             format_functions=models.FORMATTERS,
