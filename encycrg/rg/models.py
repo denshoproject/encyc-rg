@@ -933,7 +933,10 @@ class Page(repo_models.Page):
         if not data:
             mediatypes = []
             for hit in Page.pages().objects:
-                mediatypes += hit['rg_rgmediatype']
+                try:
+                    mediatypes += hit['rg_rgmediatype']
+                except KeyError:
+                    pass  # TODO why is this not working
             data = set(mediatypes)
             cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
