@@ -15,10 +15,10 @@ from django.views import View
 from django.views.decorators.cache import cache_page
 from django.views.debug import technical_500_response
 
-from elastictools import search
 from . import api
 from . import forms
 from . import models
+from . import search
 
 def load_templates(default):
     logger.info('loading templates')

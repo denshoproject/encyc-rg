@@ -15,7 +15,7 @@ from django.urls import reverse
 from rest_framework.reverse import reverse as api_reverse
 
 from elastictools import docstore
-from elastictools import search
+from . import search
 from . import repo_models
 
 INDEX_PREFIX = 'encyc'
