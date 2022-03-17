@@ -1,7 +1,6 @@
 # Models are defined here and not in encyc.models.elastic in order
 # to prevent import looping between that class and encyc.docstore.
 
-from elasticsearch.exceptions import NotFoundError
 import elasticsearch_dsl as dsl
 
 

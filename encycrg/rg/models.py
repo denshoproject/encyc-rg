@@ -9,21 +9,105 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from elasticsearch.exceptions import NotFoundError
-import elasticsearch_dsl as dsl
-
 from django.conf import settings
 from django.core.cache import cache
 from django.urls import reverse
 from rest_framework.reverse import reverse as api_reverse
 
-from . import repo_models
-from . import docstore
+from elastictools import docstore
 from . import search
+from . import repo_models
+
+INDEX_PREFIX = 'encyc'
+
+# see if cluster is available, quit with nice message if not
+docstore.Docstore(INDEX_PREFIX, settings.DOCSTORE_HOST, settings).start_test()
+
+# set default hosts and index
+DOCSTORE = docstore.Docstore(INDEX_PREFIX, settings.DOCSTORE_HOST, settings)
 
 DOCTYPE_CLASS = {}  # Maps doctype names to classes
 
 SEARCH_LIST_FIELDS = []
+
+#SEARCH_LIST_FIELDS = models.all_list_fields()
+
+# whitelist of params recognized in URL query
+# TODO derive from ddr-defs/repo_models/
+# TODO THESE ARE FROM DDR!
+SEARCH_PARAM_WHITELIST = [
+    'published_encyc',
+    'published_rg',
+    'fulltext',
+    'sort',
+    'topics',
+    'facility',
+    'model',
+    'models',
+    'parent',
+    'status',
+    'public',
+    'topics',
+    'facility',
+    'contributor',
+    'creators',
+    'format',
+    'genre',
+    'geography',
+    'language',
+    'location',
+    'mimetype',
+    'persons',
+    'rights',
+    'facet_id',
+]
+
+# fields where the relevant value is nested e.g. topics.id
+# TODO derive from ddr-defs/repo_models/
+SEARCH_NESTED_FIELDS = [
+    'facility',
+    'topics',
+]
+
+# TODO derive from ddr-defs/repo_models/
+SEARCH_AGG_FIELDS = {
+    'media-type': 'rg_rgmediatype',
+}
+
+# TODO derive from ddr-defs/repo_models/
+SEARCH_MODELS = [
+    'encycarticle',
+]
+
+# fields searched by query
+# TODO derive from ddr-defs/repo_models/
+SEARCH_INCLUDE_FIELDS = [
+    'id',
+    'model',
+    'links_html',
+    'links_json',
+    'links_img',
+    'links_thumb',
+    'links_children',
+    'status',
+    'public',
+    'title',
+    'title_sort',
+    'url_title',
+    'description',
+    'contributor',
+    'creators',
+    'facility',
+    'format',
+    'genre',
+    'geography',
+    'label',
+    'language',
+    'location',
+    'persons',
+    'rights',
+    'topics',
+]
 
 """
 
@@ -93,7 +177,7 @@ class Author(repo_models.Author):
 
     @staticmethod
     def get(title):
-        ds = docstore.Docstore()
+        ds = DOCSTORE
         return super(Author, Author).get(
             title, index=ds.index_name('author'), using=ds.es
     )
@@ -198,11 +282,13 @@ class Author(repo_models.Author):
         @param offset: int
         @returns: SearchResults
         """
-        searcher = search.Searcher()
+        searcher = search.Searcher(DOCSTORE)
         searcher.prepare(
             params={},
-            search_models=[docstore.Docstore().index_name('author')],
+            params_whitelist=SEARCH_PARAM_WHITELIST,
+            search_models=[DOCSTORE.index_name('author')],
             sort=['title_sort'],
+            fields=SEARCH_INCLUDE_FIELDS,
             fields_nested=[],
             fields_agg={},
         )
@@ -264,6 +350,7 @@ PAGE_BROWSABLE_FIELDS = {
 }
 PAGE_SEARCH_FIELDS = [
     'title',
+    'url_title',
     'description',
     'body',
     'categories',
@@ -507,7 +594,7 @@ class Page(repo_models.Page):
 
     @staticmethod
     def get(title):
-        ds = docstore.Docstore()
+        ds = DOCSTORE
         page = super(Page, Page).get(
             id=title, index=ds.index_name('article'), using=ds.es
         )
@@ -610,7 +697,7 @@ class Page(repo_models.Page):
         def setval(self, data, fieldname, is_list=False):
             value = hitvalue(self, fieldname, is_list)
             if value:
-                if isinstance(value, dsl.utils.AttrList):
+                if isinstance(value, docstore.elasticsearch_dsl.utils.AttrList):
                     value = [x for x in value]
                 data[fieldname] = value
 
@@ -634,7 +721,7 @@ class Page(repo_models.Page):
         def setval(self, data, fieldname, is_list=False):
             value = hitvalue(self, fieldname, is_list)
             if value:
-                if isinstance(value, dsl.utils.AttrList):
+                if isinstance(value, docstore.elasticsearch_dsl.utils.AttrList):
                     value = [x for x in value]
                 data[fieldname] = value
         
@@ -728,7 +815,7 @@ class Page(repo_models.Page):
             for url_title in self.authors_data['display']:
                 try:
                     author = Author.get(url_title)
-                except NotFoundError:
+                except docstore.NotFoundError:
                     author = url_title
                 objects.append(author)
         return objects
@@ -751,11 +838,13 @@ class Page(repo_models.Page):
         @param offset: int
         @returns: SearchResults
         """
-        searcher = search.Searcher()
+        searcher = search.Searcher(DOCSTORE)
         searcher.prepare(
             params={},
-            search_models=[docstore.Docstore().index_name('article')],
+            params_whitelist=SEARCH_PARAM_WHITELIST,
+            search_models=[DOCSTORE.index_name('article')],
             sort=['title_sort'],
+            fields=SEARCH_INCLUDE_FIELDS,
             fields_nested=[],
             fields_agg={},
         )
@@ -844,7 +933,10 @@ class Page(repo_models.Page):
         if not data:
             mediatypes = []
             for hit in Page.pages().objects:
-                mediatypes += hit['rg_rgmediatype']
+                try:
+                    mediatypes += hit['rg_rgmediatype']
+                except KeyError:
+                    pass  # TODO why is this not working
             data = set(mediatypes)
             cache.set(KEY, data, settings.CACHE_TIMEOUT)
         return data
@@ -886,11 +978,12 @@ class Page(repo_models.Page):
         """
         model_field = MEDIATYPE_URLSTUBS[field]
         # TODO don't get all the records just the aggregations
-        searcher = search.Searcher()
+        searcher = search.Searcher(DOCSTORE)
         searcher.prepare(
             params={},
             params_whitelist=PAGE_SEARCH_FIELDS,
-            search_models=search.SEARCH_MODELS,
+            search_models=SEARCH_MODELS,
+            sort=[],
             fields=PAGE_SEARCH_FIELDS,
             fields_nested={},
             fields_agg=PAGE_AGG_FIELDS,
@@ -937,11 +1030,12 @@ class Page(repo_models.Page):
         params = {
             model_field: value,
         }
-        searcher = search.Searcher()
+        searcher = search.Searcher(DOCSTORE)
         searcher.prepare(
             params=params,
             params_whitelist=PAGE_SEARCH_FIELDS,
-            search_models=search.SEARCH_MODELS,
+            search_models=SEARCH_MODELS,
+            sort=[],
             fields=PAGE_SEARCH_FIELDS,
             fields_nested={},
             fields_agg={},
@@ -1023,7 +1117,7 @@ class Source(repo_models.Source):
 
     @staticmethod
     def get(title):
-        ds = docstore.Docstore()
+        ds = DOCSTORE
         return super(Source, Source).get(
             title, index=ds.index_name('source'), using=ds.es
         )
@@ -1124,7 +1218,7 @@ class Source(repo_models.Source):
         if self.headword:
             try:
                 page = Page.get(self.headword)
-            except NotFoundError:
+            except docstore.NotFoundError:
                 page = None
         return page
     
@@ -1136,11 +1230,13 @@ class Source(repo_models.Source):
         @param offset: int
         @returns: SearchResults
         """
-        searcher = search.Searcher()
+        searcher = search.Searcher(DOCSTORE)
         searcher.prepare(
             params={},
-            search_models=[docstore.Docstore().index_name('source')],
+            params_whitelist=SEARCH_PARAM_WHITELIST,
+            search_models=[DOCSTORE.index_name('source')],
             sort=['encyclopedia_id'],
+            fields=SEARCH_INCLUDE_FIELDS,
             fields_nested=[],
             fields_agg={},
         )

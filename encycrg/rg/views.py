@@ -4,8 +4,6 @@ import logging
 logger = logging.getLogger(__name__)
 from urllib.parse import urlunparse
 
-from elasticsearch.exceptions import NotFoundError, TransportError
-
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
@@ -249,13 +247,14 @@ def search_ui(request):
         'fields': models.FACET_FIELDS,
     }
 
-    searcher = search.Searcher()
+    searcher = search.Searcher(models.DOCSTORE)
     if request.GET.get('fulltext'):
         params = request.GET.copy()
         searcher.prepare(
             params=params,
             params_whitelist=models.PAGE_SEARCH_FIELDS,
-            search_models=search.SEARCH_MODELS,
+            search_models=models.SEARCH_MODELS,
+            sort=[],
             fields=models.PAGE_SEARCH_FIELDS,
             fields_nested={},
             fields_agg=models.PAGE_AGG_FIELDS,
@@ -263,7 +262,7 @@ def search_ui(request):
         context['search_performed'] = True
     
     if searcher.params.get('fulltext'):
-        limit,offset = search.limit_offset(request)
+        limit,offset = search.limit_offset(request, settings.RESULTS_PER_PAGE)
         results = searcher.execute(limit, offset)
         paginator = Paginator(
             results.ordered_dict(
