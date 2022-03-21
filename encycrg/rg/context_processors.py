@@ -18,7 +18,7 @@ def sitewide(request):
         'version': settings.VERSION,
         'packages': settings.PACKAGES,
         'docstore_host': settings.DOCSTORE_HOST,
-        'encycrg_cluster': settings.ENCYCRG_CLUSTER,
+        'encycrg_cluster': settings.DOCSTORE_CLUSTER,
         'base_template': settings.BASE_TEMPLATE,
         'static_url': settings.STATIC_URL,
         'google_analytics_id': settings.GOOGLE_ANALYTICS_ID,
