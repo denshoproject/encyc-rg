@@ -17,6 +17,8 @@ import sys
 
 import requests
 
+from elastictools import docstore
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -105,18 +107,9 @@ DOCSTORE_SSL_CERTFILE = config.get('elasticsearch', 'docstore_ssl_certfile')
 DOCSTORE_USERNAME = 'elastic'
 DOCSTORE_PASSWORD = config.get('elasticsearch', 'docstore_password')
 DOCSTORE_TIMEOUT = int(config.get('elasticsearch','docstore_timeout'))
-
-ELASTICSEARCH_GREEN = [
-    g for g in config['elasticsearch'].get('docstore_green','').split(',') if g
-]
-ELASTICSEARCH_BLUE  = [
-    b for b in config['elasticsearch'].get('docstore_blue', '').split(',') if b
-]
-ENCYCRG_CLUSTER = '¯\_(ツ)_/¯'
-if DOCSTORE_HOST.split(':')[0] in ELASTICSEARCH_GREEN:
-    ENCYCRG_CLUSTER = 'green'
-elif DOCSTORE_HOST.split(':')[0] in ELASTICSEARCH_BLUE:
-    ENCYCRG_CLUSTER = 'blue'
+DOCSTORE_CLUSTER = docstore.cluster(
+    config.get('elasticsearch', 'docstore_clusters'), DOCSTORE_HOST
+)
 
 # Page size for browse and search results
 PAGE_SIZE = 25
