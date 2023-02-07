@@ -266,6 +266,7 @@ install-encyc-rg: install-virtualenv
 	apt-get --assume-yes install imagemagick sqlite3 supervisor
 	source $(VIRTUALENV)/bin/activate; \
 	pip3 install -U -r $(REQUIREMENTS)
+	sudo -u encyc git config --global --add safe.directory $(INSTALL_RG)
 # logs dir
 	-mkdir $(LOGS_BASE)
 	chown -R $(USER).root $(LOGS_BASE)
