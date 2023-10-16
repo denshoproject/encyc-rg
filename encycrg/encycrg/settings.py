@@ -153,6 +153,8 @@ SITE_MSG_TEXT = config.get('encycrg', 'site_msg_text')
 
 # ----------------------------------------------------------------------
 
+SITE_ID = 1
+
 ADMINS = (
     ('geoffrey jost', 'geoffrey.jost@densho.org'),
     ('Geoff Froh', 'geoff.froh@densho.org'),
@@ -165,6 +167,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     #
