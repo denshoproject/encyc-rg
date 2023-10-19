@@ -15,9 +15,10 @@ class Searcher(search.Searcher):
         fields,            # SEARCH_INCLUDE_FIELDS
         fields_nested,     # SEARCH_NESTED_FIELDS
         fields_agg,        # SEARCH_AGG_FIELDS
+        wildcards=False,
     ):
         params['published_rg'] = True  # only show ResourceGuide items
         return super().prepare(
             params, params_whitelist, search_models, sort,
-            fields, fields_nested, fields_agg,
+            fields, fields_nested, fields_agg, wildcards,
         )
