@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path, re_path
 from django.views.generic import TemplateView
 
@@ -9,7 +10,12 @@ from rest_framework import permissions
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from . import api
+from . import sitemaps
 from . import views
+
+SITEMAPS = {
+    'pages': sitemaps.PageSitemap,
+}
 
 schema_view = yasg_views.get_schema_view(
    openapi.Info(
@@ -27,6 +33,7 @@ schema_view = yasg_views.get_schema_view(
 
 urlpatterns = [
     path('debug/', views.debug, name='rg-debug'),
+    path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS}, name='wikiprox-sitemap'),
     
     path('api/swagger.json',
          schema_view.without_ui(cache_timeout=0), name='schema-json'
