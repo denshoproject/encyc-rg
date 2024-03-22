@@ -6,19 +6,6 @@ SHELL = /bin/bash
 APP_VERSION := $(shell cat VERSION)
 GIT_SOURCE_URL=https://github.com/densho/encyc-rg
 
-# Release name e.g. jessie
-DEBIAN_CODENAME := $(shell lsb_release -sc)
-# Release numbers e.g. 8.10
-DEBIAN_RELEASE := $(shell lsb_release -sr)
-# Sortable major version tag e.g. deb8
-DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
-
-ifeq ($(DEBIAN_CODENAME), buster)
-	PYTHON_VERSION=python3.7
-endif
-ifeq ($(DEBIAN_CODENAME), bullseye)
-	PYTHON_VERSION=python3.9
-endif
 
 PACKAGE_SERVER=ddr.densho.org/static/$(APP)
 
@@ -47,13 +34,28 @@ MEDIA_BASE=/var/www/$(APP)
 MEDIA_ROOT=$(MEDIA_BASE)/media
 STATIC_ROOT=$(MEDIA_BASE)/static
 
+# Release name e.g. jessie
+DEBIAN_CODENAME := $(shell lsb_release -sc)
+# Release numbers e.g. 8.10
+DEBIAN_RELEASE := $(shell lsb_release -sr)
+# Sortable major version tag e.g. deb8
+DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
+
+PYTHON_VERSION=
 OPENJDK_PKG=
-ifeq ($(DEBIAN_CODENAME), buster)
-	OPENJDK_PKG=openjdk-11-jre
-endif
 ifeq ($(DEBIAN_CODENAME), bullseye)
+	PYTHON_VERSION=3.9
 	OPENJDK_PKG=openjdk-17-jre-headless
 endif
+ifeq ($(DEBIAN_CODENAME), bookworm)
+	PYTHON_VERSION=3.11.2
+	OPENJDK_PKG=openjdk-17-jre-headless
+endif
+ifeq ($(DEBIAN_CODENAME), trixie)
+	PYTHON_VERSION=3.11.6
+	OPENJDK_PKG=openjdk-17-jre-headless
+endif
+
 
 ELASTICSEARCH=elasticsearch-2.4.6.deb
 
@@ -70,16 +72,21 @@ TGZ_DIR=$(INSTALL_RG)/$(TGZ_FILE)
 TGZ_APP=$(TGZ_DIR)/encyc-rg
 TGZ_ASSETS=$(TGZ_DIR)/encyc-rg/encyc-rg-assets
 
-DEB_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | tr -d _ | tr -d -)
+# Adding '-rcN' to VERSION will name the package "ddrlocal-release"
+# instead of "ddrlocal-BRANCH"
+DEB_BRANCH := $(shell python3 bin/package-branch.py)
 DEB_ARCH=amd64
-DEB_NAME_BUSTER=$(APP)-$(DEB_BRANCH)
 DEB_NAME_BULLSEYE=$(APP)-$(DEB_BRANCH)
+DEB_NAME_BOOKWORM=$(APP)-$(DEB_BRANCH)
+DEB_NAME_TRIXIE=$(APP)-$(DEB_BRANCH)
 # Application version, separator (~), Debian release tag e.g. deb8
 # Release tag used because sortable and follows Debian project usage.
-DEB_VERSION_BUSTER=$(APP_VERSION)~deb10
 DEB_VERSION_BULLSEYE=$(APP_VERSION)~deb11
-DEB_FILE_BUSTER=$(DEB_NAME_BUSTER)_$(DEB_VERSION_BUSTER)_$(DEB_ARCH).deb
+DEB_VERSION_BOOKWORM=$(APP_VERSION)~deb12
+DEB_VERSION_TRIXIE=$(APP_VERSION)~deb13
 DEB_FILE_BULLSEYE=$(DEB_NAME_BULLSEYE)_$(DEB_VERSION_BULLSEYE)_$(DEB_ARCH).deb
+DEB_FILE_BOOKWORM=$(DEB_NAME_BOOKWORM)_$(DEB_VERSION_BOOKWORM)_$(DEB_ARCH).deb
+DEB_FILE_TRIXIE=$(DEB_NAME_TRIXIE)_$(DEB_VERSION_TRIXIE)_$(DEB_ARCH).deb
 DEB_VENDOR=Densho.org
 DEB_MAINTAINER=<geoffrey.jost@densho.org>
 DEB_DESCRIPTION=Densho Encyclopedia Resource Guide site
@@ -481,26 +488,24 @@ tgz:
 install-fpm:
 	@echo "install-fpm ------------------------------------------------------------"
 	apt-get install --assume-yes ruby ruby-dev rubygems build-essential
-	gem install --no-ri --no-rdoc fpm
+	gem install --no-document fpm
 
-
-# http://fpm.readthedocs.io/en/latest/
 # https://stackoverflow.com/questions/32094205/set-a-custom-install-directory-when-making-a-deb-package-with-fpm
 # https://brejoc.com/tag/fpm/
 deb: deb-bullseye
 
-deb-buster:
+deb-bullseye:
 	@echo ""
-	@echo "FPM packaging (buster) --------------------------------------------------"
-	-rm -Rf $(DEB_FILE_BUSTER)
-	virtualenv --python=python3 --relocatable $(VIRTUALENV)  # Make venv relocatable
+	@echo "FPM packaging (bullseye) -----------------------------------------------"
+	-rm -Rf $(DEB_FILE_BULLSEYE)
+# Make package
 	fpm   \
 	--verbose   \
 	--input-type dir   \
 	--output-type deb   \
-	--name $(DEB_NAME_BUSTER)   \
-	--version $(DEB_VERSION_BUSTER)   \
-	--package $(DEB_FILE_BUSTER)   \
+	--name $(DEB_NAME_BULLSEYE)   \
+	--version $(DEB_VERSION_BULLSEYE)   \
+	--package $(DEB_FILE_BULLSEYE)   \
 	--url "$(GIT_SOURCE_URL)"   \
 	--vendor "$(DEB_VENDOR)"   \
 	--maintainer "$(DEB_MAINTAINER)"   \
@@ -525,17 +530,56 @@ deb-buster:
 	VERSION=$(DEB_BASE)  \
 	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
 
-deb-bullseye:
+deb-bookworm:
 	@echo ""
-	@echo "FPM packaging (bullseye) ------------------------------------------------"
-	-rm -Rf $(DEB_FILE_BULLSEYE)
+	@echo "FPM packaging (trixie) -----------------------------------------------"
+	-rm -Rf $(DEB_FILE_BOOKWORM)
+# Make package
 	fpm   \
 	--verbose   \
 	--input-type dir   \
 	--output-type deb   \
-	--name $(DEB_NAME_BULLSEYE)   \
-	--version $(DEB_VERSION_BULLSEYE)   \
-	--package $(DEB_FILE_BULLSEYE)   \
+	--name $(DEB_NAME_BOOKWORM)   \
+	--version $(DEB_VERSION_BOOKWORM)   \
+	--package $(DEB_FILE_BOOKWORM)   \
+	--url "$(GIT_SOURCE_URL)"   \
+	--vendor "$(DEB_VENDOR)"   \
+	--maintainer "$(DEB_MAINTAINER)"   \
+	--description "$(DEB_DESCRIPTION)"   \
+	--depends "python3"   \
+	--depends "git-core"   \
+	--depends "imagemagick"   \
+	--depends "sqlite3"   \
+	--depends "supervisor"   \
+	--chdir $(INSTALLDIR)   \
+	.git=$(DEB_BASE)   \
+	.gitignore=$(DEB_BASE)   \
+	conf=$(DEB_BASE)   \
+	COPYRIGHT=$(DEB_BASE)   \
+	encycrg=$(DEB_BASE)   \
+	static=$(MEDIA_BASE)   \
+	venv=$(DEB_BASE)   \
+	INSTALL=$(DEB_BASE)   \
+	LICENSE=$(DEB_BASE)   \
+	Makefile=$(DEB_BASE)   \
+	README.rst=$(DEB_BASE)   \
+	requirements.txt=$(DEB_BASE)  \
+	VERSION=$(DEB_BASE)  \
+	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
+
+
+deb-trixie:
+	@echo ""
+	@echo "FPM packaging (trixie) -----------------------------------------------"
+	-rm -Rf $(DEB_FILE_TRIXIE)
+# Make package
+	fpm   \
+	--verbose   \
+	--input-type dir   \
+	--output-type deb   \
+	--name $(DEB_NAME_TRIXIE)   \
+	--version $(DEB_VERSION_TRIXIE)   \
+	--package $(DEB_FILE_TRIXIE)   \
 	--url "$(GIT_SOURCE_URL)"   \
 	--vendor "$(DEB_VENDOR)"   \
 	--maintainer "$(DEB_MAINTAINER)"   \
