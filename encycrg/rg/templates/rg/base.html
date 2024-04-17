@@ -61,27 +61,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <hr />
 
     <p>
-
       API <a href="{{ api_url }}">{{ api_url }}</a>
-      <br/>
-
-      encycrg {{ docstore_host|safe }} ({{ encycrg_cluster|safe }})
-      <br/>
-
-      {{ git_commit }}
-      {{ git_branch }}
-      v{{ version }}
-      {{ packages }}
-      <br/>
-
-      served by {{ pid }}
-      on {{ host }}
-      at {{ time|date:"Y-m-d" }}T{{ time|time:"H:i:s(T)" }}
-
     </p>
 
 {% endblock footer %}
   </footer>
+
+<!--
+v{{ version }} {{ packages }}
+{{ git_commit }} {{ git_branch }}
+encycfront  {{ docstore_host|safe }}
+media  {{ MEDIA_URL_LOCAL_NETLOC }}  {{ MEDIA_URL_LOCAL_IP }}
+{{ host }}  {{ pid }}
+{{ time }}
+-->
 
 </body>
 </html>

@@ -20,6 +20,8 @@ def sitewide(request):
         'docstore_host': settings.DOCSTORE_HOST,
         'encycrg_cluster': settings.DOCSTORE_CLUSTER,
         'base_template': settings.BASE_TEMPLATE,
+        'MEDIA_URL_LOCAL_NETLOC': settings.MEDIA_URL_LOCAL_NETLOC,
+        'MEDIA_URL_LOCAL_IP': settings.MEDIA_URL_LOCAL_IP,
         'static_url': settings.STATIC_URL,
         'google_analytics_id': settings.GOOGLE_ANALYTICS_ID,
         'site_msg_text': settings.SITE_MSG_TEXT,
