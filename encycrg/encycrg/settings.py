@@ -12,8 +12,10 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import configparser
 import logging
 import os
+import socket
 import subprocess
 import sys
+from urllib.parse import urlparse
 
 import requests
 
@@ -134,6 +136,8 @@ MEDIA_URL = config.get('media', 'media_url')
 # a CDN and get blocked for not including a User-Agent header.
 # TODO Hard-coded! Replace with value from encycrg.cfg.
 MEDIA_URL_LOCAL = config.get('media', 'media_url_local')
+MEDIA_URL_LOCAL_NETLOC = urlparse(MEDIA_URL_LOCAL).netloc
+MEDIA_URL_LOCAL_IP = socket.gethostbyname(urlparse(MEDIA_URL_LOCAL).netloc)
 
 # used when document signature image field not populated
 MISSING_IMG = config.get('media', 'missing_img')

@@ -363,10 +363,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </script>
 
 <!--
-{{ time }}
+v{{ version }} {{ packages }}
+{{ git_commit }} {{ git_branch }}
+encycrg {{ docstore_host|safe }}
+media  {{ MEDIA_URL_LOCAL_NETLOC }}  {{ MEDIA_URL_LOCAL_IP }}
 {{ host }} {{ pid }}
-{{ git_commit }} {{ git_branch }} {{ version }} {{ packages }}
-encycrg {{ docstore_host|safe }} ({{ encycrg_cluster|safe }})
+{{ time }}
 -->
 
 </body><!-- .body-wrapper -->
