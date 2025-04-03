@@ -44,15 +44,15 @@ DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
 PYTHON_VERSION=
 OPENJDK_PKG=
 ifeq ($(DEBIAN_CODENAME), bullseye)
-	PYTHON_VERSION=3.9
+	PYTHON_VERSION=python3.9
 	OPENJDK_PKG=openjdk-17-jre-headless
 endif
 ifeq ($(DEBIAN_CODENAME), bookworm)
-	PYTHON_VERSION=3.11.2
+	PYTHON_VERSION=python3.11
 	OPENJDK_PKG=openjdk-17-jre-headless
 endif
 ifeq ($(DEBIAN_CODENAME), trixie)
-	PYTHON_VERSION=3.11.6
+	PYTHON_VERSION=python3.13
 	OPENJDK_PKG=openjdk-17-jre-headless
 endif
 
