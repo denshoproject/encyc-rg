@@ -61,7 +61,7 @@ urlpatterns = [
     path('api/3.0/search/', api.search, name='rg-api-search'),
     path('api/3.0/', api.index, name='rg-api-index'),
 
-    path('api/1.0/', api.redirect, name='rg-api-old-redirect'),
+    re_path(r'api/(?P<version>[\d]+)/*', api.bad_version, name='rg-api-bad-version'),
     path('api/', api.redirect, name='rg-api-old-redirect'),
     
     path('browse/title/', views.articles, name='rg-articles'),
