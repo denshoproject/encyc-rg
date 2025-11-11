@@ -16,6 +16,10 @@ from . import search as docstore_search
 from . import models
 
 
+@api_view(['GET'])
+def bad_version(request, version=None):
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+
 def redirect(request):
     return HttpResponsePermanentRedirect(reverse('rg-api-index'))
 
