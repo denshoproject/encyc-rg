@@ -208,7 +208,10 @@ def browse_field_value(request, stub, value):
     # trade the pretty urlstub for the actual mediatype fieldname
     fieldname = models.MEDIATYPE_URLSTUBS[stub]
     if fieldname == 'rg_rgmediatype':
-        context_value = models.MEDIATYPE_INFO[value]['label']
+        try:
+            context_value = models.MEDIATYPE_INFO[value]['label']
+        except KeyError:
+            raise Http404
     else:
         context_value = value
     thispage = int(request.GET.get('page', 1))
