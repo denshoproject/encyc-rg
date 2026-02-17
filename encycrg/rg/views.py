@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.decorators.cache import cache_page
 from django.views.debug import technical_500_response
+import elasticsearch
 
 from . import api
 from . import forms
@@ -101,7 +102,18 @@ def article(request, url_title):
     article = None
     try:
         article = models.Page.get(url_title)
-    except models.NotFoundError as err:
+    except models.docstore.NotFoundError as err:
+        # Bad title might just be an author link
+        if '_' in url_title:
+            return HttpResponsePermanentRedirect(
+                reverse('rg-article', args=([
+                    url_title.replace('_',' ')
+                ]))
+            )
+        if url_title in article_titles:
+            return HttpResponsePermanentRedirect(reverse('rg-author', args=([url_title])))
+        raise Http404("No article with that title. (%s)" % err)
+    except elasticsearch.exceptions.NotFoundError as err:
         # Bad title might just be an author link
         if '_' in url_title:
             return HttpResponsePermanentRedirect(
