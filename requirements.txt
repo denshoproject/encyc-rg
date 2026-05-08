@@ -5,13 +5,13 @@
 
                                    # LICENSE  Python3
 beautifulsoup4>=4.11.0,<4.12       # MIT      y
-django>=4.1.0,<4.2                 # MIT
-django-bootstrap-pagination-forked # MIT      ???     TODO replace
-djangorestframework>=3.13.0,<3.14  # BSD      y
-drf-yasg>=1.21.0,<1.22             # BSD      y
-gunicorn                           # MIT
-markdown
-redis                              # MIT
+django==6.0.5                      # MIT
+django-bootstrap-pagination-forked==1.7.2 # MIT      ???     TODO replace
+djangorestframework==3.17.1        # BSD      y
+drf-yasg==1.21.15                  # BSD      y
+gunicorn==26.0.0                   # MIT
+Markdown==3.10.2
+redis==7.4.0                       # MIT
 
 git+https://github.com/denshoproject/densho-elastictools.git@v1.0.2
 
