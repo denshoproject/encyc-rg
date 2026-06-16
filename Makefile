@@ -43,10 +43,6 @@ DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
 
 PYTHON_VERSION=
 OPENJDK_PKG=
-ifeq ($(DEBIAN_CODENAME), bullseye)
-	PYTHON_VERSION=python3.9
-	OPENJDK_PKG=openjdk-17-jre-headless
-endif
 ifeq ($(DEBIAN_CODENAME), bookworm)
 	PYTHON_VERSION=python3.11
 	OPENJDK_PKG=openjdk-17-jre-headless
@@ -76,15 +72,12 @@ TGZ_ASSETS=$(TGZ_DIR)/encyc-rg/encyc-rg-assets
 # instead of "ddrlocal-BRANCH"
 DEB_BRANCH := $(shell python3 bin/package-branch.py)
 DEB_ARCH=amd64
-DEB_NAME_BULLSEYE=$(APP)-$(DEB_BRANCH)
 DEB_NAME_BOOKWORM=$(APP)-$(DEB_BRANCH)
 DEB_NAME_TRIXIE=$(APP)-$(DEB_BRANCH)
 # Application version, separator (~), Debian release tag e.g. deb8
 # Release tag used because sortable and follows Debian project usage.
-DEB_VERSION_BULLSEYE=$(APP_VERSION)~deb11
 DEB_VERSION_BOOKWORM=$(APP_VERSION)~deb12
 DEB_VERSION_TRIXIE=$(APP_VERSION)~deb13
-DEB_FILE_BULLSEYE=$(DEB_NAME_BULLSEYE)_$(DEB_VERSION_BULLSEYE)_$(DEB_ARCH).deb
 DEB_FILE_BOOKWORM=$(DEB_NAME_BOOKWORM)_$(DEB_VERSION_BOOKWORM)_$(DEB_ARCH).deb
 DEB_FILE_TRIXIE=$(DEB_NAME_TRIXIE)_$(DEB_VERSION_TRIXIE)_$(DEB_ARCH).deb
 DEB_VENDOR=Densho.org
@@ -492,43 +485,7 @@ install-fpm:
 
 # https://stackoverflow.com/questions/32094205/set-a-custom-install-directory-when-making-a-deb-package-with-fpm
 # https://brejoc.com/tag/fpm/
-deb: deb-bullseye
-
-deb-bullseye:
-	@echo ""
-	@echo "FPM packaging (bullseye) -----------------------------------------------"
-	-rm -Rf $(DEB_FILE_BULLSEYE)
-# Make package
-	fpm   \
-	--verbose   \
-	--input-type dir   \
-	--output-type deb   \
-	--name $(DEB_NAME_BULLSEYE)   \
-	--version $(DEB_VERSION_BULLSEYE)   \
-	--package $(DEB_FILE_BULLSEYE)   \
-	--url "$(GIT_SOURCE_URL)"   \
-	--vendor "$(DEB_VENDOR)"   \
-	--maintainer "$(DEB_MAINTAINER)"   \
-	--description "$(DEB_DESCRIPTION)"   \
-	--depends "python3"   \
-	--depends "imagemagick"   \
-	--depends "sqlite3"   \
-	--depends "supervisor"   \
-	--chdir $(INSTALLDIR)   \
-	.git=$(DEB_BASE)   \
-	.gitignore=$(DEB_BASE)   \
-	conf=$(DEB_BASE)   \
-	COPYRIGHT=$(DEB_BASE)   \
-	encycrg=$(DEB_BASE)   \
-	static=$(MEDIA_BASE)   \
-	venv=$(DEB_BASE)   \
-	INSTALL=$(DEB_BASE)   \
-	LICENSE=$(DEB_BASE)   \
-	Makefile=$(DEB_BASE)   \
-	README.rst=$(DEB_BASE)   \
-	requirements.txt=$(DEB_BASE)  \
-	VERSION=$(DEB_BASE)  \
-	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
+deb: deb-trixie
 
 deb-bookworm:
 	@echo ""
