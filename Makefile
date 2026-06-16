@@ -215,7 +215,7 @@ install-elasticsearch: install-core
 	apt-get --assume-yes install $(OPENJDK_PKG)
 	-gdebi --non-interactive /tmp/downloads/$(ELASTICSEARCH)
 #cp $(INSTALL_BASE)/ddr-public/conf/elasticsearch.yml /etc/elasticsearch/
-#chown root.root /etc/elasticsearch/elasticsearch.yml
+#chown root:root /etc/elasticsearch/elasticsearch.yml
 #chmod 644 /etc/elasticsearch/elasticsearch.yml
 # 	@echo "${bldgrn}search engine (re)start${txtrst}"
 	-service elasticsearch stop
@@ -269,11 +269,11 @@ install-encyc-rg: install-virtualenv
 	sudo -u encyc git config --global --add safe.directory $(INSTALL_RG)
 # logs dir
 	-mkdir $(LOGS_BASE)
-	chown -R $(USER).root $(LOGS_BASE)
+	chown -R $(USER):root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 # sqlite db dir
 	-mkdir $(SQLITE_BASE)
-	chown -R $(USER).root $(SQLITE_BASE)
+	chown -R $(USER):root $(SQLITE_BASE)
 	chmod -R 755 $(SQLITE_BASE)
 
 syncdb:
@@ -281,9 +281,9 @@ syncdb:
 	cd $(INSTALLDIR)/encycrg && python manage.py makemigrations --noinput
 	source $(VIRTUALENV)/bin/activate; \
 	cd $(INSTALLDIR)/encycrg && python manage.py migrate --noinput
-	chown -R $(USER).root $(SQLITE_BASE)
+	chown -R $(USER):root $(SQLITE_BASE)
 	chmod -R 750 $(SQLITE_BASE)
-	chown -R $(USER).root $(LOGS_BASE)
+	chown -R $(USER):root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 
 test-encyc-rg:
@@ -335,7 +335,7 @@ install-app-assets:
 	@echo ""
 	@echo "install assets ---------------------------------------------------------"
 	-mkdir -p $(MEDIA_BASE)
-	chown -R root.root $(MEDIA_BASE)
+	chown -R root:root $(MEDIA_BASE)
 	chmod -R 755 $(MEDIA_BASE)
 	tar xzvf /tmp/$(ASSETS) -C /tmp/
 	-mkdir -p $(STATIC_ROOT)
@@ -366,16 +366,16 @@ install-configs:
 	@echo "installing configs --------------------------------------------------"
 	-mkdir /etc/encyc
 	cp $(INSTALLDIR)/conf/$(APP).cfg $(CONF_PRODUCTION)
-	chown root.root $(CONF_PRODUCTION)
+	chown root:root $(CONF_PRODUCTION)
 	chmod 644 $(CONF_PRODUCTION)
 	touch $(CONF_LOCAL)
-	chown encyc.root $(CONF_LOCAL)
+	chown encyc:root $(CONF_LOCAL)
 	chmod 640 $(CONF_LOCAL)
 	python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)])' > $(CONF_SECRET)
-	chown encyc.root $(CONF_SECRET)
+	chown encyc:root $(CONF_SECRET)
 	chmod 640 $(CONF_SECRET)
 	cp $(INSTALLDIR)/conf/encycrg.conf $(NGINX_CONF)
-	chown root.root $(NGINX_CONF)
+	chown root:root $(NGINX_CONF)
 	chmod 644 $(NGINX_CONF)
 	-ln -s $(NGINX_CONF) $(NGINX_CONF_LINK)
 
@@ -387,17 +387,17 @@ install-daemons-configs:
 	@echo "daemon configs ------------------------------------------------------"
 # nginx settings
 	cp $(INSTALLDIR)/conf/nginx-app.conf $(NGINX_CONF)
-	chown root.root $(NGINX_CONF)
+	chown root:root $(NGINX_CONF)
 	chmod 644 $(NGINX_CONF)
 	-ln -s $(NGINX_CONF) $(NGINX_CONF_LINK)
 	cp $(INSTALLDIR)/conf/nginx-elastic.conf $(NGINX_ELASTIC_CONF)
-	chown root.root $(NGINX_ELASTIC_CONF)
+	chown root:root $(NGINX_ELASTIC_CONF)
 	chmod 644 $(NGINX_ELASTIC_CONF)
 	-ln -s $(NGINX_ELASTIC_CONF) $(NGINX_ELASTIC_CONF_LINK)
 	-rm /etc/nginx/sites-enabled/default
 # supervisord
 	cp $(INSTALLDIR)/conf/gunicorn.conf $(GUNICORN_CONF)
-	chown root.root $(GUNICORN_CONF)
+	chown root:root $(GUNICORN_CONF)
 	chmod 644 $(GUNICORN_CONF)
 
 uninstall-daemons-configs:
