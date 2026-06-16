@@ -19,7 +19,7 @@ INSTALL_ASSETS=/opt/encyc-rg-assets
 REQUIREMENTS=$(INSTALLDIR)/requirements.txt
 PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 
-VIRTUALENV=$(INSTALLDIR)/venv/encycrg
+VIRTUALENV=$(INSTALLDIR)/.venv
 SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
 
 CONF_BASE=/etc/encyc
@@ -43,10 +43,6 @@ DEBIAN_RELEASE_TAG = deb$(shell lsb_release -sr | cut -c1)
 
 PYTHON_VERSION=
 OPENJDK_PKG=
-ifeq ($(DEBIAN_CODENAME), bullseye)
-	PYTHON_VERSION=python3.9
-	OPENJDK_PKG=openjdk-17-jre-headless
-endif
 ifeq ($(DEBIAN_CODENAME), bookworm)
 	PYTHON_VERSION=python3.11
 	OPENJDK_PKG=openjdk-17-jre-headless
@@ -76,15 +72,12 @@ TGZ_ASSETS=$(TGZ_DIR)/encyc-rg/encyc-rg-assets
 # instead of "ddrlocal-BRANCH"
 DEB_BRANCH := $(shell python3 bin/package-branch.py)
 DEB_ARCH=amd64
-DEB_NAME_BULLSEYE=$(APP)-$(DEB_BRANCH)
 DEB_NAME_BOOKWORM=$(APP)-$(DEB_BRANCH)
 DEB_NAME_TRIXIE=$(APP)-$(DEB_BRANCH)
 # Application version, separator (~), Debian release tag e.g. deb8
 # Release tag used because sortable and follows Debian project usage.
-DEB_VERSION_BULLSEYE=$(APP_VERSION)~deb11
 DEB_VERSION_BOOKWORM=$(APP_VERSION)~deb12
 DEB_VERSION_TRIXIE=$(APP_VERSION)~deb13
-DEB_FILE_BULLSEYE=$(DEB_NAME_BULLSEYE)_$(DEB_VERSION_BULLSEYE)_$(DEB_ARCH).deb
 DEB_FILE_BOOKWORM=$(DEB_NAME_BOOKWORM)_$(DEB_VERSION_BOOKWORM)_$(DEB_ARCH).deb
 DEB_FILE_TRIXIE=$(DEB_NAME_TRIXIE)_$(DEB_VERSION_TRIXIE)_$(DEB_ARCH).deb
 DEB_VENDOR=Densho.org
@@ -222,7 +215,7 @@ install-elasticsearch: install-core
 	apt-get --assume-yes install $(OPENJDK_PKG)
 	-gdebi --non-interactive /tmp/downloads/$(ELASTICSEARCH)
 #cp $(INSTALL_BASE)/ddr-public/conf/elasticsearch.yml /etc/elasticsearch/
-#chown root.root /etc/elasticsearch/elasticsearch.yml
+#chown root:root /etc/elasticsearch/elasticsearch.yml
 #chmod 644 /etc/elasticsearch/elasticsearch.yml
 # 	@echo "${bldgrn}search engine (re)start${txtrst}"
 	-service elasticsearch stop
@@ -239,17 +232,12 @@ remove-elasticsearch:
 
 
 install-virtualenv:
-	apt-get --assume-yes install python3-pip python3-venv
-	python3 -m venv $(VIRTUALENV)
-	source $(VIRTUALENV)/bin/activate; \
-	pip3 install -U --cache-dir=$(PIP_CACHE_DIR) pip
-
-install-setuptools: install-virtualenv
 	@echo ""
-	@echo "install-setuptools -----------------------------------------------------"
-	apt-get --assume-yes install python-dev
-	source $(VIRTUALENV)/bin/activate; \
-	pip3 install -U bpython setuptools
+	@echo "install-virtualenv -----------------------------------------------------"
+	apt-get install --assume-yes extrepo
+	extrepo enable uv
+	apt-get install --assume-yes uv
+	uv venv --relocatable --managed-python --allow-existing --python /usr/bin/python3
 
 
 get-app: get-encyc-rg
@@ -267,35 +255,52 @@ get-encyc-rg:
 	git pull
 	pip3 install -U -r $(REQUIREMENTS)
 
-install-encyc-rg: install-virtualenv
+install-pyproject: install-virtualenv
+	@echo ""
+	@echo "install pyproject -------------------------------------------------"
+	source $(VIRTUALENV)/bin/activate; uv sync
+
+install-encyc-rg: git-safe-dir install-encyc-rg-dirs install-configs install-redis install-pyproject
 	@echo ""
 	@echo "encyc-rg --------------------------------------------------------------"
 	apt-get --assume-yes install imagemagick sqlite3 supervisor
-	source $(VIRTUALENV)/bin/activate; \
-	pip3 install -U -r $(REQUIREMENTS)
-	sudo -u encyc git config --global --add safe.directory $(INSTALL_RG)
+
+install-encyc-rg-dirs:
+	@echo ""
+	@echo "install encyc-rg-dirs --------------------------------------------"
 # logs dir
 	-mkdir $(LOGS_BASE)
-	chown -R $(USER).root $(LOGS_BASE)
+	chown -R $(USER):root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 # sqlite db dir
 	-mkdir $(SQLITE_BASE)
-	chown -R $(USER).root $(SQLITE_BASE)
+	chown -R $(USER):root $(SQLITE_BASE)
 	chmod -R 755 $(SQLITE_BASE)
+
+install-testing:
+	@echo ""
+	@echo "install testing ---------------------------------------------------"
+	source $(VIRTUALENV)/bin/activate; uv pip install .[testing]
 
 syncdb:
 	source $(VIRTUALENV)/bin/activate; \
 	cd $(INSTALLDIR)/encycrg && python manage.py makemigrations --noinput
 	source $(VIRTUALENV)/bin/activate; \
 	cd $(INSTALLDIR)/encycrg && python manage.py migrate --noinput
-	chown -R $(USER).root $(SQLITE_BASE)
+	chown -R $(USER):root $(SQLITE_BASE)
 	chmod -R 750 $(SQLITE_BASE)
-	chown -R $(USER).root $(LOGS_BASE)
+	chown -R $(USER):root $(LOGS_BASE)
 	chmod -R 755 $(LOGS_BASE)
 
 test-encyc-rg:
 	source $(VIRTUALENV)/bin/activate; \
 	cd $(INSTALLDIR); python encycrg/manage.py test rg
+
+git-safe-dir:
+	@echo ""
+	@echo "git-safe-dir -----------------------------------------------------------"
+	sudo -u encyc git config --global --add safe.directory $(INSTALLDIR)
+	sudo -u encyc git config --global --add safe.directory $(INSTALL_ASSETS)
 
 shell:
 	source $(VIRTUALENV)/bin/activate; \
@@ -342,7 +347,7 @@ install-app-assets:
 	@echo ""
 	@echo "install assets ---------------------------------------------------------"
 	-mkdir -p $(MEDIA_BASE)
-	chown -R root.root $(MEDIA_BASE)
+	chown -R root:root $(MEDIA_BASE)
 	chmod -R 755 $(MEDIA_BASE)
 	tar xzvf /tmp/$(ASSETS) -C /tmp/
 	-mkdir -p $(STATIC_ROOT)
@@ -373,16 +378,16 @@ install-configs:
 	@echo "installing configs --------------------------------------------------"
 	-mkdir /etc/encyc
 	cp $(INSTALLDIR)/conf/$(APP).cfg $(CONF_PRODUCTION)
-	chown root.root $(CONF_PRODUCTION)
+	chown root:root $(CONF_PRODUCTION)
 	chmod 644 $(CONF_PRODUCTION)
 	touch $(CONF_LOCAL)
-	chown encyc.root $(CONF_LOCAL)
+	chown encyc:root $(CONF_LOCAL)
 	chmod 640 $(CONF_LOCAL)
-	python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)])' > $(CONF_SECRET)
-	chown encyc.root $(CONF_SECRET)
+	python3 -c 'import random; print(f"{[random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)]}")' > $(CONF_SECRET)
+	chown encyc:root $(CONF_SECRET)
 	chmod 640 $(CONF_SECRET)
 	cp $(INSTALLDIR)/conf/encycrg.conf $(NGINX_CONF)
-	chown root.root $(NGINX_CONF)
+	chown root:root $(NGINX_CONF)
 	chmod 644 $(NGINX_CONF)
 	-ln -s $(NGINX_CONF) $(NGINX_CONF_LINK)
 
@@ -394,17 +399,17 @@ install-daemons-configs:
 	@echo "daemon configs ------------------------------------------------------"
 # nginx settings
 	cp $(INSTALLDIR)/conf/nginx-app.conf $(NGINX_CONF)
-	chown root.root $(NGINX_CONF)
+	chown root:root $(NGINX_CONF)
 	chmod 644 $(NGINX_CONF)
 	-ln -s $(NGINX_CONF) $(NGINX_CONF_LINK)
 	cp $(INSTALLDIR)/conf/nginx-elastic.conf $(NGINX_ELASTIC_CONF)
-	chown root.root $(NGINX_ELASTIC_CONF)
+	chown root:root $(NGINX_ELASTIC_CONF)
 	chmod 644 $(NGINX_ELASTIC_CONF)
 	-ln -s $(NGINX_ELASTIC_CONF) $(NGINX_ELASTIC_CONF_LINK)
 	-rm /etc/nginx/sites-enabled/default
 # supervisord
 	cp $(INSTALLDIR)/conf/gunicorn.conf $(GUNICORN_CONF)
-	chown root.root $(GUNICORN_CONF)
+	chown root:root $(GUNICORN_CONF)
 	chmod 644 $(GUNICORN_CONF)
 
 uninstall-daemons-configs:
@@ -492,43 +497,7 @@ install-fpm:
 
 # https://stackoverflow.com/questions/32094205/set-a-custom-install-directory-when-making-a-deb-package-with-fpm
 # https://brejoc.com/tag/fpm/
-deb: deb-bullseye
-
-deb-bullseye:
-	@echo ""
-	@echo "FPM packaging (bullseye) -----------------------------------------------"
-	-rm -Rf $(DEB_FILE_BULLSEYE)
-# Make package
-	fpm   \
-	--verbose   \
-	--input-type dir   \
-	--output-type deb   \
-	--name $(DEB_NAME_BULLSEYE)   \
-	--version $(DEB_VERSION_BULLSEYE)   \
-	--package $(DEB_FILE_BULLSEYE)   \
-	--url "$(GIT_SOURCE_URL)"   \
-	--vendor "$(DEB_VENDOR)"   \
-	--maintainer "$(DEB_MAINTAINER)"   \
-	--description "$(DEB_DESCRIPTION)"   \
-	--depends "python3"   \
-	--depends "imagemagick"   \
-	--depends "sqlite3"   \
-	--depends "supervisor"   \
-	--chdir $(INSTALLDIR)   \
-	.git=$(DEB_BASE)   \
-	.gitignore=$(DEB_BASE)   \
-	conf=$(DEB_BASE)   \
-	COPYRIGHT=$(DEB_BASE)   \
-	encycrg=$(DEB_BASE)   \
-	static=$(MEDIA_BASE)   \
-	venv=$(DEB_BASE)   \
-	INSTALL=$(DEB_BASE)   \
-	LICENSE=$(DEB_BASE)   \
-	Makefile=$(DEB_BASE)   \
-	README.rst=$(DEB_BASE)   \
-	requirements.txt=$(DEB_BASE)  \
-	VERSION=$(DEB_BASE)  \
-	conf/encycrg.cfg=$(CONF_BASE)/encycrg.cfg
+deb: deb-trixie
 
 deb-bookworm:
 	@echo ""
@@ -558,7 +527,7 @@ deb-bookworm:
 	COPYRIGHT=$(DEB_BASE)   \
 	encycrg=$(DEB_BASE)   \
 	static=$(MEDIA_BASE)   \
-	venv=$(DEB_BASE)   \
+	.venv=$(DEB_BASE)   \
 	INSTALL=$(DEB_BASE)   \
 	LICENSE=$(DEB_BASE)   \
 	Makefile=$(DEB_BASE)   \
@@ -596,7 +565,7 @@ deb-trixie:
 	COPYRIGHT=$(DEB_BASE)   \
 	encycrg=$(DEB_BASE)   \
 	static=$(MEDIA_BASE)   \
-	venv=$(DEB_BASE)   \
+	.venv=$(DEB_BASE)   \
 	INSTALL=$(DEB_BASE)   \
 	LICENSE=$(DEB_BASE)   \
 	Makefile=$(DEB_BASE)   \
