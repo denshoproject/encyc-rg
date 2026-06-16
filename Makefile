@@ -290,6 +290,12 @@ test-encyc-rg:
 	source $(VIRTUALENV)/bin/activate; \
 	cd $(INSTALLDIR); python encycrg/manage.py test rg
 
+git-safe-dir:
+	@echo ""
+	@echo "git-safe-dir -----------------------------------------------------------"
+	sudo -u encyc git config --global --add safe.directory $(INSTALLDIR)
+	sudo -u encyc git config --global --add safe.directory $(INSTALL_ASSETS)
+
 shell:
 	source $(VIRTUALENV)/bin/activate; \
 	cd $(INSTALLDIR); python encycrg/manage.py shell
