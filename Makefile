@@ -377,7 +377,7 @@ install-configs:
 	touch $(CONF_LOCAL)
 	chown encyc:root $(CONF_LOCAL)
 	chmod 640 $(CONF_LOCAL)
-	python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)])' > $(CONF_SECRET)
+	python3 -c 'import random; print(f"{[random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)]}")' > $(CONF_SECRET)
 	chown encyc:root $(CONF_SECRET)
 	chmod 640 $(CONF_SECRET)
 	cp $(INSTALLDIR)/conf/encycrg.conf $(NGINX_CONF)
