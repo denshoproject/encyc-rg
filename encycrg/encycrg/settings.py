@@ -42,8 +42,8 @@ SECRET_KEY = config.get('security', 'secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config.getboolean('debug', 'debug')
-GITPKG_DEBUG = config.getboolean('debug', 'gitpkg_debug')
 
+GITPKG_DEBUG = config.getboolean('debug', 'gitpkg_debug')
 if GITPKG_DEBUG:
     # report Git branch and commit
     # This branch is the one with the leading '* '.
@@ -53,18 +53,11 @@ if GITPKG_DEBUG:
         for b in subprocess.check_output(['git', 'branch']).splitlines()
         if '*' in b.decode()
        ][0]
-    #except:
-    #    GIT_BRANCH = 'unknown'
-    #try:
-        # $ git log --pretty=oneline
-        # a21740293f... COMMIT MESSAGE
-    
+
     GIT_COMMIT = subprocess.check_output([
-        'git','log','--pretty=oneline','-1'
-       ]).decode().strip().split(' ')[0]
-    #except:
-    #    GIT_COMMIT = 'unknown'
-     
+        'git', 'log', '--pretty=format:%H %d %ad', '--date=iso', '-1'
+    ]).decode().replace('  ', ' ')
+
     def package_debs(package, apt_cache_dir='/var/cache/apt/archives'):
         """
         @param package: str Package name
@@ -87,12 +80,12 @@ if GITPKG_DEBUG:
         ]
         return pkg_paths
     
-    PACKAGES = package_debs('front-%s' % GIT_BRANCH)
+    PACKAGES = package_debs('encycrg-%s' % GIT_BRANCH)
 
 else:
-    GIT_BRANCH = []
     GIT_COMMIT = ''
-    PACKAGES = []
+    GIT_BRANCH = ''
+    PACKAGES = 'PACKAGES'
 
 LOG_LEVEL = config.get('debug', 'log_level')
 
