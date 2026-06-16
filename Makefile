@@ -19,7 +19,7 @@ INSTALL_ASSETS=/opt/encyc-rg-assets
 REQUIREMENTS=$(INSTALLDIR)/requirements.txt
 PIP_CACHE_DIR=$(INSTALL_BASE)/pip-cache
 
-VIRTUALENV=$(INSTALLDIR)/venv/encycrg
+VIRTUALENV=$(INSTALLDIR)/.venv
 SETTINGS=$(INSTALL_LOCAL)/encycrg/encycrg/settings.py
 
 CONF_BASE=/etc/encyc
@@ -232,17 +232,12 @@ remove-elasticsearch:
 
 
 install-virtualenv:
-	apt-get --assume-yes install python3-pip python3-venv
-	python3 -m venv $(VIRTUALENV)
-	source $(VIRTUALENV)/bin/activate; \
-	pip3 install -U --cache-dir=$(PIP_CACHE_DIR) pip
-
-install-setuptools: install-virtualenv
 	@echo ""
-	@echo "install-setuptools -----------------------------------------------------"
-	apt-get --assume-yes install python-dev
-	source $(VIRTUALENV)/bin/activate; \
-	pip3 install -U bpython setuptools
+	@echo "install-virtualenv -----------------------------------------------------"
+	apt-get install --assume-yes extrepo
+	extrepo enable uv
+	apt-get install --assume-yes uv
+	uv venv --relocatable --managed-python --allow-existing --python /usr/bin/python3
 
 
 get-app: get-encyc-rg
@@ -260,13 +255,19 @@ get-encyc-rg:
 	git pull
 	pip3 install -U -r $(REQUIREMENTS)
 
-install-encyc-rg: install-virtualenv
+install-pyproject: install-virtualenv
+	@echo ""
+	@echo "install pyproject -------------------------------------------------"
+	source $(VIRTUALENV)/bin/activate; uv sync
+
+install-encyc-rg: git-safe-dir install-encyc-rg-dirs install-configs install-redis install-pyproject
 	@echo ""
 	@echo "encyc-rg --------------------------------------------------------------"
 	apt-get --assume-yes install imagemagick sqlite3 supervisor
-	source $(VIRTUALENV)/bin/activate; \
-	pip3 install -U -r $(REQUIREMENTS)
-	sudo -u encyc git config --global --add safe.directory $(INSTALL_RG)
+
+install-encyc-rg-dirs:
+	@echo ""
+	@echo "install encyc-rg-dirs --------------------------------------------"
 # logs dir
 	-mkdir $(LOGS_BASE)
 	chown -R $(USER):root $(LOGS_BASE)
@@ -275,6 +276,11 @@ install-encyc-rg: install-virtualenv
 	-mkdir $(SQLITE_BASE)
 	chown -R $(USER):root $(SQLITE_BASE)
 	chmod -R 755 $(SQLITE_BASE)
+
+install-testing:
+	@echo ""
+	@echo "install testing ---------------------------------------------------"
+	source $(VIRTUALENV)/bin/activate; uv pip install .[testing]
 
 syncdb:
 	source $(VIRTUALENV)/bin/activate; \
@@ -521,7 +527,7 @@ deb-bookworm:
 	COPYRIGHT=$(DEB_BASE)   \
 	encycrg=$(DEB_BASE)   \
 	static=$(MEDIA_BASE)   \
-	venv=$(DEB_BASE)   \
+	.venv=$(DEB_BASE)   \
 	INSTALL=$(DEB_BASE)   \
 	LICENSE=$(DEB_BASE)   \
 	Makefile=$(DEB_BASE)   \
@@ -559,7 +565,7 @@ deb-trixie:
 	COPYRIGHT=$(DEB_BASE)   \
 	encycrg=$(DEB_BASE)   \
 	static=$(MEDIA_BASE)   \
-	venv=$(DEB_BASE)   \
+	.venv=$(DEB_BASE)   \
 	INSTALL=$(DEB_BASE)   \
 	LICENSE=$(DEB_BASE)   \
 	Makefile=$(DEB_BASE)   \

@@ -1,0 +1,62 @@
+[project]
+name = "encyc-rg"
+description = "Densho Resource Guide"
+authors = [
+    {name = "Geoffrey Jost", email="geoffrey.jost@densho.us"}
+]
+maintainers = [
+    {name = "Geoffrey Jost", email="geoffrey.jost@densho.us"},
+]
+readme = "README.rst"
+license = {file = "LICENSE"}
+keywords = ["history", "education",]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: Django",
+    "Framework :: Django :: 6.0",
+]
+
+dynamic = ["version"]  # see tool.setuptools.dynamic
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4>=4.11.0,<4.12",
+    "bpython",
+    "django==6.0.5",
+    "django-bootstrap-pagination-forked==1.7.2",
+    "djangorestframework==3.17.1",
+    "drf-yasg==1.21.15",
+    "gunicorn==26.0.0",
+    "Markdown==3.10.2",
+    "redis==7.4.0",
+    "elastictools @ git+https://github.com/denshoproject/densho-elastictools.git@v1.1.3",
+]
+
+[project.optional-dependencies]
+testing = [
+    "coverage",
+    "pytest",
+    "pytest-cov",
+    "pytest-django",
+    "pytest-testmon",
+    "pytest-xdist",
+]
+dev = []
+
+[project.urls]
+Repository = "https://github.com/denshoproject/encyc-rg"
+
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ['encycrg']
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
