@@ -6,7 +6,7 @@ from urllib.parse import urlunparse
 
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.http import HttpResponsePermanentRedirect
 from django.shortcuts import render
 from django.template.loader import get_template
@@ -98,6 +98,10 @@ def wiki_article(request, url_title):
 
 @cache_page(settings.CACHE_TIMEOUT)
 def article(request, url_title):
+    # redirect clankers to the API
+    query_string = request.META.get('QUERY_STRING')
+    if query_string == 'format=api':
+        return HttpResponseRedirect(reverse('rg-api-article', args=[url_title]))
     article_titles = models.Page.titles()
     article = None
     try:
