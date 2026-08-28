@@ -404,12 +404,12 @@ LOGGING = {
             'filters': [],
             'formatter': 'verbose',
         },
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-            'filters': ['require_debug_false'],
-            'formatter': 'verbose',
-        },
+        #'mail_admins': {
+        #    'level': 'ERROR',
+        #    'class': 'django.utils.log.AdminEmailHandler',
+        #    'filters': ['require_debug_false'],
+        #    'formatter': 'verbose',
+        #},
     },
     'loggers': {
         'django.request': {
