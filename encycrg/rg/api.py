@@ -81,7 +81,9 @@ def article(request, url_title, format=None):
         return Response(
             article.dict_all(request)
         )
-    except models.NotFoundError:
+    except docstore.NotFoundError:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    except AttributeError:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
@@ -90,7 +92,7 @@ def author(request, url_title, format=None):
         return Response(
             models.Author.get(url_title).dict_all(request)
         )
-    except models.NotFoundError:
+    except docstore.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
@@ -99,7 +101,7 @@ def source(request, url_title, format=None):
         return Response(
             models.Source.get(url_title).dict_all(request)
         )
-    except models.NotFoundError:
+    except docstore.NotFoundError:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 def _browse(request):
