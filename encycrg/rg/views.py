@@ -113,7 +113,7 @@ def article(request, url_title):
         if url_title in article_titles:
             return HttpResponsePermanentRedirect(reverse('rg-author', args=([url_title])))
         raise Http404("No article with that title. (%s)" % err)
-    except elasticsearch.exceptions.NotFoundError as err:
+    except models.docstore.NotFoundError as err:
         # Bad title might just be an author link
         if '_' in url_title:
             return HttpResponsePermanentRedirect(
@@ -124,12 +124,14 @@ def article(request, url_title):
         if url_title in article_titles:
             return HttpResponsePermanentRedirect(reverse('rg-author', args=([url_title])))
         raise Http404("No article with that title. (%s)" % err)
+    if not article:
+        raise Http404(f'No article with the title "{url_title}".')
     # choose only the first source
     source = None
     if article.source_ids:
         try:
             source = models.Source.get(article.source_ids[0])
-        except NotFoundError:
+        except models.docstore.NotFoundError:
             pass
     # some mediatypes have special templates
     t = MEDIATYPE_TEMPLATES.get(
@@ -155,7 +157,7 @@ def authors(request):
 def author(request, url_title):
     try:
         author = api._author(request, url_title)
-    except models.NotFoundError:
+    except models.docstore.NotFoundError:
         raise Http404("No author with that title.")
     return render(request, 'rg/author.html', {
         'author': author,
